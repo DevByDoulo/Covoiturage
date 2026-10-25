@@ -41,16 +41,42 @@ export const routes: Routes = [
     ],
   },
   {
-    path: 'accueil',
-    title: 'Accueil · CoVoitIA',
-    canActivate: [connecteGuard, roleGuard('PASSAGER', 'CONDUCTEUR')],
-    loadComponent: () => import('./features/accueil/accueil').then((m) => m.Accueil),
-  },
-  {
-    path: 'admin',
-    title: 'Back-office · CoVoitIA',
-    canActivate: [roleGuard('ADMIN')],
-    loadComponent: () => import('./features/accueil/accueil').then((m) => m.Accueil),
+    // Espace connecté : barre de navigation commune.
+    path: '',
+    canActivate: [connecteGuard],
+    loadComponent: () => import('./features/espace/espace-layout').then((m) => m.EspaceLayout),
+    children: [
+      {
+        path: 'accueil',
+        title: 'Accueil · CoVoitIA',
+        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
+        loadComponent: () => import('./features/accueil/accueil').then((m) => m.Accueil),
+      },
+      {
+        path: 'admin',
+        title: 'Back-office · CoVoitIA',
+        canActivate: [roleGuard('ADMIN')],
+        loadComponent: () => import('./features/accueil/accueil').then((m) => m.Accueil),
+      },
+      // F4 — Trajets
+      {
+        path: 'trajets/publier',
+        title: 'Publier un trajet · CoVoitIA',
+        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
+        loadComponent: () => import('./features/trajets/publier/publier').then((m) => m.Publier),
+      },
+      {
+        path: 'trajets/mes-trajets',
+        title: 'Mes trajets · CoVoitIA',
+        canActivate: [roleGuard('CONDUCTEUR')],
+        loadComponent: () => import('./features/trajets/mes-trajets/mes-trajets').then((m) => m.MesTrajets),
+      },
+      {
+        path: 'trajets/:id',
+        title: 'Trajet · CoVoitIA',
+        loadComponent: () => import('./features/trajets/detail/detail-trajet').then((m) => m.DetailTrajet),
+      },
+    ],
   },
   { path: '**', redirectTo: 'accueil' },
 ];

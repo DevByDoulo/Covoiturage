@@ -31,16 +31,22 @@ Les tables et entités suivent **les noms du diagramme de classes** (`utilisateu
   « femmes uniquement ») ; recherche PostGIS ; prix par formule de partage des frais (±10 %) ;
   réservations ; paiement en espèces confirmé par PIN/QR ; notifications in-app + push Firebase ;
   back-office (file de validation, blocage/bannissement, statistiques, coefficients de prix).
-- Frontend : uniquement l'authentification (connexion, inscription, OTP, mot de passe oublié,
-  téléphone après Google) + une page d'accueil provisoire.
+- Frontend : authentification (connexion, inscription, OTP, mot de passe oublié, téléphone après Google),
+  espace connecté (`features/espace`, barre de navigation) et **F4 Trajets** : publication avec carte,
+  escales, estimation et ajustement du prix (`/trajets/publier`), mes trajets, détail avec modification,
+  annulation, démarrage et fin (`/trajets/:id`).
+- **Carte** : Leaflet + OpenStreetMap, sans clé. Seuls `shared/carte/carte.ts` (affichage) et
+  `core/carte/geocodage.ts` (adresse ↔ coordonnées, Nominatim : 1 requête/s, recherche à la validation
+  du champ, jamais à chaque frappe) connaissent le fournisseur. Pour passer à Google Maps, remplacer ces
+  deux implémentations sans toucher aux écrans. `features/trajets/carte-trajet` est réutilisable pour F5.
 - Tests : `./mvnw test` → 11 tests (dont `ParcoursCompletTest`, parcours complet sur PostGIS) ;
   `npm test` → 14 tests. Tout l'auth a été testé à la main entre le front et le back.
 
 **À faire, dans l'ordre conseillé :**
 1. Écrans Angular d'après les maquettes : *Mon profil* (préférences, photo), *Mes véhicules et documents*,
    back-office *Validation des documents* et *Fiche utilisateur*.
-2. Écrans trajets : publication avec estimation du prix (`POST /api/trajets/estimation`), recherche avec carte
-   (Google Maps), détail, mes trajets ; puis réservations, code d'embarquement (PIN/QR), notifications.
+2. Écran de recherche avec carte (F5, réutiliser `app-carte` et `app-carte-trajet`) ; puis réservations,
+   code d'embarquement (PIN/QR), notifications.
 3. Lot 2 — service IA FastAPI : jeu de données synthétique à partir de la formule, XGBoost, appel depuis
    `MoteurTarification` avec repli sur `MoteurFormule`.
 4. Ensuite : Wave / Orange Money (PayDunya ou CinetPay), chat, avis croisés, SOS et partage de position,
