@@ -11,7 +11,7 @@ import { EntetePage } from '../../../shared/ui/entete-page';
 import { Icone } from '../../../shared/ui/icone';
 import { appliquerErreurServeur, chiffresTelephone, enErreur, telephoneSenegalValidator } from '../formulaire';
 
-/** Premier passage par Google : le numéro (vérifié par SMS) est obligatoire sur CoVoitIA. */
+/** Premier passage par Google : le numéro (vérifié par SMS) est obligatoire sur YOBALEMAsn. */
 @Component({
   selector: 'app-google-telephone',
   imports: [ReactiveFormsModule, EntetePage, Icone, Alerte, DrapeauSenegal],

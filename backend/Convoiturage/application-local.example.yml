@@ -5,3 +5,17 @@ covoitia:
     hote: localhost
     # Port de votre PostgreSQL 16 avec PostGIS (5432 par défaut, 5433 si deux versions sont installées).
     port: 5432
+
+# Envoi des codes de vérification par email. Sans cette section, les codes partent par « SMS »
+# (simulés : écrits dans la console du backend).
+# Gmail : activer la validation en deux étapes, puis créer un mot de passe d'application
+# sur https://myaccount.google.com/apppasswords (16 lettres, à coller sans espaces).
+#spring:
+#  mail:
+#    host: smtp.gmail.com
+#    port: 587
+#    username: votre.adresse@gmail.com
+#    password: motdepassedapplication
+#    properties:
+#      mail.smtp.auth: true
+#      mail.smtp.starttls.enable: true

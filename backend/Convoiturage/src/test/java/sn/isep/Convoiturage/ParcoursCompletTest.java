@@ -16,6 +16,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import sn.isep.Convoiturage.auth.EmailSender;
 import sn.isep.Convoiturage.auth.SmsSender;
 
 import java.time.LocalDate;
@@ -62,17 +63,29 @@ class ParcoursCompletTest {
         }
     }
 
+    /** Capture des codes envoyés, par destinataire (email, ou numéro pour les envois par SMS). */
     @TestConfiguration
-    static class SmsDeTest {
+    static class CodesDeTest {
         static final Map<String, String> DERNIER_CODE = new ConcurrentHashMap<>();
         private static final Pattern CODE = Pattern.compile("est (\\d{6})");
+
+        private static void capturer(String destinataire, String message) {
+            Matcher m = CODE.matcher(message);
+            if (m.find()) DERNIER_CODE.put(destinataire, m.group(1));
+        }
 
         @Bean
         @Primary
         SmsSender smsCapture() {
-            return (telephone, message) -> {
-                Matcher m = CODE.matcher(message);
-                if (m.find()) DERNIER_CODE.put(telephone, m.group(1));
+            return CodesDeTest::capturer;
+        }
+
+        @Bean
+        @Primary
+        EmailSender emailCapture() {
+            return new EmailSender() {
+                @Override public boolean disponible() { return true; }
+                @Override public void envoyer(String email, String sujet, String texte) { capturer(email, texte); }
             };
         }
     }
@@ -257,12 +270,14 @@ class ParcoursCompletTest {
     @Test
     void motDePasseOublieParOtp() throws Exception {
         inscrire("Fatou", "Sow", "fatou@test.sn", "761112233", "FEMME");
-        // Par email : le code part par SMS sur le numéro du compte, sans révéler ce numéro.
+        // Par email : le code part à l'adresse du compte, sans révéler le numéro.
         appel(post("/api/auth/mot-de-passe/oublie"), "{\"identifiant\":\"fatou@test.sn\"}")
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.canal").value("EMAIL"))
+                .andExpect(jsonPath("$.emailMasque").value("f****@test.sn"))
                 .andExpect(jsonPath("$.telephoneMasque").doesNotExist())
                 .andExpect(jsonPath("$.otpValiditeSecondes").value(300));
-        String code = SmsDeTest.DERNIER_CODE.get("+221761112233");
+        String code = CodesDeTest.DERNIER_CODE.get("fatou@test.sn");
         appel(post("/api/auth/mot-de-passe/reinitialiser"),
                 "{\"identifiant\":\"fatou@test.sn\",\"code\":\"" + code + "\",\"nouveauMotDePasse\":\"NouveauMdp2026\"}")
                 .andExpect(status().isNoContent());
@@ -302,11 +317,11 @@ class ParcoursCompletTest {
                 {"prenom":"%s","nom":"%s","email":"%s","telephone":"%s","motDePasse":"MotDePasse2026","sexe":"%s"}"""
                 .formatted(prenom, nom, email, tel, sexe))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.etape").value("OTP_ENVOYE"));
-        String telephone = "+221" + tel;
+                .andExpect(jsonPath("$.etape").value("OTP_ENVOYE"))
+                .andExpect(jsonPath("$.canal").value("EMAIL"));
         appel(post("/api/auth/otp/verifier"), "{\"identifiant\":\"" + tel + "\",\"code\":\"999999x\"}")
                 .andExpect(status().isBadRequest());
-        String code = SmsDeTest.DERNIER_CODE.get(telephone);
+        String code = CodesDeTest.DERNIER_CODE.get(email);
         return jeton(appel(post("/api/auth/otp/verifier"), "{\"identifiant\":\"" + tel + "\",\"code\":\"" + code + "\"}")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.utilisateur.statut").value("ACTIF")));

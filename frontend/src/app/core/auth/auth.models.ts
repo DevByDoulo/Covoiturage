@@ -30,13 +30,16 @@ export interface Profil {
 }
 
 export type EtapeAuth = 'CONNECTE' | 'OTP_ENVOYE' | 'TELEPHONE_REQUIS';
+export type CanalOtp = 'EMAIL' | 'SMS';
 
 export interface AuthReponse {
   etape: EtapeAuth;
   accessToken?: string;
   refreshToken?: string;
   expiresIn?: number;
+  canal?: CanalOtp;
   telephoneMasque?: string;
+  emailMasque?: string;
   otpValiditeSecondes?: number;
   renvoiPossibleDansSecondes?: number;
   utilisateur?: Profil;
@@ -55,7 +58,9 @@ export interface InscriptionRequete {
 export interface VerificationEnCours {
   /** Téléphone ou email permettant au backend de retrouver le compte. */
   identifiant: string;
+  canal: CanalOtp;
   telephoneMasque: string | null;
+  emailMasque: string | null;
   /** Instants (epoch ms) d'expiration du code et de possibilité de renvoi. */
   expireA: number;
   renvoiPossibleA: number;

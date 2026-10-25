@@ -19,7 +19,7 @@ interface EntreeMenu {
   imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Logo],
   template: `
     <header class="barre">
-      <a [routerLink]="session.pageAccueil()" aria-label="Accueil CoVoitIA"><app-logo /></a>
+      <a [routerLink]="session.pageAccueil()" aria-label="Accueil YOBALEMAsn"><app-logo /></a>
       <nav class="menu" aria-label="Navigation principale">
         @for (e of entrees(); track e.lien) {
           <a [routerLink]="e.lien" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">
