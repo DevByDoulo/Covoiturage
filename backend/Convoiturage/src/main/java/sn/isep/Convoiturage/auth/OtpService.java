@@ -1,6 +1,7 @@
 package sn.isep.Convoiturage.auth;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
  * Codes à usage unique : 6 chiffres, valables 5 minutes, 5 essais maximum, un renvoi au plus
  * toutes les 60 secondes. Seul le hash BCrypt du code est conservé. Le code est rattaché au numéro
  * du compte ; il part par email si un serveur SMTP est configuré et que le compte a un email, sinon par SMS.
+ * L'email est envoyé en arrière-plan après validation de la transaction ({@link ExpediteurCodesEmail}).
  */
 @Service
 @RequiredArgsConstructor
@@ -26,6 +28,7 @@ public class OtpService {
     private final PasswordEncoder encoder;
     private final SmsSender sms;
     private final EmailSender emails;
+    private final ApplicationEventPublisher evenements;
     private final AppProperties props;
 
     /** Canal utilisé pour un compte ayant cet email (null si le compte n'en a pas). */
@@ -61,7 +64,9 @@ public class OtpService {
             String sujet = objet == ObjetOtp.REINITIALISATION_MOT_DE_PASSE
                     ? "YOBALEMAsn - Réinitialisation de votre mot de passe"
                     : "YOBALEMAsn - Votre code de vérification";
-            emails.envoyer(email, sujet, texte + "\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.");
+            // Envoi en arrière-plan après validation : la réponse HTTP n'attend pas le serveur SMTP.
+            evenements.publishEvent(new ExpediteurCodesEmail.CodeAEnvoyer(email, sujet,
+                    texte + "\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email."));
         } else {
             sms.envoyer(telephone, texte);
         }

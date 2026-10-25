@@ -74,6 +74,19 @@ class ParcoursCompletTest {
             if (m.find()) DERNIER_CODE.put(destinataire, m.group(1));
         }
 
+        /**
+         * Les emails partent en arrière-plan après la réponse HTTP : on attend qu'un code différent
+         * de {@code ancien} soit arrivé pour ce destinataire (5 secondes au plus).
+         */
+        static String attendreNouveauCode(String destinataire, String ancien) throws InterruptedException {
+            for (int i = 0; i < 100; i++) {
+                String code = DERNIER_CODE.get(destinataire);
+                if (code != null && !code.equals(ancien)) return code;
+                Thread.sleep(50);
+            }
+            throw new AssertionError("Aucun nouveau code reçu pour " + destinataire);
+        }
+
         @Bean
         @Primary
         SmsSender smsCapture() {
@@ -270,6 +283,7 @@ class ParcoursCompletTest {
     @Test
     void motDePasseOublieParOtp() throws Exception {
         inscrire("Fatou", "Sow", "fatou@test.sn", "761112233", "FEMME");
+        String codeInscription = CodesDeTest.DERNIER_CODE.get("fatou@test.sn");
         // Par email : le code part à l'adresse du compte, sans révéler le numéro.
         appel(post("/api/auth/mot-de-passe/oublie"), "{\"identifiant\":\"fatou@test.sn\"}")
                 .andExpect(status().isOk())
@@ -277,7 +291,7 @@ class ParcoursCompletTest {
                 .andExpect(jsonPath("$.emailMasque").value("f****@test.sn"))
                 .andExpect(jsonPath("$.telephoneMasque").doesNotExist())
                 .andExpect(jsonPath("$.otpValiditeSecondes").value(300));
-        String code = CodesDeTest.DERNIER_CODE.get("fatou@test.sn");
+        String code = CodesDeTest.attendreNouveauCode("fatou@test.sn", codeInscription);
         appel(post("/api/auth/mot-de-passe/reinitialiser"),
                 "{\"identifiant\":\"fatou@test.sn\",\"code\":\"" + code + "\",\"nouveauMotDePasse\":\"NouveauMdp2026\"}")
                 .andExpect(status().isNoContent());
@@ -313,6 +327,7 @@ class ParcoursCompletTest {
     private String dernierRefresh;
 
     private String inscrire(String prenom, String nom, String email, String tel, String sexe) throws Exception {
+        String ancien = CodesDeTest.DERNIER_CODE.get(email);
         appel(post("/api/auth/inscription"), """
                 {"prenom":"%s","nom":"%s","email":"%s","telephone":"%s","motDePasse":"MotDePasse2026","sexe":"%s"}"""
                 .formatted(prenom, nom, email, tel, sexe))
@@ -321,7 +336,7 @@ class ParcoursCompletTest {
                 .andExpect(jsonPath("$.canal").value("EMAIL"));
         appel(post("/api/auth/otp/verifier"), "{\"identifiant\":\"" + tel + "\",\"code\":\"999999x\"}")
                 .andExpect(status().isBadRequest());
-        String code = CodesDeTest.DERNIER_CODE.get(email);
+        String code = CodesDeTest.attendreNouveauCode(email, ancien);
         // Code reçu par email : l'adresse est vérifiée, le numéro ne l'est pas.
         return jeton(appel(post("/api/auth/otp/verifier"), "{\"identifiant\":\"" + tel + "\",\"code\":\"" + code + "\"}")
                 .andExpect(status().isOk())

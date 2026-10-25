@@ -48,6 +48,11 @@ management:
     web:
       exposure:
         include: health,info
+  health:
+    mail:
+      # Ne pas interroger le serveur SMTP à chaque /actuator/health (10 s avec Gmail) : un envoi d'email
+      # lent ne doit pas faire paraître l'application « en panne ».
+      enabled: false
 
 app:
   jwt:
