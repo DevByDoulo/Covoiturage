@@ -1,4 +1,4 @@
-# CoVoitIA — Frontend Angular 21
+# YobalemaSn — Frontend Angular 21
 
 Application web (passager, conducteur, back-office admin). Composants autonomes, signaux,
 sans zone.js, formulaires réactifs typés, styles SCSS sans bibliothèque d'interface.
