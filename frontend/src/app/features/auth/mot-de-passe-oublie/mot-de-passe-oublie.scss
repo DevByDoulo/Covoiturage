@@ -1,0 +1,106 @@
+.bandeau {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--surface-2);
+
+  p {
+    margin: 4px 0 0;
+    font-size: 15px;
+  }
+}
+
+.bandeau__icone {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--menthe);
+  color: var(--vert-fonce);
+}
+
+.etiquette {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--vert-clair);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--vert-fonce);
+}
+
+.etape {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 17px;
+  }
+
+  fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border: 0;
+  }
+}
+
+.etape--inactive {
+  opacity: 0.55;
+}
+
+.etape__entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.etape__texte {
+  margin: -6px 0 0;
+  color: var(--texte-2);
+}
+
+.numero {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--vert);
+  font-size: 13px;
+  color: #fff;
+}
+
+.rapide {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--vert);
+}
+
+.separateur--etape .point {
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--orange);
+}
+
+.ligne-lien .bouton-lien {
+  padding: 0;
+  font-size: 12.5px;
+}

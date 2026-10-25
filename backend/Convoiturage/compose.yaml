@@ -1,0 +1,35 @@
+# Base de données de développement : PostgreSQL 16 + PostGIS, et pgAdmin 4.
+#   docker compose up -d
+# pgAdmin : http://localhost:5050 (identifiants ci-dessous, serveur "postgis", port 5432)
+services:
+  postgis:
+    image: postgis/postgis:16-3.4
+    container_name: covoitia-postgis
+    environment:
+      POSTGRES_DB: covoiturage
+      POSTGRES_USER: covoiturage
+      POSTGRES_PASSWORD: covoiturage
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgis-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U covoiturage -d covoiturage"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pgadmin:
+    image: dpage/pgadmin4:8.12
+    container_name: covoitia-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@covoitia.dev
+      PGADMIN_DEFAULT_PASSWORD: pgadmin-dev
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgis
+    profiles: ["outils"]
+
+volumes:
+  postgis-data:

@@ -1,0 +1,17 @@
+# Profil des tests d'intégration : base locale « covoiturage_test » (db/init-local.sql),
+# même hôte/port que la base de développement (application-local.yml).
+spring:
+  datasource:
+    url: jdbc:postgresql://${covoitia.db.hote:localhost}:${covoitia.db.port:5432}/covoiturage_test
+    username: covoiturage
+    password: covoiturage
+
+app:
+  jwt:
+    secret: dGVzdC1vbmx5LXNlY3JldC1jb3ZvaXRpYS0zMi1ieXRlcy1taW5pbXVtLW9rIQ==
+  stockage:
+    repertoire: ${java.io.tmpdir}/covoitia-tests
+  admin:
+    email: admin@test.local
+    mot-de-passe: Admin-Test-2026!
+    telephone: "+221700000001"

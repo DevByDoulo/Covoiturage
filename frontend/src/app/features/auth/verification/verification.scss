@@ -1,0 +1,30 @@
+.illustration {
+  display: flex;
+  justify-content: center;
+}
+
+.titres h1 {
+  font-size: 24px;
+}
+
+.validite {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+  margin: -4px 0 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 13px;
+  color: var(--texte-2);
+
+  strong {
+    color: var(--orange-fonce);
+  }
+}
+
+.validite--expiree {
+  background: var(--erreur-fond);
+  color: var(--erreur);
+}

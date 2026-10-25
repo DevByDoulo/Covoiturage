@@ -1,0 +1,74 @@
+<div class="ecran">
+  <div class="marque">
+    <div class="marque__tuile"><app-logo /></div>
+    <span class="pastille"><app-icone nom="feuille" [taille]="14" /> Covoiturage intelligent &amp; solidaire</span>
+  </div>
+
+  <div class="titres">
+    <h1>Bon retour !</h1>
+    <p>Retrouvez vos trajets du quotidien et vos compagnons de route.</p>
+  </div>
+
+  @if (reinitialise()) {
+    <app-alerte type="succes" titre="Mot de passe modifié">Connectez-vous avec votre nouveau mot de passe.</app-alerte>
+  } @else if (expiree()) {
+    <app-alerte type="info">Votre session a expiré. Reconnectez-vous pour continuer.</app-alerte>
+  }
+
+  <app-bouton-google (jeton)="google($event)" (indisponible)="googleIndisponible.set(true)" />
+  @if (googleIndisponible()) {
+    <app-alerte type="info">La connexion Google n'est pas encore activée. Utilisez votre email ou votre téléphone.</app-alerte>
+  }
+
+  <div class="separateur">ou</div>
+
+  <form class="formulaire" [formGroup]="form" (ngSubmit)="soumettre()" novalidate>
+    <div class="champ" [class.champ--erreur]="enErreur('identifiant')">
+      <label class="libelle" for="identifiant">Email ou Téléphone (+221)</label>
+      <div class="saisie">
+        <app-icone nom="arobase" />
+        <input
+          id="identifiant"
+          formControlName="identifiant"
+          autocomplete="username"
+          inputmode="email"
+          placeholder="awa.diop@gmail.com"
+          [attr.aria-invalid]="enErreur('identifiant')"
+        />
+      </div>
+      @if (enErreur('identifiant')) {
+        <p class="message-erreur"><app-icone nom="alerte" [taille]="14" /> Saisissez votre email ou votre numéro</p>
+      }
+    </div>
+
+    <div class="champ" [class.champ--erreur]="enErreur('motDePasse')">
+      <label class="libelle" for="motDePasse">Mot de passe</label>
+      <app-champ-mot-de-passe idChamp="motDePasse" formControlName="motDePasse" autocomplete="current-password" />
+      <div class="ligne-lien">
+        @if (enErreur('motDePasse')) {
+          <p class="message-erreur"><app-icone nom="alerte" [taille]="14" /> Saisissez votre mot de passe</p>
+        }
+        <a routerLink="/auth/mot-de-passe-oublie">Mot de passe oublié ?</a>
+      </div>
+    </div>
+
+    @if (erreur(); as e) {
+      @if (bloque()) {
+        <app-alerte type="avertissement" titre="Trop de tentatives">{{ e.message.replace('Trop de tentatives. ', '') }}</app-alerte>
+      } @else {
+        <app-alerte type="erreur">{{ e.message }}</app-alerte>
+      }
+    }
+
+    <button class="bouton bouton--primaire" type="submit" [disabled]="envoi() || bloque()">
+      @if (envoi()) {
+        <span class="chargement" aria-hidden="true"></span> Connexion…
+      } @else {
+        <app-icone nom="connexion" /> Se connecter
+      }
+    </button>
+  </form>
+
+  <p class="bas-de-page">Pas encore de compte ? <a routerLink="/auth/inscription">S'inscrire</a></p>
+  <p class="pied-securite"><app-icone nom="bouclier" [taille]="15" /> Trajets sécurisés avec vérification d'identité</p>
+</div>

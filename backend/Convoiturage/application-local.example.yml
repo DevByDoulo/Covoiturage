@@ -1,0 +1,7 @@
+# Réglages propres à votre poste. Copiez ce fichier en « application-local.yml »
+# (même dossier) et adaptez-le : ce fichier-là n'est pas versionné.
+covoitia:
+  db:
+    hote: localhost
+    # Port de votre PostgreSQL 16 avec PostGIS (5432 par défaut, 5433 si deux versions sont installées).
+    port: 5432

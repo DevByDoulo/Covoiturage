@@ -1,0 +1,15 @@
+# Profil de développement local : PostgreSQL du poste (application-local.yml), SMS et push affichés dans les logs.
+# Ces valeurs ne doivent JAMAIS être utilisées en production.
+app:
+  jwt:
+    secret: ${COVOITIA_JWT_SECRET:ZGV2LW9ubHktc2VjcmV0LWNvdm9pdGlhLWNoYW5nZS1tZS1pbi1wcm9kLTIwMjY=}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:5000,http://localhost:8081}
+  admin:
+    email: ${ADMIN_EMAIL:admin@covoitia.local}
+    mot-de-passe: ${ADMIN_PASSWORD:Admin-Dev-2026!}
+    telephone: ${ADMIN_TELEPHONE:+221700000000}
+
+logging:
+  level:
+    sn.isep.Convoiturage: DEBUG

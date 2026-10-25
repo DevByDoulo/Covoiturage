@@ -1,0 +1,89 @@
+/* Mise en page partagée par les écrans d'authentification. */
+
+.ecran {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.marque {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.marque__tuile {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  border-radius: 6px;
+  background: #f3f1e7;
+}
+
+.marque--petite .marque__tuile {
+  width: 64px;
+  height: 64px;
+}
+
+.pastille {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--info-fond);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--vert-fonce);
+}
+
+.titres {
+  text-align: center;
+
+  h1 {
+    font-size: 26px;
+    font-weight: 800;
+  }
+
+  p {
+    margin: 6px 0 0;
+    color: var(--texte-2);
+  }
+}
+
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.deux-colonnes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.ligne-lien {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13.5px;
+
+  a {
+    margin-left: auto;
+  }
+}
+
+.bas-de-page {
+  margin: 0;
+  text-align: center;
+  color: var(--texte-2);
+}
+
+.centre {
+  margin: -6px 0 0;
+  text-align: center;
+}

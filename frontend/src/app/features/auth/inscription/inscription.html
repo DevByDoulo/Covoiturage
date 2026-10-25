@@ -1,0 +1,150 @@
+<div class="ecran">
+  <div class="marque marque--petite">
+    <div class="marque__tuile"><app-logo [compact]="true" /></div>
+  </div>
+
+  <div class="titres">
+    <h1>Créer un compte</h1>
+    <p>Voyagez partout au Sénégal en toute sérénité</p>
+  </div>
+
+  <app-bouton-google (jeton)="google($event)" (indisponible)="googleIndisponible.set(true)" />
+  @if (googleIndisponible()) {
+    <app-alerte type="info">L'inscription avec Google n'est pas encore activée. Remplissez le formulaire ci-dessous.</app-alerte>
+  }
+
+  <div class="separateur">ou</div>
+
+  <form class="formulaire" [formGroup]="form" (ngSubmit)="soumettre()" novalidate>
+    <div class="deux-colonnes">
+      <div class="champ" [class.champ--erreur]="enErreur('prenom')">
+        <label class="libelle" for="prenom">Prénom</label>
+        <div class="saisie"><input id="prenom" formControlName="prenom" autocomplete="given-name" placeholder="Awa" /></div>
+        @if (enErreur('prenom')) {
+          <p class="message-erreur">Prénom requis</p>
+        }
+      </div>
+      <div class="champ" [class.champ--erreur]="enErreur('nom')">
+        <label class="libelle" for="nom">Nom</label>
+        <div class="saisie"><input id="nom" formControlName="nom" autocomplete="family-name" placeholder="Diop" /></div>
+        @if (enErreur('nom')) {
+          <p class="message-erreur">Nom requis</p>
+        }
+      </div>
+    </div>
+
+    <div class="champ" [class.champ--erreur]="enErreur('email')">
+      <label class="libelle" for="email">Email</label>
+      <div class="saisie">
+        <app-icone nom="mail" />
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          placeholder="awa.diop@example.sn"
+          [attr.aria-invalid]="enErreur('email')"
+          aria-describedby="erreur-email"
+        />
+        @if (enErreur('email')) {
+          <app-icone nom="alerte" />
+        }
+      </div>
+      @if (enErreur('email')) {
+        <p class="message-erreur" id="erreur-email">
+          <strong aria-hidden="true">!</strong>
+          {{ erreurServeur('email') ?? 'Saisissez une adresse email valide' }}
+        </p>
+      }
+    </div>
+
+    <div class="champ" [class.champ--erreur]="enErreur('telephone')">
+      <label class="libelle" for="telephone">Numéro de téléphone</label>
+      <div class="saisie">
+        <span class="indicatif"><app-drapeau-senegal /> +221</span>
+        <input
+          id="telephone"
+          type="tel"
+          formControlName="telephone"
+          autocomplete="tel-national"
+          inputmode="tel"
+          placeholder="77 123 45 67"
+          [attr.aria-invalid]="enErreur('telephone')"
+        />
+      </div>
+      @if (enErreur('telephone')) {
+        <p class="message-erreur">{{ erreurServeur('telephone') ?? 'Numéro sénégalais à 9 chiffres (ex. 77 123 45 67)' }}</p>
+      } @else {
+        <p class="aide">Un code de vérification vous sera envoyé par SMS.</p>
+      }
+    </div>
+
+    <div class="champ" [class.champ--erreur]="enErreur('sexe')">
+      <span class="libelle" id="libelle-sexe">Sexe</span>
+      <div class="bascule" role="group" aria-labelledby="libelle-sexe">
+        <button type="button" [attr.aria-pressed]="sexe() === 'HOMME'" (click)="choisirSexe('HOMME')">
+          <app-icone nom="homme" [taille]="18" /> Homme
+        </button>
+        <button type="button" [attr.aria-pressed]="sexe() === 'FEMME'" (click)="choisirSexe('FEMME')">
+          <app-icone nom="femme" [taille]="18" /> Femme
+        </button>
+      </div>
+      @if (enErreur('sexe')) {
+        <p class="message-erreur">Choisissez une option (utile pour les trajets « femmes uniquement »)</p>
+      }
+    </div>
+
+    <div class="champ" [class.champ--erreur]="enErreur('motDePasse')">
+      <label class="libelle" for="motDePasse">Mot de passe</label>
+      <app-champ-mot-de-passe
+        idChamp="motDePasse"
+        formControlName="motDePasse"
+        autocomplete="new-password"
+        decritPar="aide-mdp"
+      />
+      <p [class]="enErreur('motDePasse') ? 'message-erreur' : 'aide'" id="aide-mdp">
+        8 caractères minimum, au moins une lettre et un chiffre
+      </p>
+    </div>
+
+    <div class="champ" [class.champ--erreur]="enErreur('confirmation') || confirmationDifferente()">
+      <label class="libelle" for="confirmation">Confirmer le mot de passe</label>
+      <app-champ-mot-de-passe
+        idChamp="confirmation"
+        formControlName="confirmation"
+        icone="cadenas-rotation"
+        autocomplete="new-password"
+      />
+      @if (confirmationDifferente()) {
+        <p class="message-erreur">Les deux mots de passe ne correspondent pas</p>
+      } @else if (enErreur('confirmation')) {
+        <p class="message-erreur">Confirmez votre mot de passe</p>
+      }
+    </div>
+
+    <label class="case">
+      <input type="checkbox" formControlName="cgu" />
+      <span>
+        J'accepte les <a href="/conditions" target="_blank" rel="noopener">conditions d'utilisation</a> et la
+        <a href="/confidentialite" target="_blank" rel="noopener">politique de confidentialité</a>
+      </span>
+    </label>
+    @if (enErreur('cgu')) {
+      <p class="message-erreur">Vous devez accepter les conditions pour créer un compte</p>
+    }
+
+    @if (erreur(); as e) {
+      <app-alerte type="erreur">{{ e.message }}</app-alerte>
+    }
+
+    <button class="bouton bouton--primaire" type="submit" [disabled]="envoi()">
+      @if (envoi()) {
+        <span class="chargement" aria-hidden="true"></span> Création du compte…
+      } @else {
+        S'inscrire <app-icone nom="fleche-droite" />
+      }
+    </button>
+  </form>
+
+  <p class="bas-de-page">Déjà un compte ? <a routerLink="/auth/connexion">Se connecter</a></p>
+</div>

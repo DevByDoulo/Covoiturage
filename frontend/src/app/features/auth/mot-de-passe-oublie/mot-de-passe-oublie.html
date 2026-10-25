@@ -1,0 +1,110 @@
+<app-entete-page titre="Mot de passe oublié" />
+
+<div class="ecran">
+  <div class="bandeau">
+    <span class="bandeau__icone"><app-icone nom="cadenas-rotation" [taille]="24" /></span>
+    <div>
+      <span class="etiquette">Sécurité CoVoitIA</span>
+      <p>Récupérez l'accès à vos trajets en toute sérénité.</p>
+    </div>
+  </div>
+
+  <!-- Étape 1 -->
+  <section class="carte etape" aria-labelledby="titre-etape-1">
+    <header class="etape__entete">
+      <h2 id="titre-etape-1"><span class="numero">1</span> Vérification de contact</h2>
+      <span class="rapide"><app-icone nom="eclair" [taille]="14" /> Rapide</span>
+    </header>
+    <p class="etape__texte">Entrez votre téléphone ou votre email, nous vous enverrons un code par SMS.</p>
+
+    <form class="formulaire" (submit)="$event.preventDefault(); envoyerCode()" novalidate>
+      <div class="champ" [class.champ--erreur]="contact.invalid && contact.touched">
+        <label class="libelle" for="contact">Téléphone ou email</label>
+        <div class="saisie">
+          <app-icone [nom]="ressembleATelephone() ? 'telephone' : 'mail'" />
+          @if (ressembleATelephone()) {
+            <span class="indicatif">+221</span>
+          }
+          <input
+            id="contact"
+            [formControl]="contact"
+            autocomplete="username"
+            placeholder="77 123 45 67"
+          />
+        </div>
+        @if (contact.invalid && contact.touched) {
+          <p class="message-erreur">Saisissez votre numéro ou votre email</p>
+        }
+      </div>
+
+      <button class="bouton bouton--primaire" type="submit" [disabled]="envoiCode() || (!!identifiantEnvoye() && attenteRenvoi() > 0)">
+        @if (envoiCode()) {
+          <span class="chargement" aria-hidden="true"></span> Envoi…
+        } @else {
+          {{ identifiantEnvoye() ? 'Renvoyer le code' : 'Envoyer le code' }} <app-icone nom="envoyer" [taille]="18" />
+        }
+      </button>
+    </form>
+
+    @if (erreurEtape1(); as e) {
+      <app-alerte [type]="e.status === 429 ? 'avertissement' : 'erreur'">{{ e.message }}</app-alerte>
+    } @else if (identifiantEnvoye()) {
+      <app-alerte type="info">Si un compte existe, un code vous a été envoyé par SMS.</app-alerte>
+    }
+  </section>
+
+  <div class="separateur separateur--etape"><span class="point"></span>Étape suivante</div>
+
+  <!-- Étape 2 -->
+  <section class="carte etape" [class.etape--inactive]="!identifiantEnvoye()" aria-labelledby="titre-etape-2">
+    <h2 id="titre-etape-2"><span class="numero">2</span> Code reçu et nouveau mot de passe</h2>
+
+    <form class="formulaire" [formGroup]="form" (ngSubmit)="reinitialiser()" novalidate>
+      <fieldset [disabled]="!identifiantEnvoye()">
+        <div class="champ" [class.champ--erreur]="enErreur('code')">
+          <div class="ligne-lien">
+            <label class="libelle" for="code">Code de confirmation (6 chiffres)</label>
+            <button class="bouton-lien" type="button" [disabled]="attenteRenvoi() > 0 || envoiCode()" (click)="envoyerCode()">
+              Renvoyer{{ attenteRenvoi() > 0 ? ' (' + attenteRenvoi() + 's)' : '' }}
+            </button>
+          </div>
+          <app-saisie-code idChamp="code" formControlName="code" [erreur]="enErreur('code')" />
+        </div>
+
+        <div class="champ" [class.champ--erreur]="enErreur('motDePasse')">
+          <label class="libelle" for="nouveau">Nouveau mot de passe</label>
+          <app-champ-mot-de-passe idChamp="nouveau" formControlName="motDePasse" icone="cle" autocomplete="new-password" />
+          @if (enErreur('motDePasse')) {
+            <p class="message-erreur">8 caractères minimum, au moins une lettre et un chiffre</p>
+          }
+        </div>
+
+        <div class="champ" [class.champ--erreur]="enErreur('confirmation') || confirmationDifferente()">
+          <label class="libelle" for="confirmer">Confirmer</label>
+          <app-champ-mot-de-passe idChamp="confirmer" formControlName="confirmation" autocomplete="new-password" />
+          @if (confirmationDifferente()) {
+            <p class="message-erreur">Les deux mots de passe ne correspondent pas</p>
+          }
+        </div>
+
+        <app-force-mot-de-passe [motDePasse]="motDePasse()" />
+
+        @if (erreurEtape2(); as e) {
+          <app-alerte type="erreur" [titre]="e.tentativesRestantes !== undefined ? 'Code incorrect' : undefined">
+            {{ e.tentativesRestantes !== undefined ? e.message.replace('Code incorrect. ', '') : e.message }}
+          </app-alerte>
+        }
+
+        <button class="bouton bouton--primaire" type="submit" [disabled]="envoiReinit()">
+          @if (envoiReinit()) {
+            <span class="chargement" aria-hidden="true"></span> Réinitialisation…
+          } @else {
+            <app-icone nom="valide" /> Réinitialiser
+          }
+        </button>
+      </fieldset>
+    </form>
+
+    <p class="pied-securite"><app-icone nom="bouclier" [taille]="15" /> Vous serez déconnecté de tous vos appareils.</p>
+  </section>
+</div>

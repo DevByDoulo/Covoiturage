@@ -1,0 +1,84 @@
+<app-entete-page titre="Vérification" />
+
+<div class="ecran">
+  <div class="illustration" aria-hidden="true">
+    <svg viewBox="0 0 96 96" width="96" height="96">
+      <circle cx="48" cy="48" r="46" fill="#e3e9fb" />
+      <rect x="28" y="16" width="40" height="64" rx="8" fill="#fff" stroke="#d5dbe7" stroke-width="2" />
+      <rect x="40" y="21" width="16" height="3" rx="1.5" fill="#d5dbe7" />
+      <rect x="33" y="38" width="30" height="16" rx="5" fill="#c9f2d9" />
+      <rect x="37" y="42" width="7" height="8" rx="2" fill="#0c6b3f" />
+      <rect x="47" y="43" width="12" height="2.5" rx="1.2" fill="#0c6b3f" />
+      <rect x="47" y="47" width="8" height="2.5" rx="1.2" fill="#7fcfa2" />
+      <rect x="40" y="70" width="16" height="3" rx="1.5" fill="#d5dbe7" />
+      <circle cx="70" cy="22" r="11" fill="#0c6b3f" stroke="#fff" stroke-width="3" />
+      <path d="M70 15.5c-1.8 1.4-3.6 2-5 2v3.8c0 3.3 2.2 5 5 6.2 2.8-1.2 5-2.9 5-6.2v-3.8c-1.4 0-3.2-.6-5-2z" fill="#fff" />
+    </svg>
+  </div>
+
+  <div class="titres">
+    <h1>Vérifiez votre numéro</h1>
+    <p>
+      @if (verification()?.telephoneMasque; as numero) {
+        Code à 6 chiffres envoyé au <strong>{{ numero }}</strong>
+      } @else {
+        Code à 6 chiffres envoyé par SMS au numéro de votre compte
+      }
+    </p>
+  </div>
+
+  <app-saisie-code #saisie [formControl]="code" [erreur]="!!erreur()" (complet)="verifier()" />
+
+  <p class="validite" [class.validite--expiree]="validite() === 0" aria-live="polite">
+    <app-icone nom="horloge" [taille]="15" />
+    @if (validite() > 0) {
+      Code valable encore <strong>{{ validiteTexte() }}</strong>
+    } @else {
+      Code expiré : demandez-en un nouveau
+    }
+  </p>
+
+  @if (erreur(); as e) {
+    @if (e.tentativesRestantes !== undefined) {
+      <app-alerte type="erreur" titre="Code incorrect">
+        @if (plusDEssai()) {
+          Plus aucune tentative : demandez un nouveau code.
+        } @else {
+          Il vous reste {{ e.tentativesRestantes }} tentative{{ e.tentativesRestantes > 1 ? 's' : '' }}
+        }
+      </app-alerte>
+    } @else {
+      <app-alerte type="erreur">{{ e.message }}</app-alerte>
+    }
+  } @else if (codeRenvoye()) {
+    <app-alerte type="succes">Un nouveau code vous a été envoyé.</app-alerte>
+  }
+
+  <button
+    class="bouton bouton--primaire"
+    type="button"
+    [disabled]="code.value.length !== 6 || envoi() || validite() === 0 || plusDEssai()"
+    (click)="verifier()"
+  >
+    @if (envoi()) {
+      <span class="chargement" aria-hidden="true"></span> Vérification…
+    } @else {
+      Vérifier <app-icone nom="fleche-droite" />
+    }
+  </button>
+
+  <p class="centre">
+    <button class="bouton-lien" type="button" [disabled]="attenteRenvoi() > 0 || renvoiEnCours()" (click)="renvoyer()">
+      <app-icone nom="rafraichir" [taille]="15" />
+      @if (attenteRenvoi() > 0) {
+        Renvoyer le code (disponible dans {{ attenteRenvoi() }} s)
+      } @else {
+        Renvoyer le code
+      }
+    </button>
+  </p>
+
+  <app-pave-numerique [desactive]="envoi()" (touche)="saisie.appliquerTouche($event)" />
+
+  <p class="pied-securite"><app-icone nom="cadenas" [taille]="15" /> Protection et sécurité des trajets CoVoitIA</p>
+</div>

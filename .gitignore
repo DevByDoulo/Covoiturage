@@ -1,0 +1,13 @@
+# Règles communes à tout le dépôt (chaque sous-projet a aussi son propre .gitignore).
+
+# Systèmes et éditeurs
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+
+# Secrets et configuration propre à chaque poste
+.env
+.env.*
+application-local.yml
+firebase-*.json
