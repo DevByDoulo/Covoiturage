@@ -17,14 +17,26 @@
   </div>
 
   <div class="titres">
-    <h1>Vérifiez votre numéro</h1>
-    <p>
-      @if (verification()?.telephoneMasque; as numero) {
-        Code à 6 chiffres envoyé au <strong>{{ numero }}</strong>
-      } @else {
-        Code à 6 chiffres envoyé par SMS au numéro de votre compte
-      }
-    </p>
+    @if (verification()?.canal === 'EMAIL') {
+      <h1>Vérifiez votre email</h1>
+      <p>
+        @if (verification()?.emailMasque; as adresse) {
+          Code à 6 chiffres envoyé à <strong>{{ adresse }}</strong>
+        } @else {
+          Code à 6 chiffres envoyé à l'adresse email de votre compte
+        }
+        <br /><small>Pensez à regarder dans vos spams.</small>
+      </p>
+    } @else {
+      <h1>Vérifiez votre numéro</h1>
+      <p>
+        @if (verification()?.telephoneMasque; as numero) {
+          Code à 6 chiffres envoyé au <strong>{{ numero }}</strong>
+        } @else {
+          Code à 6 chiffres envoyé par SMS au numéro de votre compte
+        }
+      </p>
+    }
   </div>
 
   <app-saisie-code #saisie [formControl]="code" [erreur]="!!erreur()" (complet)="verifier()" />

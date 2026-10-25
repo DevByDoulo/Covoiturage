@@ -12,8 +12,9 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
 /**
- * Codes à usage unique envoyés par SMS : 6 chiffres, valables 5 minutes, 5 essais maximum,
- * un renvoi au plus toutes les 60 secondes. Seul le hash BCrypt du code est conservé.
+ * Codes à usage unique : 6 chiffres, valables 5 minutes, 5 essais maximum, un renvoi au plus
+ * toutes les 60 secondes. Seul le hash BCrypt du code est conservé. Le code est rattaché au numéro
+ * du compte ; il part par email si un serveur SMTP est configuré et que le compte a un email, sinon par SMS.
  */
 @Service
 @RequiredArgsConstructor
@@ -24,10 +25,16 @@ public class OtpService {
     private final OtpCodeRepository otps;
     private final PasswordEncoder encoder;
     private final SmsSender sms;
+    private final EmailSender emails;
     private final AppProperties props;
 
+    /** Canal utilisé pour un compte ayant cet email (null si le compte n'en a pas). */
+    public CanalOtp canalPour(String email) {
+        return email != null && !email.isBlank() && emails.disponible() ? CanalOtp.EMAIL : CanalOtp.SMS;
+    }
+
     @Transactional
-    public void envoyer(String telephone, ObjetOtp objet) {
+    public CanalOtp envoyer(String telephone, String email, ObjetOtp objet) {
         AppProperties.Otp conf = props.otp();
         otps.findFirstByTelephoneAndObjetOrderByDateCreationDesc(telephone, objet).ifPresent(dernier -> {
             LocalDateTime renvoiPossible = dernier.getDateCreation().plusSeconds(conf.delaiRenvoiSecondes());
@@ -45,8 +52,19 @@ public class OtpService {
         otp.setCodeHash(encoder.encode(code));
         otp.setDateExpiration(LocalDateTime.now().plusMinutes(conf.validiteMinutes()));
         otps.save(otp);
-        sms.envoyer(telephone, "CoVoitIA : votre code de vérification est " + code
-                + ". Il expire dans " + conf.validiteMinutes() + " minutes. Ne le partagez avec personne.");
+
+        String texte = "CoVoitIA : votre code de vérification est " + code
+                + ". Il expire dans " + conf.validiteMinutes() + " minutes. Ne le partagez avec personne.";
+        CanalOtp canal = canalPour(email);
+        if (canal == CanalOtp.EMAIL) {
+            String sujet = objet == ObjetOtp.REINITIALISATION_MOT_DE_PASSE
+                    ? "CoVoitIA - Réinitialisation de votre mot de passe"
+                    : "CoVoitIA - Votre code de vérification";
+            emails.envoyer(email, sujet, texte + "\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.");
+        } else {
+            sms.envoyer(telephone, texte);
+        }
+        return canal;
     }
 
     /**
