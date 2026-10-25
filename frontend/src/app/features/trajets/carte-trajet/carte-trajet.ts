@@ -28,6 +28,13 @@ import { LIBELLES_STATUT, Trajet } from '../trajets.models';
         <li><span class="puce puce--arrivee"></span>{{ t.arrivee.lieu }}</li>
       </ol>
 
+      @if (t.correspondance; as c) {
+        <p class="proximite">
+          <app-icone nom="position" [taille]="15" />
+          Prise en charge à {{ distance(c.distanceRamassageM) }} de votre départ · dépose à {{ distance(c.distanceDeposeM) }} de votre arrivée
+        </p>
+      }
+
       <div class="trajet__bas">
         <span><app-icone nom="utilisateurs" [taille]="16" /> {{ t.nombrePlacesDisponibles }}/{{ t.nombrePlacesTotal }} places</span>
         @if (t.femmesUniquement) {
@@ -83,6 +90,17 @@ import { LIBELLES_STATUT, Trajet } from '../trajets.models';
     .trajet__bas { color: var(--texte-2); font-size: 13.5px; }
     .trajet__bas span { display: inline-flex; align-items: center; gap: 4px; }
     .femmes { color: #a0306a; font-weight: 600; }
+    .proximite {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: var(--info-fond);
+      font-size: 12.5px;
+      color: var(--info);
+    }
     .prix { margin-left: auto; font-size: 17px; color: var(--vert-fonce); }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -90,4 +108,9 @@ import { LIBELLES_STATUT, Trajet } from '../trajets.models';
 export class CarteTrajet {
   readonly trajet = input.required<Trajet>();
   protected readonly libellesStatut = LIBELLES_STATUT;
+
+  /** 450 -> « 450 m », 1240 -> « 1,2 km » */
+  protected distance(metres: number): string {
+    return metres < 1000 ? `${Math.round(metres / 10) * 10} m` : `${(metres / 1000).toFixed(1).replace('.', ',')} km`;
+  }
 }

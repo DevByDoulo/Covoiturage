@@ -10,5 +10,7 @@ public enum TypeNotification {
     EMBARQUEMENT_CONFIRME,
     DOCUMENT_VALIDE,
     DOCUMENT_REFUSE,
-    COMPTE_SUSPENDU
+    COMPTE_SUSPENDU,
+    /** Un trajet correspondant à une alerte de recherche vient d'être publié (F5). */
+    ALERTE_TRAJET
 }

@@ -19,7 +19,7 @@ interface EntreeMenu {
   imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Logo],
   template: `
     <header class="barre">
-      <a routerLink="/accueil" aria-label="Accueil CoVoitIA"><app-logo /></a>
+      <a [routerLink]="session.pageAccueil()" aria-label="Accueil CoVoitIA"><app-logo /></a>
       <nav class="menu" aria-label="Navigation principale">
         @for (e of entrees(); track e.lien) {
           <a [routerLink]="e.lien" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">
@@ -147,6 +147,8 @@ export class EspaceLayout {
     const role = this.session.utilisateur()?.role;
     if (role === 'ADMIN') return [{ lien: '/admin', libelle: 'Tableau de bord', icone: 'maison' }];
     const menu: EntreeMenu[] = [{ lien: '/accueil', libelle: 'Accueil', icone: 'maison' }];
+    // F5 Recherche
+    menu.push({ lien: '/rechercher', libelle: 'Rechercher', icone: 'recherche' });
     // F4 Trajets : publier est accessible à tous (l'écran explique comment devenir conducteur).
     menu.push({ lien: '/trajets/publier', libelle: 'Publier', icone: 'plus' });
     if (role === 'CONDUCTEUR') menu.push({ lien: '/trajets/mes-trajets', libelle: 'Mes trajets', icone: 'liste' });

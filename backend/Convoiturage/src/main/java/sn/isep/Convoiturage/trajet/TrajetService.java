@@ -129,6 +129,7 @@ public class TrajetService {
         t.setTarification(tf);
 
         trajets.save(t);
+        evenements.publishEvent(new TrajetEvenements.TrajetPublie(t.getId()));
         return TrajetDto.de(t, true, null);
     }
 

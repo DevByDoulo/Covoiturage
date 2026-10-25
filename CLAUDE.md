@@ -34,7 +34,11 @@ Les tables et entités suivent **les noms du diagramme de classes** (`utilisateu
 - Frontend : authentification (connexion, inscription, OTP, mot de passe oublié, téléphone après Google),
   espace connecté (`features/espace`, barre de navigation) et **F4 Trajets** : publication avec carte,
   escales, estimation et ajustement du prix (`/trajets/publier`), mes trajets, détail avec modification,
-  annulation, démarrage et fin (`/trajets/:id`).
+  annulation, démarrage et fin (`/trajets/:id`) ; **F5 Recherche** (`/rechercher`) : départ/arrivée, date,
+  passagers, filtres (heure, prix max, note, rayon, conducteur, femmes uniquement), tri, carte avec point de
+  prise en charge ; critères portés par l'URL. **Alertes de recherche** : module backend `recherche`
+  (`/api/moi/alertes`, table `alerte_recherche`), déclenchées après la publication d'un trajet
+  (événement `TrajetPublie`), notification `ALERTE_TRAJET`.
 - **Carte** : Leaflet + OpenStreetMap, sans clé. Seuls `shared/carte/carte.ts` (affichage) et
   `core/carte/geocodage.ts` (adresse ↔ coordonnées, Nominatim : 1 requête/s, recherche à la validation
   du champ, jamais à chaque frappe) connaissent le fournisseur. Pour passer à Google Maps, remplacer ces
@@ -45,8 +49,8 @@ Les tables et entités suivent **les noms du diagramme de classes** (`utilisateu
 **À faire, dans l'ordre conseillé :**
 1. Écrans Angular d'après les maquettes : *Mon profil* (préférences, photo), *Mes véhicules et documents*,
    back-office *Validation des documents* et *Fiche utilisateur*.
-2. Écran de recherche avec carte (F5, réutiliser `app-carte` et `app-carte-trajet`) ; puis réservations,
-   code d'embarquement (PIN/QR), notifications.
+2. Réservations (F6 : bouton « Réserver » à ajouter sur `/trajets/:id`), code d'embarquement (PIN/QR),
+   notifications (F9 : cloche, push Angular).
 3. Lot 2 — service IA FastAPI : jeu de données synthétique à partir de la formule, XGBoost, appel depuis
    `MoteurTarification` avec repli sur `MoteurFormule`.
 4. Ensuite : Wave / Orange Money (PayDunya ou CinetPay), chat, avis croisés, SOS et partage de position,
@@ -60,8 +64,8 @@ vérifier à qui elle revient ; ne pas modifier le code d'une fonctionnalité de
 | Doulo | Son binôme |
 |---|---|
 | **F3 Service IA de prix** — dossier `ia/` (FastAPI, XGBoost) + branchement dans `MoteurTarification` | **F1 Utilisateurs** — écrans profil, préférences, photo (backend fait) |
-| **F4 Trajets** — écrans publication (carte, escales, prix ±10 %), mes trajets (backend fait) | **F2 Véhicules et documents** — écrans conducteur (backend fait) |
-| **F5 Recherche** — écran recherche + carte, détail ; alertes de recherche (à créer) | **F6 Réservations** — écrans passager et conducteur (backend fait) |
+| **F4 Trajets** — écrans publication (carte, escales, prix ±10 %), mes trajets, détail (fait) | **F2 Véhicules et documents** — écrans conducteur (backend fait) |
+| **F5 Recherche** — écran recherche + carte, alertes de recherche (fait) | **F6 Réservations** — écrans passager et conducteur (backend fait) |
 | **F8 Messagerie** — chat temps réel après demande de réservation (à créer) | **F7 Paiement** — PIN/QR à l'écran (backend fait), Wave / Orange Money (à créer) |
 | **F9 Notifications** — push Angular, cloche, email/SMS selon l'urgence (base faite) | **F10 Avis** — notation croisée à l'aveugle (à créer) |
 | **F11 Sécurité** — SOS, partage de position, signalements (à créer) | **F12 Administration** — écrans back-office (backend fait) |

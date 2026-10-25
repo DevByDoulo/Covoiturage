@@ -19,6 +19,10 @@ import { Icone } from '../../shared/ui/icone';
 
       @if (u.role !== 'ADMIN') {
         <div class="raccourcis">
+          <a class="carte raccourci" routerLink="/rechercher">
+            <span class="raccourci__icone"><app-icone nom="recherche" [taille]="24" /></span>
+            <span><strong>Trouver un trajet</strong><br /><small>Avec le point de prise en charge</small></span>
+          </a>
           <a class="carte raccourci" routerLink="/trajets/publier">
             <span class="raccourci__icone"><app-icone nom="plus" [taille]="24" /></span>
             <span><strong>Publier un trajet</strong><br /><small>Le prix est calculé pour vous</small></span>

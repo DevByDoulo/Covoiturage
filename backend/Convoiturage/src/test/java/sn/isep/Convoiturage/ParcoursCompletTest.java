@@ -148,6 +148,28 @@ class ParcoursCompletTest {
         mvc.perform(get("/api/moi").header("Authorization", "Bearer " + conductrice))
                 .andExpect(jsonPath("$.conducteurValide").value(true));
 
+        // --- Passager : recherche infructueuse, puis alertes de recherche (F5)
+        String passager = inscrire("Moussa", "Ndiaye", "moussa@test.sn", "781234567", "HOMME");
+        String date = LocalDate.now().plusDays(3).toString();
+        String recherche = "/api/trajets/recherche?latDepart=%s&lngDepart=%s&latArrivee=%s&lngArrivee=%s&date=%s&places=2"
+                .formatted(DAKAR_LAT + 0.008, DAKAR_LNG + 0.004, THIES_LAT - 0.005, THIES_LNG, date);
+        mvc.perform(get(recherche)).andExpect(jsonPath("$.length()").value(0));
+        String alerte = """
+                {"depart":{"lieu":"%s","latitude":%s,"longitude":%s},"arrivee":{"lieu":"%s","latitude":%s,"longitude":%s},
+                 "date":"%s","rayonKm":5%s}""";
+        // Correspond au futur trajet :
+        appel(post("/api/moi/alertes").header("Authorization", "Bearer " + passager),
+                alerte.formatted("Dakar", DAKAR_LAT + 0.008, DAKAR_LNG + 0.004, "Thiès", THIES_LAT - 0.005, THIES_LNG, date, ""))
+                .andExpect(status().isCreated());
+        // Ne correspondent pas : sens inverse, prix maximum trop bas.
+        appel(post("/api/moi/alertes").header("Authorization", "Bearer " + passager),
+                alerte.formatted("Thiès", THIES_LAT, THIES_LNG, "Dakar", DAKAR_LAT, DAKAR_LNG, date, "")).andExpect(status().isCreated());
+        appel(post("/api/moi/alertes").header("Authorization", "Bearer " + passager),
+                alerte.formatted("Dakar", DAKAR_LAT, DAKAR_LNG, "Thiès", THIES_LAT, THIES_LNG, date, ",\"prixMax\":100"))
+                .andExpect(status().isCreated());
+        mvc.perform(get("/api/moi/alertes").header("Authorization", "Bearer " + passager))
+                .andExpect(jsonPath("$.length()").value(3));
+
         // --- Estimation puis publication
         appel(post("/api/trajets/estimation").header("Authorization", "Bearer " + conductrice), """
                 {"idVehicule":%d,"depart":{"lieu":"Dakar","latitude":%s,"longitude":%s},
@@ -169,12 +191,12 @@ class ParcoursCompletTest {
         appel(put("/api/trajets/" + idTrajet).header("Authorization", "Bearer " + conductrice), "{\"prixParPlace\":1}")
                 .andExpect(status().isBadRequest());
 
-        // --- Passager
-        String passager = inscrire("Moussa", "Ndiaye", "moussa@test.sn", "781234567", "HOMME");
+        // Une seule alerte déclenchée : celle qui correspond (même sens, prix accepté).
+        mvc.perform(get("/api/moi/notifications").header("Authorization", "Bearer " + passager))
+                .andExpect(jsonPath("$.page.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].type").value("ALERTE_TRAJET"));
 
-        String date = LocalDate.now().plusDays(3).toString();
-        String recherche = "/api/trajets/recherche?latDepart=%s&lngDepart=%s&latArrivee=%s&lngArrivee=%s&date=%s&places=2"
-                .formatted(DAKAR_LAT + 0.008, DAKAR_LNG + 0.004, THIES_LAT - 0.005, THIES_LNG, date);
+        // --- Recherche du passager
         mvc.perform(get(recherche)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value(idTrajet))
@@ -223,8 +245,9 @@ class ParcoursCompletTest {
                 .andExpect(jsonPath("$[0].statutPaiement").value("REUSSI"));
 
         // --- Notifications et statistiques
+        // Alerte de recherche + réservation acceptée + embarquement confirmé
         mvc.perform(get("/api/moi/notifications").header("Authorization", "Bearer " + passager))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.page.totalElements").value(2));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.page.totalElements").value(3));
         mvc.perform(get("/api/admin/statistiques").header("Authorization", "Bearer " + admin))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.conducteursValides").value(1))

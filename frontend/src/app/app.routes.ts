@@ -58,6 +58,13 @@ export const routes: Routes = [
         canActivate: [roleGuard('ADMIN')],
         loadComponent: () => import('./features/accueil/accueil').then((m) => m.Accueil),
       },
+      // F5 — Recherche
+      {
+        path: 'rechercher',
+        title: 'Rechercher un trajet · CoVoitIA',
+        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
+        loadComponent: () => import('./features/recherche/recherche').then((m) => m.Recherche),
+      },
       // F4 — Trajets
       {
         path: 'trajets/publier',

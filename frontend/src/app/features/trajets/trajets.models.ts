@@ -159,3 +159,39 @@ export const LIBELLES_ROUTE: Record<TypeRoute, string> = {
   VILLE: 'En ville',
   MIXTE: 'Mixte',
 };
+
+/** Critères de GET /api/trajets/recherche (F5). Seuls les champs renseignés sont envoyés. */
+export interface CriteresRecherche {
+  latDepart: number;
+  lngDepart: number;
+  latArrivee: number;
+  lngArrivee: number;
+  date: string;
+  places?: number;
+  heureMin?: string;
+  heureMax?: string;
+  rayonKm?: number;
+  prixMax?: number;
+  noteMin?: number;
+  femmesUniquement?: boolean;
+  conducteur?: string;
+}
+
+/** Alerte de recherche (F5) : prévenu quand un trajet correspondant est publié. */
+export interface AlerteRecherche {
+  id: number;
+  depart: PointTrajet;
+  arrivee: PointTrajet;
+  date: string;
+  rayonKm: number;
+  prixMax: number | null;
+  dateCreation: string;
+}
+
+export interface CreationAlerte {
+  depart: PointTrajet;
+  arrivee: PointTrajet;
+  date: string;
+  rayonKm?: number;
+  prixMax?: number | null;
+}

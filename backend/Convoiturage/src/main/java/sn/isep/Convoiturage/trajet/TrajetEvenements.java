@@ -9,6 +9,9 @@ public final class TrajetEvenements {
 
     private TrajetEvenements() {}
 
+    /** Nouveau trajet : déclenche les alertes de recherche (module recherche), après validation de la transaction. */
+    public record TrajetPublie(Long idTrajet) {}
+
     public record TrajetModifie(Long idTrajet, String changements) {}
 
     public record TrajetAnnule(Long idTrajet, String motif) {}
