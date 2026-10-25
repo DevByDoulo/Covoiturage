@@ -64,19 +64,23 @@ public class AuthService {
     @Transactional
     public AuthReponse renvoyerOtp(IdentifiantRequete req) {
         Utilisateur u = trouverParIdentifiant(req.identifiant())
-                .filter(x -> x.getTelephone() != null && !x.isTelephoneVerifie())
+                .filter(x -> x.getTelephone() != null && x.getStatut() == StatutCompte.EN_ATTENTE_OTP)
                 .orElseThrow(() -> ApiException.notFound("Aucune vérification en attente pour ce compte"));
         return envoyerCodeVerification(u);
     }
 
-    /** Valide le téléphone, active le compte et connecte l'utilisateur. */
+    /**
+     * Valide le moyen de contact qui a reçu le code (email ou téléphone, jamais les deux à la fois),
+     * active le compte et connecte l'utilisateur.
+     */
     @Transactional
     public AuthReponse verifierOtp(VerificationOtpRequete req) {
         Utilisateur u = trouverParIdentifiant(req.identifiant())
                 .filter(x -> x.getTelephone() != null)
                 .orElseThrow(() -> ApiException.badRequest("Aucun code en attente pour ce compte. Demandez un nouveau code."));
-        otp.verifier(u.getTelephone(), ObjetOtp.VERIFICATION_TELEPHONE, req.code());
-        u.setTelephoneVerifie(true);
+        CanalOtp canal = otp.verifier(u.getTelephone(), ObjetOtp.VERIFICATION_TELEPHONE, req.code());
+        if (canal == CanalOtp.EMAIL) u.setEmailVerifie(true);
+        else u.setTelephoneVerifie(true);
         if (u.getStatut() == StatutCompte.EN_ATTENTE_OTP) u.setStatut(StatutCompte.ACTIF);
         verifierPeutSeConnecter(u);
         return AuthReponse.connecte(tokens.emettre(u), ProfilDto.de(u));
@@ -104,7 +108,7 @@ public class AuthService {
 
     /**
      * Connexion Google. 1er passage : le compte est créé/lié, puis on exige un numéro
-     * (TELEPHONE_REQUIS) vérifié par OTP. Ensuite : connexion directe.
+     * (TELEPHONE_REQUIS) et un code de vérification. Ensuite (compte vérifié) : connexion directe.
      */
     @Transactional
     public AuthReponse connecterAvecGoogle(GoogleRequete req) {
@@ -125,7 +129,7 @@ public class AuthService {
         u.setGoogleId(g.sub());
         if (u.getSexe() == null && req.sexe() != null) u.setSexe(req.sexe());
 
-        if (u.isTelephoneVerifie()) {
+        if (u.estVerifie() && u.getTelephone() != null) {
             utilisateurs.save(u);
             verifierPeutSeConnecter(u);
             return AuthReponse.connecte(tokens.emettre(u), ProfilDto.de(u));

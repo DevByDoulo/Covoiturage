@@ -1,4 +1,4 @@
-# CoVoitIA — contexte pour Claude Code
+# YOBALEMAsn — contexte pour Claude Code
 
 Fichier lu automatiquement par Claude Code au début de chaque session. Il résume l'état du projet,
 les décisions déjà prises et les pièges connus, pour que n'importe quel membre de l'équipe puisse
@@ -130,6 +130,14 @@ sont seulement journalisés, et un admin est créé au démarrage (identifiants 
 - Messages de commit en français : `feat: …`, `fix: …`, `docs: …`.
 
 ## Pièges connus
+
+- **Nom de l'application : YOBALEMAsn** (« YOBALEMA » en vert, « sn » en orange). L'ancien nom « CoVoitIA »
+  subsiste volontairement dans des identifiants techniques invisibles pour l'utilisateur : variables
+  `COVOITIA_*`, `issuer` du JWT, clés de stockage du navigateur (`covoitia.refresh`…), préfixe du QR code
+  d'embarquement, package `sn.isep.Convoiturage`, et la migration V1 (ne jamais la modifier). Les renommer
+  casserait la configuration des postes et les sessions sans rien changer à l'écran.
+- **Vérification des comptes** : un code reçu par **email** valide `emailVerifie`, un code reçu par **SMS**
+  valide `telephoneVerifie` (jamais l'un pour l'autre). `Utilisateur.estVerifie()` = au moins l'un des deux.
 
 - **Spring Boot 4** : starters renommés ou séparés (`spring-boot-starter-webmvc`, `-restclient`, `-flyway`,
   `-security-oauth2-resource-server`, `-webmvc-test`). Sans `spring-boot-starter-restclient`, l'application

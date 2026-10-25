@@ -1,4 +1,4 @@
-# CoVoitIA — Plateforme de covoiturage avec estimation tarifaire par IA
+# YOBALEMAsn — Plateforme de covoiturage avec estimation tarifaire par IA
 
 Projet de fin d'études : application web et mobile de covoiturage (Sénégal) avec un prix par passager
 calculé à partir du véhicule réel, du trajet réel et des conditions du jour.

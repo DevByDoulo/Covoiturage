@@ -25,11 +25,13 @@ public final class UtilisateurDtos {
 
     /** Profil complet, visible uniquement par son propriétaire (et l'administrateur). */
     public record ProfilDto(Long id, String prenom, String nom, String email, String telephone, boolean telephoneVerifie,
+                            boolean emailVerifie,
                             Sexe sexe, String photoProfil, String bio, Role role, StatutCompte statut,
                             boolean conducteurValide, BigDecimal noteMoyenne, PreferenceDto preferences,
                             LocalDateTime dateCreation) {
         public static ProfilDto de(Utilisateur u) {
             return new ProfilDto(u.getId(), u.getPrenom(), u.getNom(), u.getEmail(), u.getTelephone(), u.isTelephoneVerifie(),
+                    u.isEmailVerifie(),
                     u.getSexe(), urlPhoto(u.getPhotoProfil()), u.getBio(), u.getRole(), u.getStatut(),
                     u.isConducteurValide(), u.getNoteMoyenne(), PreferenceDto.de(u.getPreference()), u.getDateCreation());
         }

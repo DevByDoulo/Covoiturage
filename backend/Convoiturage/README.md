@@ -1,4 +1,4 @@
-# CoVoitIA — Backend (Spring Boot 4, Java 21)
+# YOBALEMAsn — Backend (Spring Boot 4, Java 21)
 
 API REST de la plateforme de covoiturage. Lot 1 : authentification JWT + OTP, profils, véhicules,
 validation des documents par l'administrateur, publication/recherche de trajets (PostGIS),

@@ -69,8 +69,8 @@ public class AdminService {
         if (adminId.equals(utilisateurId)) throw ApiException.badRequest("Vous ne pouvez pas modifier votre propre compte");
         Utilisateur u = charger(utilisateurId);
         if (u.getRole() == Role.ADMIN) throw ApiException.forbidden("Le statut d'un administrateur ne peut pas être modifié ici");
-        if (nouveau == StatutCompte.ACTIF && !u.isTelephoneVerifie()) {
-            throw ApiException.conflict("Ce compte n'a pas encore vérifié son numéro de téléphone");
+        if (nouveau == StatutCompte.ACTIF && !u.estVerifie()) {
+            throw ApiException.conflict("Ce compte n'a encore vérifié ni son email ni son numéro de téléphone");
         }
         u.setStatut(nouveau);
         if (nouveau != StatutCompte.ACTIF) {

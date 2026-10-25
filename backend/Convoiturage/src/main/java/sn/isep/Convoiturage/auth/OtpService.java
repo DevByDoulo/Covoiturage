@@ -46,20 +46,21 @@ public class OtpService {
             dernier.setUtilise(true);
         });
         String code = genererCode(conf.longueur());
+        CanalOtp canal = canalPour(email);
         OtpCode otp = new OtpCode();
         otp.setTelephone(telephone);
         otp.setObjet(objet);
+        otp.setCanal(canal);
         otp.setCodeHash(encoder.encode(code));
         otp.setDateExpiration(LocalDateTime.now().plusMinutes(conf.validiteMinutes()));
         otps.save(otp);
 
-        String texte = "CoVoitIA : votre code de vérification est " + code
+        String texte = "YOBALEMAsn : votre code de vérification est " + code
                 + ". Il expire dans " + conf.validiteMinutes() + " minutes. Ne le partagez avec personne.";
-        CanalOtp canal = canalPour(email);
         if (canal == CanalOtp.EMAIL) {
             String sujet = objet == ObjetOtp.REINITIALISATION_MOT_DE_PASSE
-                    ? "CoVoitIA - Réinitialisation de votre mot de passe"
-                    : "CoVoitIA - Votre code de vérification";
+                    ? "YOBALEMAsn - Réinitialisation de votre mot de passe"
+                    : "YOBALEMAsn - Votre code de vérification";
             emails.envoyer(email, sujet, texte + "\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.");
         } else {
             sms.envoyer(telephone, texte);
@@ -70,9 +71,12 @@ public class OtpService {
     /**
      * Vérifie le code et le consomme. Les tentatives échouées sont enregistrées même si
      * la transaction appelante est annulée (REQUIRES_NEW).
+     *
+     * @return le canal par lequel le code avait été envoyé : sa saisie prouve la possession de
+     *         l'adresse email (EMAIL) ou du numéro (SMS), pas des deux.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW, noRollbackFor = ApiException.class)
-    public void verifier(String telephone, ObjetOtp objet, String code) {
+    public CanalOtp verifier(String telephone, ObjetOtp objet, String code) {
         OtpCode otp = otps.findFirstByTelephoneAndObjetOrderByDateCreationDesc(telephone, objet)
                 .filter(o -> !o.isUtilise())
                 .orElseThrow(() -> ApiException.badRequest("Aucun code en attente pour ce numéro. Demandez un nouveau code."));
@@ -91,6 +95,7 @@ public class OtpService {
             throw ApiException.badRequest("Code incorrect. " + suite).avec("tentativesRestantes", restantes);
         }
         otp.setUtilise(true);
+        return otp.getCanal();
     }
 
     private static String genererCode(int longueur) {

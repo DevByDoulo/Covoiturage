@@ -22,7 +22,7 @@ export const routes: Routes = [
       },
       {
         path: 'verification',
-        title: 'Vérification du numéro · YOBALEMAsn',
+        title: 'Vérification · YOBALEMAsn',
         canActivate: [verificationGuard],
         loadComponent: () => import('./features/auth/verification/verification').then((m) => m.Verification),
       },

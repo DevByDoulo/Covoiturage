@@ -322,9 +322,12 @@ class ParcoursCompletTest {
         appel(post("/api/auth/otp/verifier"), "{\"identifiant\":\"" + tel + "\",\"code\":\"999999x\"}")
                 .andExpect(status().isBadRequest());
         String code = CodesDeTest.DERNIER_CODE.get(email);
+        // Code reçu par email : l'adresse est vérifiée, le numéro ne l'est pas.
         return jeton(appel(post("/api/auth/otp/verifier"), "{\"identifiant\":\"" + tel + "\",\"code\":\"" + code + "\"}")
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.utilisateur.statut").value("ACTIF")));
+                .andExpect(jsonPath("$.utilisateur.statut").value("ACTIF"))
+                .andExpect(jsonPath("$.utilisateur.emailVerifie").value(true))
+                .andExpect(jsonPath("$.utilisateur.telephoneVerifie").value(false)));
     }
 
     private ResultActions appel(MockHttpServletRequestBuilder req, String json) throws Exception {

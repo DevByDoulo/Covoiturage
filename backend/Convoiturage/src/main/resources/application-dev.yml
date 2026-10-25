@@ -11,6 +11,10 @@ app:
     secret: ${COVOITIA_JWT_SECRET:ZGV2LW9ubHktc2VjcmV0LWNvdm9pdGlhLWNoYW5nZS1tZS1pbi1wcm9kLTIwMjY=}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:5000,http://localhost:8081}
+  google:
+    # ID client OAuth de développement, le même que frontend/src/environments/environment.ts.
+    # Ce n'est pas un secret (il est visible dans le navigateur) ; origine autorisée : http://localhost:4200.
+    client-id: ${GOOGLE_CLIENT_ID:520088419510-nu738k1cpi6s20k5fkqupu0nfbsgautv.apps.googleusercontent.com}
   admin:
     email: ${ADMIN_EMAIL:admin@covoitia.local}
     mot-de-passe: ${ADMIN_PASSWORD:Admin-Dev-2026!}

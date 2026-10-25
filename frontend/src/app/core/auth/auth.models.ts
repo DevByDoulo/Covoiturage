@@ -18,6 +18,7 @@ export interface Profil {
   email: string | null;
   telephone: string | null;
   telephoneVerifie: boolean;
+  emailVerifie: boolean;
   sexe: Sexe | null;
   photoProfil: string | null;
   bio: string | null;
