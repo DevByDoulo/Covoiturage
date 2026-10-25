@@ -1,5 +1,11 @@
 # Profil de développement local : PostgreSQL du poste (application-local.yml), SMS et push affichés dans les logs.
 # Ces valeurs ne doivent JAMAIS être utilisées en production.
+spring:
+  flyway:
+    # Migrations nommées par date (V2026_10_25_1430__...) : deux développeurs peuvent fusionner dans le
+    # désordre ; une migration plus ancienne arrivée après une plus récente est quand même appliquée.
+    out-of-order: true
+
 app:
   jwt:
     secret: ${COVOITIA_JWT_SECRET:ZGV2LW9ubHktc2VjcmV0LWNvdm9pdGlhLWNoYW5nZS1tZS1pbi1wcm9kLTIwMjY=}

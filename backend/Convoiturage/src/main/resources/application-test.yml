@@ -5,6 +5,8 @@ spring:
     url: jdbc:postgresql://${covoitia.db.hote:localhost}:${covoitia.db.port:5432}/covoiturage_test
     username: covoiturage
     password: covoiturage
+  flyway:
+    out-of-order: true
 
 app:
   jwt:

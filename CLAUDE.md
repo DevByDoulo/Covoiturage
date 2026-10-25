@@ -46,6 +46,30 @@ Les tables et entités suivent **les noms du diagramme de classes** (`utilisateu
 4. Ensuite : Wave / Orange Money (PayDunya ou CinetPay), chat, avis croisés, SOS et partage de position,
    alertes de recherche, application Flutter.
 
+## Répartition du travail (2 développeurs)
+
+Chacun porte des fonctionnalités **complètes**, du backend à l'écran Angular. Avant de commencer une tâche,
+vérifier à qui elle revient ; ne pas modifier le code d'une fonctionnalité de l'autre sans le prévenir.
+
+| Doulo | Son binôme |
+|---|---|
+| **F3 Service IA de prix** — dossier `ia/` (FastAPI, XGBoost) + branchement dans `MoteurTarification` | **F1 Utilisateurs** — écrans profil, préférences, photo (backend fait) |
+| **F4 Trajets** — écrans publication (carte, escales, prix ±10 %), mes trajets (backend fait) | **F2 Véhicules et documents** — écrans conducteur (backend fait) |
+| **F5 Recherche** — écran recherche + carte, détail ; alertes de recherche (à créer) | **F6 Réservations** — écrans passager et conducteur (backend fait) |
+| **F8 Messagerie** — chat temps réel après demande de réservation (à créer) | **F7 Paiement** — PIN/QR à l'écran (backend fait), Wave / Orange Money (à créer) |
+| **F9 Notifications** — push Angular, cloche, email/SMS selon l'urgence (base faite) | **F10 Avis** — notation croisée à l'aveugle (à créer) |
+| **F11 Sécurité** — SOS, partage de position, signalements (à créer) | **F12 Administration** — écrans back-office (backend fait) |
+
+**Non attribué :** application mobile Flutter (après les écrans web, à répartir de la même façon).
+
+**Packages backend :** garder la structure existante `sn.isep.Convoiturage.<module>` (`utilisateur`,
+`vehicule`, `trajet`, `reservation`, `notification`, `admin`…). Un nouveau module = un nouveau package
+au même niveau (ex. `messagerie`, `securite`, `avis`, `paiement`).
+
+**Fichiers partagés, sources de conflits fréquents :** `frontend/src/app/app.routes.ts`, `styles.scss`,
+`shared/ui/icone.ts`, `pom.xml`, `SecurityConfig.java`. Y faire des modifications courtes, et fusionner
+souvent par petites pull requests.
+
 **Décisions encore ouvertes (à trancher avec l'encadrant) :** commission de la plateforme, règles
 d'annulation et de remboursement, prix réels du carburant (valeurs indicatives dans la migration V1),
 fournisseur SMS réel.
@@ -67,7 +91,10 @@ sont seulement journalisés, et un admin est créé au démarrage (identifiants 
 **Backend** (`sn.isep.Convoiturage`, monolithe modulaire : `common`, `auth`, `utilisateur`, `vehicule`,
 `trajet`, `tarification`, `reservation`, `notification`, `admin`) :
 - Le schéma est géré **uniquement par Flyway** (`db/migration`, `ddl-auto: validate`). Toute modification
-  = nouveau fichier `V2__...sql`, `V3__...sql` ; ne jamais modifier une migration déjà poussée.
+  = nouveau fichier **nommé par date et heure** pour éviter les collisions entre les deux développeurs :
+  `V2026_10_25_1430__messagerie.sql` (année_mois_jour_heureminute). Ne jamais modifier une migration déjà
+  poussée. `out-of-order` est activé en dev/test : une migration plus ancienne fusionnée après une plus
+  récente est quand même appliquée.
 - Entités JPA avec Lombok ; DTO en `record` regroupés dans des classes `XxxDtos` ; jamais d'entité renvoyée
   directement par un contrôleur.
 - Erreurs métier : `ApiException` (→ ProblemDetail). `.surChamp("email")` place l'erreur sous le bon champ
@@ -85,7 +112,10 @@ sont seulement journalisés, et un admin est créé au démarrage (identifiants 
   composant. Icônes : ajouter le tracé dans `shared/ui/icone.ts`. Interface mobile-first, fidèle aux maquettes.
 
 **Git** :
-- Une branche par fonctionnalité (`feature/profil`, `feature/vehicules`…), fusion dans `main` par pull request.
+- Jamais de travail directement sur `main`. Une branche par fonctionnalité, nommée d'après la répartition :
+  `F4-trajets`, `F3-ia-pricing`, `F1-utilisateurs`…
+- Chaque matin, avant de commencer : `git checkout main`, `git pull`, puis rebaser ou fusionner `main` dans sa branche.
+- Fusion dans `main` par pull request, **relue par l'autre** développeur.
 - Avant chaque commit : `./mvnw test` (backend) et `npm test` + `npx ng build` (frontend).
 - Messages de commit en français : `feat: …`, `fix: …`, `docs: …`.
 
