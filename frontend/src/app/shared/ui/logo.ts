@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-/** Logo YobalemaSn : repère de localisation avec une route, « Yobalema » en vert et « Sn » en orange. */
+/** Logo YOBALEMAsn : repère de localisation avec une route, « YOBALEMA » en vert et « sn » en orange. */
 @Component({
   selector: 'app-logo',
   template: `
-    <span class="logo" [class.logo--compact]="compact()" role="img" aria-label="YobalemaSn">
+    <span class="logo" [class.logo--compact]="compact()" role="img" aria-label="YOBALEMAsn">
       <svg viewBox="0 0 40 48" class="logo__pin" aria-hidden="true">
         <path
           d="M20 46c-1 0-15-15.3-15-27A15 15 0 0 1 35 19c0 11.7-14 27-15 27z"
@@ -16,7 +16,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
         <path d="M27.5 9.5c-3 .2-5 2.2-5.2 5 2.9-.1 4.9-2.1 5.2-5z" fill="#2fa36a" />
       </svg>
       @if (!compact()) {
-        <span class="logo__texte">Yobalema<span class="logo__suffixe">Sn</span></span>
+        <span class="logo__texte">YOBALEMA<span class="logo__suffixe">sn</span></span>
       }
     </span>
   `,
