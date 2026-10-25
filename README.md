@@ -9,6 +9,7 @@ calculé à partir du véhicule réel, du trajet réel et des conditions du jour
 |---|---|---|
 | [`backend/Convoiturage`](backend/Convoiturage) | API REST : comptes, véhicules, trajets, réservations, paiement, notifications, administration | Spring Boot 4, Java 21, PostgreSQL 16 + PostGIS, Flyway |
 | [`frontend`](frontend) | Application web passager, conducteur et back-office | Angular 21 |
+| [`docs`](docs/README.md) | Maquettes des écrans et diagrammes UML (PowerAMC) | PNG, `.moo` |
 
 À venir : service de prix IA (FastAPI, XGBoost) et application mobile (Flutter).
 

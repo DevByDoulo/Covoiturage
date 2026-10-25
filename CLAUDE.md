@@ -17,9 +17,10 @@ module IA (microservice sans interface). L'équipe parle français : code métie
 | *(à créer)* `ia/` | Service de prix | FastAPI, scikit-learn, XGBoost |
 | *(à créer)* `mobile/` | Application mobile | Flutter |
 
-Les diagrammes UML (PowerAMC `.moo`) et les maquettes PNG sont hors du dépôt, chez Doulo
-(`PFF_Covoiturage/Maquettes`, `*.moo`). Les tables et entités suivent **les noms du diagramme de classes**
-(`utilisateur`, `trajet`, `id_trajet`, `reservation`…).
+Les maquettes (PNG) et les diagrammes UML (PowerAMC `.moo`) sont dans [`docs/`](docs/README.md) ;
+le diagramme de classes de référence est `docs/conception/CoVoiturage_Diagramme_Classe_nouveau.moo`.
+Les tables et entités suivent **les noms du diagramme de classes** (`utilisateur`, `trajet`, `id_trajet`,
+`reservation`…). Pour un nouvel écran, partir de la maquette correspondante dans `docs/maquettes/`.
 
 ## État au 25/10/2026
 
