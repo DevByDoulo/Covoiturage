@@ -10,31 +10,31 @@ export const routes: Routes = [
       { path: '', pathMatch: 'full', redirectTo: 'connexion' },
       {
         path: 'connexion',
-        title: 'Connexion · CoVoitIA',
+        title: 'Connexion · YOBALEMAsn',
         canActivate: [invitesGuard],
         loadComponent: () => import('./features/auth/connexion/connexion').then((m) => m.Connexion),
       },
       {
         path: 'inscription',
-        title: 'Créer un compte · CoVoitIA',
+        title: 'Créer un compte · YOBALEMAsn',
         canActivate: [invitesGuard],
         loadComponent: () => import('./features/auth/inscription/inscription').then((m) => m.Inscription),
       },
       {
         path: 'verification',
-        title: 'Vérification du numéro · CoVoitIA',
+        title: 'Vérification du numéro · YOBALEMAsn',
         canActivate: [verificationGuard],
         loadComponent: () => import('./features/auth/verification/verification').then((m) => m.Verification),
       },
       {
         path: 'mot-de-passe-oublie',
-        title: 'Mot de passe oublié · CoVoitIA',
+        title: 'Mot de passe oublié · YOBALEMAsn',
         loadComponent: () =>
           import('./features/auth/mot-de-passe-oublie/mot-de-passe-oublie').then((m) => m.MotDePasseOublie),
       },
       {
         path: 'google/telephone',
-        title: 'Votre numéro · CoVoitIA',
+        title: 'Votre numéro · YOBALEMAsn',
         loadComponent: () =>
           import('./features/auth/google-telephone/google-telephone').then((m) => m.GoogleTelephone),
       },
@@ -42,13 +42,13 @@ export const routes: Routes = [
   },
   {
     path: 'accueil',
-    title: 'Accueil · CoVoitIA',
+    title: 'Accueil · YOBALEMAsn',
     canActivate: [connecteGuard, roleGuard('PASSAGER', 'CONDUCTEUR')],
     loadComponent: () => import('./features/accueil/accueil').then((m) => m.Accueil),
   },
   {
     path: 'admin',
-    title: 'Back-office · CoVoitIA',
+    title: 'Back-office · YOBALEMAsn',
     canActivate: [roleGuard('ADMIN')],
     loadComponent: () => import('./features/accueil/accueil').then((m) => m.Accueil),
   },

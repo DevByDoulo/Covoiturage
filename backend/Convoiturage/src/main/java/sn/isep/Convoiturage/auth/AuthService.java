@@ -58,8 +58,7 @@ public class AuthService {
         u.setStatut(StatutCompte.EN_ATTENTE_OTP);
         utilisateurs.save(u);
 
-        otp.envoyer(telephone, ObjetOtp.VERIFICATION_TELEPHONE);
-        return otpEnvoye(telephone);
+        return envoyerCodeVerification(u);
     }
 
     @Transactional
@@ -67,8 +66,7 @@ public class AuthService {
         Utilisateur u = trouverParIdentifiant(req.identifiant())
                 .filter(x -> x.getTelephone() != null && !x.isTelephoneVerifie())
                 .orElseThrow(() -> ApiException.notFound("Aucune vérification en attente pour ce compte"));
-        otp.envoyer(u.getTelephone(), ObjetOtp.VERIFICATION_TELEPHONE);
-        return otpEnvoye(u.getTelephone());
+        return envoyerCodeVerification(u);
     }
 
     /** Valide le téléphone, active le compte et connecte l'utilisateur. */
@@ -98,8 +96,7 @@ public class AuthService {
         limiteur.reinitialiser(cle);
         Utilisateur u = trouve.get();
         if (u.getStatut() == StatutCompte.EN_ATTENTE_OTP) {
-            otp.envoyer(u.getTelephone(), ObjetOtp.VERIFICATION_TELEPHONE);
-            return otpEnvoye(u.getTelephone());
+            return envoyerCodeVerification(u);
         }
         verifierPeutSeConnecter(u);
         return AuthReponse.connecte(tokens.emettre(u), ProfilDto.de(u));
@@ -143,8 +140,7 @@ public class AuthService {
                 .ifPresent(autre -> { throw ApiException.conflict("Ce numéro est déjà associé à un compte").surChamp("telephone"); });
         u.setTelephone(telephone);
         utilisateurs.save(u);
-        otp.envoyer(telephone, ObjetOtp.VERIFICATION_TELEPHONE);
-        return otpEnvoye(telephone);
+        return envoyerCodeVerification(u);
     }
 
     @Transactional
@@ -160,19 +156,22 @@ public class AuthService {
     }
 
     /**
-     * Envoie un code de réinitialisation par SMS au numéro du compte (identifié par email ou téléphone).
+     * Envoie un code de réinitialisation au compte (identifié par email ou téléphone), par email ou à défaut par SMS.
      * La réponse est identique que le compte existe ou non, pour ne pas révéler les comptes inscrits.
      */
     @Transactional
     public AuthReponse motDePasseOublie(IdentifiantRequete req) {
         Optional<Utilisateur> u = trouverParIdentifiant(req.identifiant())
                 .filter(x -> x.getStatut() == StatutCompte.ACTIF && x.getTelephone() != null);
-        u.ifPresent(x -> otp.envoyer(x.getTelephone(), ObjetOtp.REINITIALISATION_MOT_DE_PASSE));
-        // Le numéro masqué n'est montré que si l'utilisateur l'a lui-même saisi.
-        boolean saisiParTelephone = !req.identifiant().contains("@");
-        return new AuthReponse(EtapeAuth.OTP_ENVOYE, null, null, null,
-                saisiParTelephone ? Telephones.masquer(cleIdentifiant(req.identifiant())) : null,
-                props.otp().validiteMinutes() * 60, props.otp().delaiRenvoiSecondes(), null);
+        CanalOtp canal = u.map(x -> otp.envoyer(x.getTelephone(), x.getEmail(), ObjetOtp.REINITIALISATION_MOT_DE_PASSE))
+                .orElseGet(() -> otp.canalPour("compte-inconnu"));
+        // L'adresse ou le numéro masqué n'est montré que si l'utilisateur l'a lui-même saisi.
+        String cle = cleIdentifiant(req.identifiant());
+        boolean saisiParEmail = cle.contains("@");
+        return AuthReponse.otpEnvoye(canal,
+                saisiParEmail ? null : Telephones.masquer(cle),
+                saisiParEmail ? masquerEmail(cle) : null,
+                props.otp());
     }
 
     /** Vérifie le code, change le mot de passe et déconnecte tous les appareils. */
@@ -187,8 +186,19 @@ public class AuthService {
         limiteur.reinitialiser(cleIdentifiant(req.identifiant()));
     }
 
-    private AuthReponse otpEnvoye(String telephone) {
-        return AuthReponse.otpEnvoye(Telephones.masquer(telephone), props.otp());
+    /** Envoie le code de vérification du compte (email si possible, sinon SMS) et décrit l'envoi à l'interface. */
+    private AuthReponse envoyerCodeVerification(Utilisateur u) {
+        CanalOtp canal = otp.envoyer(u.getTelephone(), u.getEmail(), ObjetOtp.VERIFICATION_TELEPHONE);
+        return canal == CanalOtp.EMAIL
+                ? AuthReponse.otpEnvoye(canal, null, masquerEmail(u.getEmail()), props.otp())
+                : AuthReponse.otpEnvoye(canal, Telephones.masquer(u.getTelephone()), null, props.otp());
+    }
+
+    /** « awa.diop@gmail.com » → « a*******@gmail.com ». */
+    static String masquerEmail(String email) {
+        int arobase = email.indexOf('@');
+        if (arobase < 1) return email;
+        return email.charAt(0) + "*".repeat(Math.max(1, arobase - 1)) + email.substring(arobase);
     }
 
     private Optional<Utilisateur> trouverParIdentifiant(String identifiant) {

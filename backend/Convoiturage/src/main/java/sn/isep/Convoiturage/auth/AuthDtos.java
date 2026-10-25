@@ -46,32 +46,35 @@ public final class AuthDtos {
     public enum EtapeAuth {
         /** Jetons délivrés. */
         CONNECTE,
-        /** Un code a été envoyé par SMS : appeler /api/auth/otp/verifier. */
+        /** Un code a été envoyé (par email ou SMS, voir canal) : appeler /api/auth/otp/verifier. */
         OTP_ENVOYE,
         /** Compte Google sans téléphone : renvoyer la requête avec le champ telephone. */
         TELEPHONE_REQUIS
     }
 
     /**
-     * Réponse unique des endpoints d'authentification. Pour OTP_ENVOYE, l'interface affiche le numéro
-     * masqué, le compte à rebours de validité du code et le délai avant de pouvoir le renvoyer.
+     * Réponse unique des endpoints d'authentification. Pour OTP_ENVOYE, l'interface affiche le canal
+     * (EMAIL ou SMS), l'adresse ou le numéro masqué, le compte à rebours de validité du code et le délai
+     * avant de pouvoir le renvoyer.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record AuthReponse(EtapeAuth etape, String accessToken, String refreshToken, Long expiresIn,
-                              String telephoneMasque, Integer otpValiditeSecondes, Integer renvoiPossibleDansSecondes,
+                              CanalOtp canal, String telephoneMasque, String emailMasque,
+                              Integer otpValiditeSecondes, Integer renvoiPossibleDansSecondes,
                               ProfilDto utilisateur) {
 
         static AuthReponse connecte(TokenService.Jetons j, ProfilDto u) {
-            return new AuthReponse(EtapeAuth.CONNECTE, j.accessToken(), j.refreshToken(), j.expiresIn(), null, null, null, u);
+            return new AuthReponse(EtapeAuth.CONNECTE, j.accessToken(), j.refreshToken(), j.expiresIn(),
+                    null, null, null, null, null, u);
         }
 
-        static AuthReponse otpEnvoye(String telephoneMasque, AppProperties.Otp conf) {
-            return new AuthReponse(EtapeAuth.OTP_ENVOYE, null, null, null, telephoneMasque,
+        static AuthReponse otpEnvoye(CanalOtp canal, String telephoneMasque, String emailMasque, AppProperties.Otp conf) {
+            return new AuthReponse(EtapeAuth.OTP_ENVOYE, null, null, null, canal, telephoneMasque, emailMasque,
                     conf.validiteMinutes() * 60, conf.delaiRenvoiSecondes(), null);
         }
 
         static AuthReponse telephoneRequis() {
-            return new AuthReponse(EtapeAuth.TELEPHONE_REQUIS, null, null, null, null, null, null, null);
+            return new AuthReponse(EtapeAuth.TELEPHONE_REQUIS, null, null, null, null, null, null, null, null, null);
         }
     }
 }

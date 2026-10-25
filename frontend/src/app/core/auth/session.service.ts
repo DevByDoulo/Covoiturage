@@ -149,7 +149,9 @@ export class SessionService {
       const maintenant = Date.now();
       this.definirVerification({
         identifiant,
+        canal: r.canal ?? 'SMS',
         telephoneMasque: r.telephoneMasque ?? null,
+        emailMasque: r.emailMasque ?? null,
         expireA: maintenant + (r.otpValiditeSecondes ?? 300) * 1000,
         renvoiPossibleA: maintenant + (r.renvoiPossibleDansSecondes ?? 60) * 1000,
       });
