@@ -67,6 +67,8 @@ class ParcoursCompletTest {
     @TestConfiguration
     static class CodesDeTest {
         static final Map<String, String> DERNIER_CODE = new ConcurrentHashMap<>();
+        /** Sujets des emails reçus, par adresse. */
+        static final Map<String, List<String>> SUJETS = new ConcurrentHashMap<>();
         private static final Pattern CODE = Pattern.compile("est (\\d{6})");
 
         private static void capturer(String destinataire, String message) {
@@ -87,6 +89,15 @@ class ParcoursCompletTest {
             throw new AssertionError("Aucun nouveau code reçu pour " + destinataire);
         }
 
+        /** Attend (5 secondes au plus) qu'un email de ce sujet soit arrivé à cette adresse. */
+        static void attendreEmail(String email, String sujet) throws InterruptedException {
+            for (int i = 0; i < 100; i++) {
+                if (SUJETS.getOrDefault(email, List.of()).contains(sujet)) return;
+                Thread.sleep(50);
+            }
+            throw new AssertionError("Email « " + sujet + " » non reçu par " + email);
+        }
+
         @Bean
         @Primary
         SmsSender smsCapture() {
@@ -98,13 +109,19 @@ class ParcoursCompletTest {
         EmailSender emailCapture() {
             return new EmailSender() {
                 @Override public boolean disponible() { return true; }
-                @Override public void envoyer(String email, String sujet, String texte) { capturer(email, texte); }
+                @Override public void envoyer(String email, String sujet, String texte) {
+                    SUJETS.computeIfAbsent(email, k -> new java.util.concurrent.CopyOnWriteArrayList<>()).add(sujet);
+                    capturer(email, texte);
+                }
             };
         }
     }
 
     @Autowired
     MockMvc mvc;
+
+    @Autowired
+    JdbcTemplate jdbc;
 
     // Points réels : Dakar (Place de l'Indépendance) -> Thiès ; le passager est à ~1 km de chaque point.
     static final double DAKAR_LAT = 14.6681, DAKAR_LNG = -17.4318;
@@ -310,8 +327,35 @@ class ParcoursCompletTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.etape").value("CONNECTE"));
         // Le jeton n'est pas un jeton d'accès.
         mvc.perform(get("/api/moi").header("Authorization", "Bearer " + jeton)).andExpect(status().isUnauthorized());
-        // Compte inexistant : même réponse
-        appel(post("/api/auth/mot-de-passe/oublie"), "{\"identifiant\":\"inconnu@test.sn\"}").andExpect(status().isOk());
+        // Le titulaire est prévenu du changement.
+        CodesDeTest.attendreEmail("fatou@test.sn", "YOBALEMAsn - Votre mot de passe a été modifié");
+
+        // Compte inexistant : mêmes réponses qu'un vrai compte (envoi, code faux, renvoi trop rapide).
+        appel(post("/api/auth/mot-de-passe/oublie"), "{\"identifiant\":\"inconnu@test.sn\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.canal").value("EMAIL"))
+                .andExpect(jsonPath("$.emailMasque").value("i******@test.sn"));
+        appel(post("/api/auth/mot-de-passe/verifier-code"), "{\"identifiant\":\"inconnu@test.sn\",\"code\":\"123456\"}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.tentativesRestantes").value(4));
+        appel(post("/api/auth/mot-de-passe/oublie"), "{\"identifiant\":\"inconnu@test.sn\"}")
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.motif").value("DELAI_RENVOI"));
+    }
+
+    @Test
+    void limiteLeNombreDeCodesParHeure() throws Exception {
+        String demande = "{\"identifiant\":\"77 999 88 77\"}";
+        for (int i = 0; i < 5; i++) {
+            appel(post("/api/auth/mot-de-passe/oublie"), demande).andExpect(status().isOk());
+            // Les codes fictifs (comptes inconnus) ont une clé commençant par « ? » : on les vieillit
+            // de 2 minutes pour passer le délai de renvoi de 60 s sans attendre.
+            jdbc.update("update otp_code set date_creation = date_creation - interval '2 minutes' where telephone like '?%'");
+        }
+        appel(post("/api/auth/mot-de-passe/oublie"), demande)
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.motif").value("QUOTA_CODES"))
+                .andExpect(jsonPath("$.reessayerDansSecondes").isNumber());
     }
 
     @Test

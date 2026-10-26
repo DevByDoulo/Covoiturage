@@ -99,7 +99,12 @@ Les erreurs suivent le format ProblemDetail : `{"status":409,"detail":"Il ne res
 
 ## Règles métier implémentées
 
-- **OTP** : 6 chiffres, 5 min, 5 essais, renvoi après 60 s, stocké haché (BCrypt).
+- **OTP** : 6 chiffres, 5 min, 5 essais, renvoi après 60 s, au plus 5 codes par heure et 10 par jour pour un
+  même compte et un même usage (`app.otp.max-codes-par-*`), stocké haché (BCrypt).
+- **Mot de passe oublié** : réponses identiques que le compte existe ou non (un code fictif, jamais envoyé, est
+  enregistré sous une clé `?…` pour les comptes inconnus) ; au plus 20 demandes de code et 30 vérifications
+  par heure et par IP (`LimiteurParIp`, derrière un proxy : `server.forward-headers-strategy: framework`) ;
+  après le changement, toutes les sessions sont fermées et le titulaire est prévenu par email (ou SMS).
 - **Jetons** : accès JWT 30 min ; refresh opaque 30 jours, haché, rotation à chaque usage, réutilisation détectée → toutes les sessions coupées.
 - **Trajet** : départ ≥ 30 min après publication, flexibilité 15–30 min, places ≤ places du véhicule − 1, « femmes uniquement » réservé aux conductrices (et aux passagères).
 - **Prix** : `(carburant + usure + péages) / (places proposées + 1)`, arrondi à 50 FCFA, plancher 500 FCFA ; le conducteur choisit dans ±10 %.

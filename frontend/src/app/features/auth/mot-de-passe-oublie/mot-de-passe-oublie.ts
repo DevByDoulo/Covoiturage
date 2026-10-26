@@ -94,7 +94,8 @@ export class MotDePasseOublie {
       error: (e) => {
         const err = lireErreur(e);
         // Délai de renvoi non écoulé : le code déjà envoyé reste valable, on passe quand même à l'étape 2.
-        if (err.status === 429 && err.reessayerDansSecondes) {
+        // Les autres refus (trop de codes demandés, trop de demandes depuis cette connexion) restent à l'étape 1.
+        if (err.motif === 'DELAI_RENVOI' && err.reessayerDansSecondes) {
           this.renvoiPossibleA.set(Date.now() + err.reessayerDansSecondes * 1000);
           this.allerAuCode(identifiant);
         }

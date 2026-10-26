@@ -1,5 +1,6 @@
 package sn.isep.Convoiturage.auth;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,7 @@ import sn.isep.Convoiturage.auth.AuthDtos.*;
 public class AuthController {
 
     private final AuthService auth;
+    private final LimiteurParIp limiteurIp;
 
     @PostMapping("/inscription")
     @ResponseStatus(HttpStatus.CREATED)
@@ -52,12 +54,15 @@ public class AuthController {
     }
 
     @PostMapping("/mot-de-passe/oublie")
-    public AuthReponse motDePasseOublie(@Valid @RequestBody IdentifiantRequete req) {
+    public AuthReponse motDePasseOublie(@Valid @RequestBody IdentifiantRequete req, HttpServletRequest http) {
+        limiteurIp.consommer(LimiteurParIp.Action.DEMANDE_CODE, http.getRemoteAddr());
         return auth.motDePasseOublie(req);
     }
 
     @PostMapping("/mot-de-passe/verifier-code")
-    public CodeVerifieReponse verifierCodeReinitialisation(@Valid @RequestBody VerificationOtpRequete req) {
+    public CodeVerifieReponse verifierCodeReinitialisation(@Valid @RequestBody VerificationOtpRequete req,
+                                                           HttpServletRequest http) {
+        limiteurIp.consommer(LimiteurParIp.Action.VERIFICATION_CODE, http.getRemoteAddr());
         return auth.verifierCodeReinitialisation(req);
     }
 
