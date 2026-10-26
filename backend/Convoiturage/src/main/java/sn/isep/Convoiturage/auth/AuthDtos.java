@@ -38,9 +38,11 @@ public final class AuthDtos {
     /** Email ou numéro de téléphone. */
     public record IdentifiantRequete(@NotBlank String identifiant) {}
 
+    /** Code accepté : le jeton autorise le choix du nouveau mot de passe pendant validiteSecondes. */
+    public record CodeVerifieReponse(String jeton, long validiteSecondes) {}
+
     public record ReinitialisationRequete(
-            @NotBlank String identifiant,
-            @NotBlank @Pattern(regexp = "\\d{4,8}") String code,
+            @NotBlank String jeton,
             @NotBlank @Pattern(regexp = REGLE_MDP, message = MESSAGE_MDP) String nouveauMotDePasse) {}
 
     public enum EtapeAuth {

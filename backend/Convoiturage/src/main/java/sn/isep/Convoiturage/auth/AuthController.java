@@ -56,6 +56,11 @@ public class AuthController {
         return auth.motDePasseOublie(req);
     }
 
+    @PostMapping("/mot-de-passe/verifier-code")
+    public CodeVerifieReponse verifierCodeReinitialisation(@Valid @RequestBody VerificationOtpRequete req) {
+        return auth.verifierCodeReinitialisation(req);
+    }
+
     @PostMapping("/mot-de-passe/reinitialiser")
     public ResponseEntity<Void> reinitialiser(@Valid @RequestBody ReinitialisationRequete req) {
         auth.reinitialiserMotDePasse(req);

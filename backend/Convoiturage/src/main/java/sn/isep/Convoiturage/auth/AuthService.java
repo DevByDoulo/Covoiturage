@@ -27,6 +27,7 @@ public class AuthService {
     private final TokenService tokens;
     private final GoogleTokenVerifier google;
     private final LimiteurConnexion limiteur;
+    private final JetonReinitialisation jetonsReinitialisation;
     private final AppProperties props;
 
     /** Crée le compte (statut EN_ATTENTE_OTP) et envoie le code de vérification par SMS. */
@@ -77,7 +78,7 @@ public class AuthService {
     public AuthReponse verifierOtp(VerificationOtpRequete req) {
         Utilisateur u = trouverParIdentifiant(req.identifiant())
                 .filter(x -> x.getTelephone() != null)
-                .orElseThrow(() -> ApiException.badRequest("Aucun code en attente pour ce compte. Demandez un nouveau code."));
+                .orElseThrow(() -> ApiException.badRequest("Code incorrect. Demandez un nouveau code."));
         CanalOtp canal = otp.verifier(u.getTelephone(), ObjetOtp.VERIFICATION_TELEPHONE, req.code());
         if (canal == CanalOtp.EMAIL) u.setEmailVerifie(true);
         else u.setTelephoneVerifie(true);
@@ -178,16 +179,27 @@ public class AuthService {
                 props.otp());
     }
 
-    /** Vérifie le code, change le mot de passe et déconnecte tous les appareils. */
+    /** Vérifie le code reçu (5 essais) et remet le jeton qui autorise le choix du nouveau mot de passe. */
     @Transactional
-    public void reinitialiserMotDePasse(ReinitialisationRequete req) {
+    public CodeVerifieReponse verifierCodeReinitialisation(VerificationOtpRequete req) {
         Utilisateur u = trouverParIdentifiant(req.identifiant())
                 .filter(x -> x.getTelephone() != null)
                 .orElseThrow(() -> ApiException.badRequest("Code incorrect. Demandez un nouveau code."));
         otp.verifier(u.getTelephone(), ObjetOtp.REINITIALISATION_MOT_DE_PASSE, req.code());
+        return new CodeVerifieReponse(jetonsReinitialisation.emettre(u), JetonReinitialisation.VALIDITE.toSeconds());
+    }
+
+    /** Change le mot de passe (jeton obtenu après vérification du code) et déconnecte tous les appareils. */
+    @Transactional
+    public void reinitialiserMotDePasse(ReinitialisationRequete req) {
+        Utilisateur u = JetonReinitialisation.lireIdentifiant(req.jeton())
+                .flatMap(utilisateurs::findById)
+                .filter(x -> jetonsReinitialisation.signatureValide(req.jeton(), x))
+                .orElseThrow(() -> ApiException.badRequest("Ce lien de réinitialisation a expiré. Recommencez la procédure."));
         u.setMotDePasse(encoder.encode(req.nouveauMotDePasse()));
         tokens.revoquerTous(u.getId());
-        limiteur.reinitialiser(cleIdentifiant(req.identifiant()));
+        limiteur.reinitialiser(u.getTelephone());
+        if (u.getEmail() != null) limiteur.reinitialiser(u.getEmail());
     }
 
     /** Envoie le code de vérification du compte (email si possible, sinon SMS) et décrit l'envoi à l'interface. */

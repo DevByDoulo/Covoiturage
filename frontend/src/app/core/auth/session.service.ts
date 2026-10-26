@@ -5,6 +5,7 @@ import { Observable, catchError, finalize, firstValueFrom, map, of, shareReplay,
 import { environment } from '../../../environments/environment';
 import {
   AuthReponse,
+  CodeVerifie,
   InscriptionRequete,
   Profil,
   Sexe,
@@ -90,9 +91,14 @@ export class SessionService {
     return this.http.post<AuthReponse>(`${this.api}/mot-de-passe/oublie`, { identifiant });
   }
 
-  reinitialiserMotDePasse(identifiant: string, code: string, nouveauMotDePasse: string): Observable<void> {
+  /** Vérifie le code reçu ; le jeton renvoyé autorise ensuite le choix du nouveau mot de passe. */
+  verifierCodeReinitialisation(identifiant: string, code: string): Observable<CodeVerifie> {
+    return this.http.post<CodeVerifie>(`${this.api}/mot-de-passe/verifier-code`, { identifiant, code });
+  }
+
+  reinitialiserMotDePasse(jeton: string, nouveauMotDePasse: string): Observable<void> {
     return this.http
-      .post<void>(`${this.api}/mot-de-passe/reinitialiser`, { identifiant, code, nouveauMotDePasse })
+      .post<void>(`${this.api}/mot-de-passe/reinitialiser`, { jeton, nouveauMotDePasse })
       .pipe(tap(() => this.effacerSession()));
   }
 

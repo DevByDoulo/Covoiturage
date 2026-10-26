@@ -81,7 +81,7 @@ Les modules communiquent par services ou par **événements** (`TrajetEvenements
 | Méthode | Chemin | Accès |
 |---|---|---|
 | POST | `/api/auth/inscription`, `/otp/verifier`, `/otp/renvoyer`, `/connexion`, `/google`, `/refresh`, `/deconnexion` | public |
-| POST | `/api/auth/mot-de-passe/oublie`, `/mot-de-passe/reinitialiser` | public |
+| POST | `/api/auth/mot-de-passe/oublie` → `/mot-de-passe/verifier-code` (renvoie un `jeton` valable 10 min) → `/mot-de-passe/reinitialiser` (`jeton` + `nouveauMotDePasse`) | public |
 | GET/PUT | `/api/moi`, `/api/moi/preferences`, POST `/api/moi/photo`, PUT `/api/moi/fcm-token` | connecté |
 | GET | `/api/utilisateurs/{id}` (profil public) | public |
 | POST/GET/PUT/DELETE | `/api/moi/vehicules[/{id}]` | connecté |

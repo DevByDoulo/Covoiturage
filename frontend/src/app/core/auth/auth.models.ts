@@ -46,6 +46,12 @@ export interface AuthReponse {
   utilisateur?: Profil;
 }
 
+/** Code de « mot de passe oublié » accepté : le jeton autorise le nouveau mot de passe pendant validiteSecondes. */
+export interface CodeVerifie {
+  jeton: string;
+  validiteSecondes: number;
+}
+
 export interface InscriptionRequete {
   prenom: string;
   nom: string;

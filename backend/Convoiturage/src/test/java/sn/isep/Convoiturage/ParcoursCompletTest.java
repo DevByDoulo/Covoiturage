@@ -292,11 +292,24 @@ class ParcoursCompletTest {
                 .andExpect(jsonPath("$.telephoneMasque").doesNotExist())
                 .andExpect(jsonPath("$.otpValiditeSecondes").value(300));
         String code = CodesDeTest.attendreNouveauCode("fatou@test.sn", codeInscription);
-        appel(post("/api/auth/mot-de-passe/reinitialiser"),
-                "{\"identifiant\":\"fatou@test.sn\",\"code\":\"" + code + "\",\"nouveauMotDePasse\":\"NouveauMdp2026\"}")
-                .andExpect(status().isNoContent());
+        String codeFaux = code.equals("000000") ? "111111" : "000000";
+        // 1) Le code est vérifié seul : un mauvais code est refusé avant tout choix de mot de passe.
+        appel(post("/api/auth/mot-de-passe/verifier-code"), "{\"identifiant\":\"fatou@test.sn\",\"code\":\"" + codeFaux + "\"}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.tentativesRestantes").value(4));
+        String jeton = JsonPath.read(appel(post("/api/auth/mot-de-passe/verifier-code"),
+                        "{\"identifiant\":\"fatou@test.sn\",\"code\":\"" + code + "\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.validiteSecondes").value(600))
+                .andReturn().getResponse().getContentAsString(), "$.jeton");
+        // 2) Le jeton remis autorise le nouveau mot de passe, une seule fois.
+        String reinitialisation = "{\"jeton\":\"" + jeton + "\",\"nouveauMotDePasse\":\"NouveauMdp2026\"}";
+        appel(post("/api/auth/mot-de-passe/reinitialiser"), reinitialisation).andExpect(status().isNoContent());
+        appel(post("/api/auth/mot-de-passe/reinitialiser"), reinitialisation).andExpect(status().isBadRequest());
         appel(post("/api/auth/connexion"), "{\"identifiant\":\"76 111 22 33\",\"motDePasse\":\"NouveauMdp2026\"}")
                 .andExpect(status().isOk()).andExpect(jsonPath("$.etape").value("CONNECTE"));
+        // Le jeton n'est pas un jeton d'accès.
+        mvc.perform(get("/api/moi").header("Authorization", "Bearer " + jeton)).andExpect(status().isUnauthorized());
         // Compte inexistant : même réponse
         appel(post("/api/auth/mot-de-passe/oublie"), "{\"identifiant\":\"inconnu@test.sn\"}").andExpect(status().isOk());
     }
