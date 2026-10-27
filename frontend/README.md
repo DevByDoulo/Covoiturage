@@ -22,8 +22,9 @@ src/app
 │   └── auth/                    SessionService (jetons, parcours d'auth), intercepteur JWT + refresh, guards
 ├── shared/ui                    icônes, logo, alerte, champ mot de passe, saisie de code OTP, pavé numérique…
 └── features
-    ├── auth                     connexion, inscription, vérification OTP, mot de passe oublié, téléphone Google
-    └── accueil                  page provisoire après connexion
+    ├── auth                     connexion, inscription, vérification OTP, mot de passe oublié (3 étapes), téléphone Google
+    ├── espace                   cadre de l'espace connecté (barre de navigation, déconnexion)
+    └── accueil                  page d'arrivée après connexion
 ```
 
 ## Session

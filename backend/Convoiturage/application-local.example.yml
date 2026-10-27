@@ -6,6 +6,12 @@ covoitia:
     # Port de votre PostgreSQL 16 avec PostGIS (5432 par défaut, 5433 si deux versions sont installées).
     port: 5432
 
+# Connexion Google : un ID client de développement est déjà fourni (application-dev.yml). Pour utiliser
+# le vôtre, mettez le même ID ici ET dans frontend/src/environments/environment.ts :
+#app:
+#  google:
+#    client-id: 1234567890-xxxx.apps.googleusercontent.com
+
 # Envoi des codes de vérification par email. Sans cette section, les codes partent par « SMS »
 # (simulés : écrits dans la console du backend).
 # Gmail : activer la validation en deux étapes, puis créer un mot de passe d'application

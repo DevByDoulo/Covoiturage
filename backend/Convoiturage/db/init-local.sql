@@ -1,5 +1,5 @@
 -- =====================================================================
--- Initialisation d'une base PostgreSQL locale (sans Docker) pour CoVoitIA.
+-- Initialisation d'une base PostgreSQL locale (sans Docker) pour YOBALEMAsn.
 -- À exécuter en tant que superutilisateur « postgres », APRÈS avoir installé
 -- PostGIS (postgis-bundle-pg16x64-setup-*.exe). Le script peut être relancé
 -- sans risque : il ne crée que ce qui manque.

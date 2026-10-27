@@ -29,6 +29,11 @@ public class OtpCode {
     @Column(nullable = false, length = 30)
     private ObjetOtp objet;
 
+    /** Canal par lequel le code a été envoyé : détermine ce que sa saisie prouve (email ou téléphone). */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private CanalOtp canal = CanalOtp.SMS;
+
     @Column(nullable = false)
     private int tentatives;
 

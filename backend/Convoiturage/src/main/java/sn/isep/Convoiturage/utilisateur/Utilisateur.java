@@ -33,8 +33,13 @@ public class Utilisateur {
     @Column(unique = true, length = 20)
     private String telephone;
 
+    /** Vrai après saisie d'un code reçu par SMS sur ce numéro. */
     @Column(name = "telephone_verifie", nullable = false)
     private boolean telephoneVerifie;
+
+    /** Vrai après saisie d'un code reçu par email à cette adresse. */
+    @Column(name = "email_verifie", nullable = false)
+    private boolean emailVerifie;
 
     /** Hash BCrypt ; null pour un compte créé uniquement via Google. */
     @Column(name = "mot_de_passe", length = 100)
@@ -88,6 +93,11 @@ public class Utilisateur {
 
     public String nomComplet() {
         return prenom + " " + nom;
+    }
+
+    /** Le compte a prouvé au moins un moyen de contact (code reçu par SMS ou par email). */
+    public boolean estVerifie() {
+        return telephoneVerifie || emailVerifie;
     }
 
     public boolean estActif() {

@@ -18,6 +18,7 @@ export interface Profil {
   email: string | null;
   telephone: string | null;
   telephoneVerifie: boolean;
+  emailVerifie: boolean;
   sexe: Sexe | null;
   photoProfil: string | null;
   bio: string | null;
@@ -43,6 +44,12 @@ export interface AuthReponse {
   otpValiditeSecondes?: number;
   renvoiPossibleDansSecondes?: number;
   utilisateur?: Profil;
+}
+
+/** Code de « mot de passe oublié » accepté : le jeton autorise le nouveau mot de passe pendant validiteSecondes. */
+export interface CodeVerifie {
+  jeton: string;
+  validiteSecondes: number;
 }
 
 export interface InscriptionRequete {

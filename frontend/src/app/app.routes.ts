@@ -22,7 +22,7 @@ export const routes: Routes = [
       },
       {
         path: 'verification',
-        title: 'Vérification du numéro · YOBALEMAsn',
+        title: 'Vérification · YOBALEMAsn',
         canActivate: [verificationGuard],
         loadComponent: () => import('./features/auth/verification/verification').then((m) => m.Verification),
       },
@@ -41,16 +41,25 @@ export const routes: Routes = [
     ],
   },
   {
-    path: 'accueil',
-    title: 'Accueil · YOBALEMAsn',
-    canActivate: [connecteGuard, roleGuard('PASSAGER', 'CONDUCTEUR')],
-    loadComponent: () => import('./features/accueil/accueil').then((m) => m.Accueil),
-  },
-  {
-    path: 'admin',
-    title: 'Back-office · YOBALEMAsn',
-    canActivate: [roleGuard('ADMIN')],
-    loadComponent: () => import('./features/accueil/accueil').then((m) => m.Accueil),
+    // Espace connecté : barre de navigation commune.
+    path: '',
+    canActivate: [connecteGuard],
+    loadComponent: () => import('./features/espace/espace-layout').then((m) => m.EspaceLayout),
+    children: [
+      // Chaque fonctionnalité ajoute ici ses écrans (fichier partagé : modifications courtes).
+      {
+        path: 'accueil',
+        title: 'Accueil · YOBALEMAsn',
+        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
+        loadComponent: () => import('./features/accueil/accueil').then((m) => m.Accueil),
+      },
+      {
+        path: 'admin',
+        title: 'Back-office · YOBALEMAsn',
+        canActivate: [roleGuard('ADMIN')],
+        loadComponent: () => import('./features/accueil/accueil').then((m) => m.Accueil),
+      },
+    ],
   },
   { path: '**', redirectTo: 'accueil' },
 ];

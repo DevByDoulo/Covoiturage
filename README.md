@@ -1,4 +1,4 @@
-# CoVoitIA — Plateforme de covoiturage avec estimation tarifaire par IA
+# YOBALEMAsn — Plateforme de covoiturage avec estimation tarifaire par IA
 
 Projet de fin d'études : application web et mobile de covoiturage (Sénégal) avec un prix par passager
 calculé à partir du véhicule réel, du trajet réel et des conditions du jour.
@@ -7,9 +7,12 @@ calculé à partir du véhicule réel, du trajet réel et des conditions du jour
 
 | Dossier | Contenu | Technologies |
 |---|---|---|
-| [`backend/Convoiturage`](backend/Convoiturage) | API REST : comptes, véhicules, trajets, réservations, paiement, notifications, administration | Spring Boot 4, Java 21, PostgreSQL 16 + PostGIS, Flyway |
-| [`frontend`](frontend) | Application web passager, conducteur et back-office | Angular 21 |
+| [`backend/Convoiturage`](backend/Convoiturage) | API REST (aujourd'hui : inscription, connexion, profil) | Spring Boot 4, Java 21, PostgreSQL 16 + PostGIS, Flyway |
+| [`frontend`](frontend) | Application web passager, conducteur et back-office (aujourd'hui : écrans d'authentification) | Angular 21 |
+| [`docs`](docs/README.md) | Maquettes des écrans et diagrammes UML (PowerAMC) | PNG, `.moo` |
 
+Le dépôt repart de l'authentification ; chaque fonctionnalité est reconstruite par son responsable (voir `CLAUDE.md`).
+L'ancienne version complète du lot 1 reste disponible sous l'étiquette Git `archive/lot1-complet`.
 À venir : service de prix IA (FastAPI, XGBoost) et application mobile (Flutter).
 
 ## Démarrage rapide
@@ -24,5 +27,5 @@ Détails dans le README de chaque dossier.
 
 ## Tests
 
-- Backend : `./mvnw test` (dont un parcours complet sur la base locale `covoiturage_test`)
+- Backend : `./mvnw test` (dont un parcours d'authentification complet sur la base locale `covoiturage_test`)
 - Frontend : `npm test`

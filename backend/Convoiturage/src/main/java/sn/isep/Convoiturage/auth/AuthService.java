@@ -27,6 +27,8 @@ public class AuthService {
     private final TokenService tokens;
     private final GoogleTokenVerifier google;
     private final LimiteurConnexion limiteur;
+    private final JetonReinitialisation jetonsReinitialisation;
+    private final AlertesSecurite alertes;
     private final AppProperties props;
 
     /** Crée le compte (statut EN_ATTENTE_OTP) et envoie le code de vérification par SMS. */
@@ -64,19 +66,23 @@ public class AuthService {
     @Transactional
     public AuthReponse renvoyerOtp(IdentifiantRequete req) {
         Utilisateur u = trouverParIdentifiant(req.identifiant())
-                .filter(x -> x.getTelephone() != null && !x.isTelephoneVerifie())
+                .filter(x -> x.getTelephone() != null && x.getStatut() == StatutCompte.EN_ATTENTE_OTP)
                 .orElseThrow(() -> ApiException.notFound("Aucune vérification en attente pour ce compte"));
         return envoyerCodeVerification(u);
     }
 
-    /** Valide le téléphone, active le compte et connecte l'utilisateur. */
+    /**
+     * Valide le moyen de contact qui a reçu le code (email ou téléphone, jamais les deux à la fois),
+     * active le compte et connecte l'utilisateur.
+     */
     @Transactional
     public AuthReponse verifierOtp(VerificationOtpRequete req) {
         Utilisateur u = trouverParIdentifiant(req.identifiant())
                 .filter(x -> x.getTelephone() != null)
-                .orElseThrow(() -> ApiException.badRequest("Aucun code en attente pour ce compte. Demandez un nouveau code."));
-        otp.verifier(u.getTelephone(), ObjetOtp.VERIFICATION_TELEPHONE, req.code());
-        u.setTelephoneVerifie(true);
+                .orElseThrow(() -> ApiException.badRequest("Code incorrect. Demandez un nouveau code."));
+        CanalOtp canal = otp.verifier(u.getTelephone(), ObjetOtp.VERIFICATION_TELEPHONE, req.code());
+        if (canal == CanalOtp.EMAIL) u.setEmailVerifie(true);
+        else u.setTelephoneVerifie(true);
         if (u.getStatut() == StatutCompte.EN_ATTENTE_OTP) u.setStatut(StatutCompte.ACTIF);
         verifierPeutSeConnecter(u);
         return AuthReponse.connecte(tokens.emettre(u), ProfilDto.de(u));
@@ -104,7 +110,7 @@ public class AuthService {
 
     /**
      * Connexion Google. 1er passage : le compte est créé/lié, puis on exige un numéro
-     * (TELEPHONE_REQUIS) vérifié par OTP. Ensuite : connexion directe.
+     * (TELEPHONE_REQUIS) et un code de vérification. Ensuite (compte vérifié) : connexion directe.
      */
     @Transactional
     public AuthReponse connecterAvecGoogle(GoogleRequete req) {
@@ -125,7 +131,7 @@ public class AuthService {
         u.setGoogleId(g.sub());
         if (u.getSexe() == null && req.sexe() != null) u.setSexe(req.sexe());
 
-        if (u.isTelephoneVerifie()) {
+        if (u.estVerifie() && u.getTelephone() != null) {
             utilisateurs.save(u);
             verifierPeutSeConnecter(u);
             return AuthReponse.connecte(tokens.emettre(u), ProfilDto.de(u));
@@ -157,16 +163,20 @@ public class AuthService {
 
     /**
      * Envoie un code de réinitialisation au compte (identifié par email ou téléphone), par email ou à défaut par SMS.
-     * La réponse est identique que le compte existe ou non, pour ne pas révéler les comptes inscrits.
+     * Les réponses sont identiques que le compte existe ou non, pour ne pas révéler les comptes inscrits :
+     * pour un compte inconnu, un code fictif est enregistré sans être envoyé (mêmes délais, quotas et essais).
      */
     @Transactional
     public AuthReponse motDePasseOublie(IdentifiantRequete req) {
-        Optional<Utilisateur> u = trouverParIdentifiant(req.identifiant())
-                .filter(x -> x.getStatut() == StatutCompte.ACTIF && x.getTelephone() != null);
-        CanalOtp canal = u.map(x -> otp.envoyer(x.getTelephone(), x.getEmail(), ObjetOtp.REINITIALISATION_MOT_DE_PASSE))
-                .orElseGet(() -> otp.canalPour("compte-inconnu"));
-        // L'adresse ou le numéro masqué n'est montré que si l'utilisateur l'a lui-même saisi.
         String cle = cleIdentifiant(req.identifiant());
+        CanalOtp canal = compteRecuperable(req.identifiant())
+                .map(x -> otp.envoyer(x.getTelephone(), x.getEmail(), ObjetOtp.REINITIALISATION_MOT_DE_PASSE))
+                .orElseGet(() -> {
+                    CanalOtp c = otp.canalPour("compte-inconnu");
+                    otp.simulerEnvoi(cleFictive(cle), ObjetOtp.REINITIALISATION_MOT_DE_PASSE, c);
+                    return c;
+                });
+        // L'adresse ou le numéro masqué n'est montré que si l'utilisateur l'a lui-même saisi.
         boolean saisiParEmail = cle.contains("@");
         return AuthReponse.otpEnvoye(canal,
                 saisiParEmail ? null : Telephones.masquer(cle),
@@ -174,16 +184,43 @@ public class AuthService {
                 props.otp());
     }
 
-    /** Vérifie le code, change le mot de passe et déconnecte tous les appareils. */
+    /** Vérifie le code reçu (5 essais) et remet le jeton qui autorise le choix du nouveau mot de passe. */
+    @Transactional
+    public CodeVerifieReponse verifierCodeReinitialisation(VerificationOtpRequete req) {
+        Optional<Utilisateur> u = compteRecuperable(req.identifiant());
+        String cleCode = u.map(Utilisateur::getTelephone).orElseGet(() -> cleFictive(cleIdentifiant(req.identifiant())));
+        otp.verifier(cleCode, ObjetOtp.REINITIALISATION_MOT_DE_PASSE, req.code());
+        // Code fictif deviné (1 chance sur un million) : même refus qu'un code faux.
+        Utilisateur compte = u.orElseThrow(() -> ApiException.badRequest("Code incorrect. Demandez un nouveau code."));
+        return new CodeVerifieReponse(jetonsReinitialisation.emettre(compte), JetonReinitialisation.VALIDITE.toSeconds());
+    }
+
+    /** Change le mot de passe (jeton obtenu après vérification du code) et déconnecte tous les appareils. */
     @Transactional
     public void reinitialiserMotDePasse(ReinitialisationRequete req) {
-        Utilisateur u = trouverParIdentifiant(req.identifiant())
-                .filter(x -> x.getTelephone() != null)
-                .orElseThrow(() -> ApiException.badRequest("Code incorrect. Demandez un nouveau code."));
-        otp.verifier(u.getTelephone(), ObjetOtp.REINITIALISATION_MOT_DE_PASSE, req.code());
+        Utilisateur u = JetonReinitialisation.lireIdentifiant(req.jeton())
+                .flatMap(utilisateurs::findById)
+                .filter(x -> jetonsReinitialisation.signatureValide(req.jeton(), x))
+                .orElseThrow(() -> ApiException.badRequest("Ce lien de réinitialisation a expiré. Recommencez la procédure."));
         u.setMotDePasse(encoder.encode(req.nouveauMotDePasse()));
         tokens.revoquerTous(u.getId());
-        limiteur.reinitialiser(cleIdentifiant(req.identifiant()));
+        limiteur.reinitialiser(u.getTelephone());
+        if (u.getEmail() != null) limiteur.reinitialiser(u.getEmail());
+        alertes.motDePasseModifie(u);
+    }
+
+    /** Compte pouvant récupérer son mot de passe : actif et avec un numéro (auquel les codes sont rattachés). */
+    private Optional<Utilisateur> compteRecuperable(String identifiant) {
+        return trouverParIdentifiant(identifiant)
+                .filter(x -> x.getStatut() == StatutCompte.ACTIF && x.getTelephone() != null);
+    }
+
+    /**
+     * Clé des codes fictifs d'un identifiant sans compte : « ? » suivi d'un hash (20 caractères, la taille
+     * de la colonne). Elle ne peut pas correspondre à un numéro, et l'identifiant saisi n'est pas conservé.
+     */
+    static String cleFictive(String cleIdentifiant) {
+        return "?" + TokenService.hash("reinitialisation|" + cleIdentifiant).substring(0, 19);
     }
 
     /** Envoie le code de vérification du compte (email si possible, sinon SMS) et décrit l'envoi à l'interface. */

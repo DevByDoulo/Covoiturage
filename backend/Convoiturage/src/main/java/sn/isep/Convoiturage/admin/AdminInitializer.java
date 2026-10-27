@@ -34,10 +34,11 @@ public class AdminInitializer implements ApplicationRunner {
         }
         Utilisateur admin = new Utilisateur();
         admin.setPrenom("Admin");
-        admin.setNom("CoVoitIA");
+        admin.setNom("YOBALEMAsn");
         admin.setEmail(conf.email().toLowerCase());
         admin.setTelephone(conf.telephone());
         admin.setTelephoneVerifie(true);
+        admin.setEmailVerifie(true);
         admin.setMotDePasse(encoder.encode(conf.motDePasse()));
         admin.setRole(Role.ADMIN);
         admin.setStatut(StatutCompte.ACTIF);

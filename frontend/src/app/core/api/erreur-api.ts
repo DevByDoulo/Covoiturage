@@ -10,6 +10,8 @@ export interface ErreurApi {
   erreurs?: Record<string, string>;
   tentativesRestantes?: number;
   reessayerDansSecondes?: number;
+  /** Raison d'un refus 429 : DELAI_RENVOI (le code déjà envoyé reste valable), QUOTA_CODES, LIMITE_IP… */
+  motif?: string;
 }
 
 export function lireErreur(err: unknown): ErreurApi {
@@ -25,6 +27,7 @@ export function lireErreur(err: unknown): ErreurApi {
       erreurs: corps.erreurs,
       tentativesRestantes: corps.tentativesRestantes,
       reessayerDansSecondes: corps.reessayerDansSecondes,
+      motif: corps.motif,
     };
   }
   return { status: -1, message: 'Une erreur inattendue est survenue.' };
