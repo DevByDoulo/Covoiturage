@@ -271,6 +271,86 @@ class ParcoursCompletTest {
     }
 
     @Test
+    void administrationValidationDesDocumentsEtBlocage() throws Exception {
+        String admin = "Bearer " + jeton(appel(post("/api/auth/connexion"), """
+                {"identifiant":"admin@test.local","motDePasse":"Admin-Test-2026!"}"""));
+        String ousmane = "Bearer " + inscrire("Ousmane", "Gueye", "ousmane@test.sn", "778880001", "HOMME");
+        long idOusmane = ((Number) JsonPath.read(mvc.perform(get("/api/moi").header("Authorization", ousmane))
+                .andReturn().getResponse().getContentAsString(), "$.id")).longValue();
+        mvc.perform(get("/api/admin/statistiques").header("Authorization", ousmane)).andExpect(status().isForbidden());
+
+        // Ousmane déclare un véhicule et envoie ses trois pièces
+        String vehicule = mvc.perform(post("/api/moi/vehicules").header("Authorization", ousmane).contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"immatriculation":"DK-7788-AA","marque":"Toyota","modele":"Yaris","annee":2020,"puissanceFiscale":5,
+                                 "nombrePlaces":4,"typeEnergie":"ESSENCE"}"""))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        long idVehicule = ((Number) JsonPath.read(vehicule, "$.id")).longValue();
+        byte[] png = {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0};
+        for (String type : new String[]{"PERMIS_CONDUIRE", "PIECE_IDENTITE", "CARTE_GRISE"}) {
+            var envoi = multipart("/api/moi/documents").file(new MockMultipartFile("fichier", "doc.png", "image/png", png))
+                    .param("type", type).header("Authorization", ousmane);
+            if (type.equals("CARTE_GRISE")) envoi.param("idVehicule", String.valueOf(idVehicule));
+            mvc.perform(envoi).andExpect(status().isCreated());
+        }
+
+        // File de validation : filtres par titulaire et par type, autres pièces du titulaire jointes
+        mvc.perform(get("/api/admin/documents").param("recherche", "ousmane").header("Authorization", admin))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.content.length()").value(3));
+        String permis = mvc.perform(get("/api/admin/documents").param("recherche", "ousmane").param("type", "PERMIS_CONDUIRE")
+                        .header("Authorization", admin))
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].autresDocuments.length()").value(2))
+                .andReturn().getResponse().getContentAsString();
+        long idPermis = ((Number) JsonPath.read(permis, "$.content[0].document.id")).longValue();
+
+        // Refus : motif obligatoire, communiqué au titulaire ; une pièce déjà traitée ne peut plus l'être
+        mvc.perform(post("/api/admin/documents/" + idPermis + "/refuser").header("Authorization", admin)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"motif\":\"\"}")).andExpect(status().isBadRequest());
+        mvc.perform(post("/api/admin/documents/" + idPermis + "/refuser").header("Authorization", admin)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"motif\":\"Photo floue\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.statutValidation").value("REFUSE"));
+        CodesDeTest.attendreEmail("ousmane@test.sn", "YOBALEMAsn - Document à renvoyer");
+        mvc.perform(post("/api/admin/documents/" + idPermis + "/valider").header("Authorization", admin)).andExpect(status().isConflict());
+
+        // Nouveau permis, puis validation des trois pièces : Ousmane devient conducteur validé
+        mvc.perform(multipart("/api/moi/documents").file(new MockMultipartFile("fichier", "permis.png", "image/png", png))
+                .param("type", "PERMIS_CONDUIRE").header("Authorization", ousmane)).andExpect(status().isCreated());
+        String file = mvc.perform(get("/api/admin/documents").param("recherche", "ousmane").header("Authorization", admin))
+                .andExpect(jsonPath("$.content.length()").value(3)).andReturn().getResponse().getContentAsString();
+        for (Object id : JsonPath.<List<Object>>read(file, "$.content[*].document.id")) {
+            mvc.perform(post("/api/admin/documents/" + id + "/valider").header("Authorization", admin)).andExpect(status().isOk());
+        }
+        mvc.perform(get("/api/moi").header("Authorization", ousmane)).andExpect(jsonPath("$.conducteurValide").value(true));
+
+        // Fiche : véhicule, pièces, historique des décisions
+        mvc.perform(get("/api/admin/utilisateurs/" + idOusmane).header("Authorization", admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.vehicules.length()").value(1))
+                .andExpect(jsonPath("$.documents.length()").value(4))
+                .andExpect(jsonPath("$.historique.length()").value(4))
+                .andExpect(jsonPath("$.historique[3].type").value("DOCUMENT_REFUSE"));
+        mvc.perform(get("/api/admin/utilisateurs").param("recherche", "ousmane").header("Authorization", admin))
+                .andExpect(jsonPath("$.page.totalElements").value(1));
+
+        // Blocage : motif obligatoire, pas sur soi-même ; connexion et sessions coupées ; puis déblocage
+        mvc.perform(post("/api/admin/utilisateurs/" + idOusmane + "/bloquer").header("Authorization", admin)
+                .contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isBadRequest());
+        mvc.perform(post("/api/admin/utilisateurs/" + idOusmane + "/bloquer").header("Authorization", admin)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"motif\":\"Annulations répétées\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.utilisateur.statut").value("BLOQUE"));
+        appel(post("/api/auth/connexion"), "{\"identifiant\":\"ousmane@test.sn\",\"motDePasse\":\"MotDePasse2026\"}")
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/admin/utilisateurs/" + idOusmane + "/reactiver").header("Authorization", admin))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.utilisateur.statut").value("ACTIF"))
+                .andExpect(jsonPath("$.historique[0].type").value("COMPTE_REACTIVE"));
+        appel(post("/api/auth/connexion"), "{\"identifiant\":\"ousmane@test.sn\",\"motDePasse\":\"MotDePasse2026\"}")
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/admin/statistiques").header("Authorization", admin))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.conducteursValides").isNumber());
+    }
+
+    @Test
     void motDePasseOublieParOtp() throws Exception {
         inscrire("Fatou", "Sow", "fatou@test.sn", "761112233", "FEMME");
         String codeInscription = CodesDeTest.DERNIER_CODE.get("fatou@test.sn");

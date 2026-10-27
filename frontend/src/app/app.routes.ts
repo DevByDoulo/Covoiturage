@@ -41,6 +41,34 @@ export const routes: Routes = [
     ],
   },
   {
+    // 07 — Administration : back-office avec son propre cadre (menu latéral).
+    path: 'admin',
+    canActivate: [connecteGuard, roleGuard('ADMIN')],
+    loadComponent: () => import('./features/admin/admin-layout').then((m) => m.AdminLayout),
+    children: [
+      {
+        path: '',
+        title: 'Tableau de bord · YOBALEMAsn',
+        loadComponent: () => import('./features/admin/tableau-de-bord').then((m) => m.TableauDeBord),
+      },
+      {
+        path: 'documents',
+        title: 'Validation des documents · YOBALEMAsn',
+        loadComponent: () => import('./features/admin/validation-documents').then((m) => m.ValidationDocuments),
+      },
+      {
+        path: 'utilisateurs',
+        title: 'Utilisateurs · YOBALEMAsn',
+        loadComponent: () => import('./features/admin/utilisateurs').then((m) => m.AdminUtilisateurs),
+      },
+      {
+        path: 'utilisateurs/:id',
+        title: 'Fiche utilisateur · YOBALEMAsn',
+        loadComponent: () => import('./features/admin/fiche-utilisateur').then((m) => m.FicheUtilisateurPage),
+      },
+    ],
+  },
+  {
     // Espace connecté : barre de navigation commune.
     path: '',
     canActivate: [connecteGuard],
@@ -106,12 +134,6 @@ export const routes: Routes = [
         path: 'trajets/:id',
         title: 'Trajet · YOBALEMAsn',
         loadComponent: () => import('./features/trajets/detail/detail-trajet').then((m) => m.DetailTrajet),
-      },
-      {
-        path: 'admin',
-        title: 'Back-office · YOBALEMAsn',
-        canActivate: [roleGuard('ADMIN')],
-        loadComponent: () => import('./features/accueil/accueil').then((m) => m.Accueil),
       },
     ],
   },

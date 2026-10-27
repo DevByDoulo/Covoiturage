@@ -1,0 +1,160 @@
+<header class="titre">
+  <div>
+    <h1>Validation des documents <span class="pastille pastille--attente">{{ total() }} en cours</span></h1>
+    <p>{{ total() }} document{{ total() > 1 ? 's' : '' }} en attente de vérification manuelle par l'équipe d'administration.</p>
+  </div>
+  <div class="filtres">
+    <label class="sr-only" for="filtre-type">Type de document</label>
+    <select id="filtre-type" [formControl]="type">
+      <option value="">Type : tous</option>
+      @for (t of types; track t[0]) {
+        <option [value]="t[0]">{{ t[1] }}</option>
+      }
+    </select>
+    <label class="sr-only" for="filtre-ordre">Ordre</label>
+    <select id="filtre-ordre" [formControl]="ordre">
+      <option value="anciens">Plus anciens d'abord</option>
+      <option value="recents">Plus récents d'abord</option>
+    </select>
+    <button class="bouton-rond" type="button" (click)="charger()" aria-label="Actualiser"><app-icone nom="rafraichir" [taille]="18" /></button>
+  </div>
+</header>
+
+@if (confirmation(); as c) {
+  <app-alerte type="succes">{{ c }}</app-alerte>
+}
+
+<div class="ecran">
+  <section class="carte file" aria-labelledby="titre-file">
+    <header class="file__entete">
+      <h2 id="titre-file"><app-icone nom="liste" /> File d'attente</h2>
+      <span class="pastille pastille--attente">{{ total() }} restant{{ total() > 1 ? 's' : '' }}</span>
+    </header>
+    <form (submit)="$event.preventDefault(); charger()">
+      <div class="saisie">
+        <app-icone nom="recherche" [taille]="18" />
+        <input [formControl]="recherche" placeholder="Rechercher un candidat (nom, téléphone)…" aria-label="Rechercher un candidat" />
+      </div>
+    </form>
+    <ul>
+      @for (d of file(); track d.document.id) {
+        <li>
+          <button type="button" [class.choisi]="d.document.id === idChoisi()" (click)="choisir(d)">
+            <span class="avatar">{{ initiales(d.titulaire.prenom + ' ' + d.titulaire.nom) }}</span>
+            <span class="file__texte">
+              <strong>{{ d.titulaire.prenom }} {{ d.titulaire.nom }}</strong>
+              <span class="type"><app-icone [nom]="icones[d.document.typeDocument]" [taille]="15" /> {{ libelles[d.document.typeDocument] }}</span>
+              <small>Soumis le {{ d.document.dateSoumission | date: "dd/MM/yyyy 'à' HH'h'mm" }}</small>
+            </span>
+          </button>
+        </li>
+      } @empty {
+        @if (charge()) {
+          <li class="vide"><app-icone nom="valide" [taille]="28" /> Aucun document en attente.</li>
+        }
+      }
+    </ul>
+  </section>
+
+  @if (selection(); as d) {
+    <section class="carte detail" aria-labelledby="titre-detail">
+      <header class="detail__entete">
+        <div>
+          <h2 id="titre-detail">{{ libelles[d.document.typeDocument] }} – {{ d.titulaire.prenom }} {{ d.titulaire.nom }}</h2>
+          <span class="pastille pastille--attente">En attente</span>
+          <p class="aide">Soumis le {{ d.document.dateSoumission | date: "dd/MM/yyyy 'à' HH'h'mm" }} • Document n° {{ d.document.id }}</p>
+        </div>
+        <div class="outils" role="group" aria-label="Affichage du document">
+          <button class="bouton-rond" type="button" (click)="zoomer(0.25)" aria-label="Agrandir"><app-icone nom="plus" [taille]="17" /></button>
+          <button class="bouton-rond" type="button" (click)="zoomer(-0.25)" aria-label="Réduire"><span aria-hidden="true">−</span></button>
+          <button class="bouton-rond" type="button" (click)="tourner()" aria-label="Pivoter"><app-icone nom="rafraichir" [taille]="17" /></button>
+          @if (apercu(); as a) {
+            <a class="bouton-rond" [href]="a.url" target="_blank" rel="noopener" aria-label="Ouvrir dans un nouvel onglet"><app-icone nom="fleche-droite" [taille]="17" /></a>
+          }
+        </div>
+      </header>
+
+      <div class="visionneuse">
+        @if (apercu(); as a) {
+          @if (a.pdf) {
+            <iframe [src]="a.securise" title="Document PDF"></iframe>
+          } @else {
+            <img [src]="a.url" [style.transform]="transformation()" alt="Document envoyé par l'utilisateur" />
+          }
+        } @else {
+          <span class="chargement" aria-label="Chargement du document"></span>
+        }
+      </div>
+
+      <h3>Informations à vérifier</h3>
+      <div class="infos">
+        <div>
+          <small>Nom sur le compte</small>
+          <strong>{{ d.titulaire.prenom }} {{ d.titulaire.nom }}</strong>
+          <a [routerLink]="['/admin/utilisateurs', d.titulaire.id]">Voir la fiche</a>
+        </div>
+        <div>
+          <small>Contact vérifié</small>
+          <strong>{{ telephone(d.titulaire.telephone) }}</strong>
+          <span class="etat">
+            @if (d.telephoneVerifie) { Téléphone vérifié par SMS } @else if (d.emailVerifie) { Email vérifié } @else { Non vérifié }
+          </span>
+        </div>
+        <div>
+          <small>Véhicule associé</small>
+          @if (d.vehicule; as v) {
+            <strong>{{ v.immatriculation }}</strong>
+            <span class="etat">{{ v.marque }} {{ v.modele }} {{ v.annee }} • {{ v.nombrePlaces }} pl. • {{ energies[v.typeEnergie] }}</span>
+          } @else {
+            <strong>—</strong>
+            <span class="etat">Non concerné</span>
+          }
+        </div>
+        <div>
+          <small>Autres documents</small>
+          @for (a of d.autresDocuments; track a.id) {
+            <span class="pastille" [class.pastille--succes]="a.statutValidation === 'VALIDE'"
+              [class.pastille--attente]="a.statutValidation === 'EN_ATTENTE'" [class.pastille--erreur]="a.statutValidation === 'REFUSE'">
+              {{ libelles[a.typeDocument] }}
+              {{ a.statutValidation === 'VALIDE' ? 'validé(e)' : a.statutValidation === 'REFUSE' ? 'refusé(e)' : 'en attente' }}
+            </span>
+          } @empty {
+            <span class="etat">Aucun</span>
+          }
+        </div>
+      </div>
+
+      <app-alerte type="info">
+        Le conducteur sera activé dès que son permis, sa pièce d'identité et sa carte grise seront tous validés.
+      </app-alerte>
+
+      <div class="champ" [class.champ--erreur]="erreur()?.champ === 'motif'">
+        <label class="libelle" for="motif">Motif du refus <span class="aide">(obligatoire uniquement en cas de rejet)</span></label>
+        <div class="saisie saisie--texte">
+          <textarea id="motif" [formControl]="motif" rows="3" maxlength="500"
+            placeholder="Ex. : photo floue, document expiré, nom différent du compte, document tronqué…"></textarea>
+        </div>
+      </div>
+
+      @if (erreur(); as e) {
+        <app-alerte type="erreur">{{ e.message }}</app-alerte>
+      }
+
+      <div class="actions">
+        <button class="bouton-lien refuser" type="button" (click)="refuser()" [disabled]="decision()">
+          <app-icone nom="croix" [taille]="18" /> Refuser
+        </button>
+        <button class="bouton bouton--primaire" type="button" (click)="valider()" [disabled]="decision()">
+          @if (decision() === 'valider') {
+            <span class="chargement" aria-hidden="true"></span>
+          } @else {
+            <app-icone nom="valide" />
+          }
+          Valider le document
+        </button>
+      </div>
+    </section>
+  } @else if (erreur(); as e) {
+    <app-alerte type="erreur">{{ e.message }}</app-alerte>
+  }
+</div>

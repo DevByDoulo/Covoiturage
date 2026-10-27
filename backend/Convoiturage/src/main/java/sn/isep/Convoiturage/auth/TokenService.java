@@ -40,6 +40,7 @@ public class TokenService {
 
     @Transactional
     public Jetons emettre(Utilisateur u) {
+        u.setDerniereConnexion(LocalDateTime.now());
         return new Jetons(genererAccessToken(u), creerRefreshToken(u), props.jwt().accessTokenMinutes() * 60);
     }
 

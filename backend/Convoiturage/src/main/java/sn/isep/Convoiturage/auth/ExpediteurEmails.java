@@ -15,10 +15,10 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-class ExpediteurEmails {
+public class ExpediteurEmails {
 
-    /** Email à envoyer après validation de la transaction. */
-    record EmailAEnvoyer(String email, String sujet, String texte) {}
+    /** Email à envoyer après validation de la transaction (à publier avec ApplicationEventPublisher). */
+    public record EmailAEnvoyer(String email, String sujet, String texte) {}
 
     private final EmailSender emails;
 

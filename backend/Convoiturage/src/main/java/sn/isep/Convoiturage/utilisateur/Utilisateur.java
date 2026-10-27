@@ -79,6 +79,10 @@ public class Utilisateur {
     @Column(name = "date_creation", nullable = false, updatable = false)
     private LocalDateTime dateCreation;
 
+    /** Dernière ouverture ou prolongation de session (connexion, code vérifié, rafraîchissement du jeton). */
+    @Column(name = "derniere_connexion")
+    private LocalDateTime derniereConnexion;
+
     @OneToOne(mappedBy = "utilisateur", cascade = CascadeType.ALL, orphanRemoval = true)
     private Preference preference;
 
