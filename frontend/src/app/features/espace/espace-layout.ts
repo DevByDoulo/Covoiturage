@@ -148,6 +148,10 @@ export class EspaceLayout {
     const profil: EntreeMenu = { lien: '/profil', libelle: 'Profil', icone: 'utilisateur' };
     if (role === 'ADMIN') return [{ lien: '/admin', libelle: 'Tableau de bord', icone: 'maison' }, profil];
     const menu: EntreeMenu[] = [{ lien: '/accueil', libelle: 'Accueil', icone: 'maison' }];
+    // 03 — Trajets
+    menu.push({ lien: '/rechercher', libelle: 'Rechercher', icone: 'recherche' });
+    menu.push({ lien: '/trajets/publier', libelle: 'Publier', icone: 'plus' });
+    if (role === 'CONDUCTEUR') menu.push({ lien: '/trajets/mes-trajets', libelle: 'Mes trajets', icone: 'route' });
     return [...menu, profil];
   });
 }
