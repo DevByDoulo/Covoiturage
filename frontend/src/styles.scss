@@ -358,6 +358,117 @@ button {
   }
 }
 
+/* Section d'un écran de réglages (Mon profil, Véhicules…) : titre avec icône, action ronde à droite */
+.bloc {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    app-icone {
+      color: var(--vert);
+    }
+  }
+}
+.bloc__entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.bloc__sous-titre {
+  margin: -8px 0 0;
+  font-size: 13px;
+  color: var(--texte-3);
+}
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.bouton-rond {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--texte-2);
+  cursor: pointer;
+  text-decoration: none;
+  &:hover {
+    background: var(--vert-clair);
+    color: var(--vert);
+  }
+}
+
+/* Interrupteur (case à cocher role="switch") */
+.interrupteur {
+  position: relative;
+  flex: none;
+  width: 48px;
+  height: 28px;
+  margin: 0;
+  border-radius: 14px;
+  background: #d5dbe7;
+  appearance: none;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(17, 24, 39, 0.25);
+    transition: transform 0.2s;
+  }
+  &:checked {
+    background: var(--vert);
+  }
+  &:checked::after {
+    transform: translateX(20px);
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+/* Pastille de statut (Validé, En attente, Refusé…) */
+.pastille {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.pastille--succes {
+  background: var(--vert-clair);
+  color: var(--vert-fonce);
+}
+.pastille--attente {
+  background: var(--orange-clair);
+  color: var(--orange-fonce);
+}
+.pastille--erreur {
+  background: var(--erreur-fond);
+  color: var(--erreur);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

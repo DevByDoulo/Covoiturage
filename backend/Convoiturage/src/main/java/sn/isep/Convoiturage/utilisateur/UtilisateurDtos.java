@@ -23,17 +23,21 @@ public final class UtilisateurDtos {
         }
     }
 
-    /** Profil complet, visible uniquement par son propriétaire (et l'administrateur). */
+    /**
+     * Profil complet, visible uniquement par son propriétaire (et l'administrateur). motDePasseDefini est faux pour un
+     * compte créé avec Google : l'écran « Changer le mot de passe » ne demande alors pas l'ancien.
+     */
     public record ProfilDto(Long id, String prenom, String nom, String email, String telephone, boolean telephoneVerifie,
                             boolean emailVerifie,
                             Sexe sexe, String photoProfil, String bio, Role role, StatutCompte statut,
                             boolean conducteurValide, BigDecimal noteMoyenne, PreferenceDto preferences,
-                            LocalDateTime dateCreation) {
+                            boolean motDePasseDefini, LocalDateTime dateCreation) {
         public static ProfilDto de(Utilisateur u) {
             return new ProfilDto(u.getId(), u.getPrenom(), u.getNom(), u.getEmail(), u.getTelephone(), u.isTelephoneVerifie(),
                     u.isEmailVerifie(),
                     u.getSexe(), urlPhoto(u.getPhotoProfil()), u.getBio(), u.getRole(), u.getStatut(),
-                    u.isConducteurValide(), u.getNoteMoyenne(), PreferenceDto.de(u.getPreference()), u.getDateCreation());
+                    u.isConducteurValide(), u.getNoteMoyenne(), PreferenceDto.de(u.getPreference()),
+                    u.getMotDePasse() != null, u.getDateCreation());
         }
     }
 
@@ -62,4 +66,15 @@ public final class UtilisateurDtos {
             Sexe sexe) {}
 
     public record FcmTokenRequete(@NotNull @Size(max = 255) String token) {}
+
+    public record ContactUrgenceRequete(
+            @NotBlank @Size(max = 120) String nom,
+            @NotBlank String telephone,
+            @Size(max = 40) String lien) {}
+
+    public record ContactUrgenceDto(Long id, String nom, String telephone, String lien) {
+        public static ContactUrgenceDto de(ContactUrgence c) {
+            return new ContactUrgenceDto(c.getId(), c.getNom(), c.getTelephone(), c.getLien());
+        }
+    }
 }

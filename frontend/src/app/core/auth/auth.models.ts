@@ -27,6 +27,8 @@ export interface Profil {
   conducteurValide: boolean;
   noteMoyenne: number | null;
   preferences: Preferences;
+  /** Faux pour un compte créé avec Google : l'ancien mot de passe n'est alors pas demandé. */
+  motDePasseDefini: boolean;
   dateCreation: string;
 }
 

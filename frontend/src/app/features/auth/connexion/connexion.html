@@ -11,6 +11,8 @@
 
   @if (reinitialise()) {
     <app-alerte type="succes" titre="Mot de passe modifié">Connectez-vous avec votre nouveau mot de passe.</app-alerte>
+  } @else if (desactive()) {
+    <app-alerte type="info" titre="Compte désactivé">Reconnectez-vous à tout moment pour le réactiver.</app-alerte>
   } @else if (expiree()) {
     <app-alerte type="info">Votre session a expiré. Reconnectez-vous pour continuer.</app-alerte>
   }

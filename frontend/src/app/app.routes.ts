@@ -53,6 +53,23 @@ export const routes: Routes = [
         canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
         loadComponent: () => import('./features/accueil/accueil').then((m) => m.Accueil),
       },
+      // 01 — Gestion des utilisateurs
+      {
+        path: 'profil',
+        title: 'Mon profil · YOBALEMAsn',
+        loadComponent: () => import('./features/profil/profil').then((m) => m.ProfilPage),
+      },
+      {
+        path: 'profil/mot-de-passe',
+        title: 'Mot de passe · YOBALEMAsn',
+        loadComponent: () => import('./features/profil/changer-mot-de-passe').then((m) => m.ChangerMotDePasse),
+      },
+      {
+        path: 'profil/desactivation',
+        title: 'Désactiver mon compte · YOBALEMAsn',
+        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
+        loadComponent: () => import('./features/profil/desactivation').then((m) => m.Desactivation),
+      },
       {
         path: 'admin',
         title: 'Back-office · YOBALEMAsn',
