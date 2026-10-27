@@ -77,6 +77,8 @@ app:
   google:
     # ID client OAuth Google (vérification des idToken du « Se connecter avec Google »)
     client-id: ${GOOGLE_CLIENT_ID:}
+    # Clé Google Maps Platform (Routes API) pour les itinéraires. Vide => estimation à vol d'oiseau × 1,25.
+    maps-api-key: ${GOOGLE_MAPS_API_KEY:}
   ia:
     # Service ia-tarification (FastAPI, dossier ia-tarification/). Vide => prix calculés par la formule seule.
     url: ${IA_TARIFICATION_URL:}

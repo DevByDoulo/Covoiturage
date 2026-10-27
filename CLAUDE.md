@@ -59,8 +59,17 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   Service `ia-tarification` : XGBoost sur ADEME Car Labelling (MAE 0,35 L/100 km), Open-Meteo attendu 1,5 s au
   plus. En dev, `IA_TARIFICATION_URL` vaut `http://localhost:8000` ; en test, formule seule. À brancher dans
   `TrajetService` (module 03) : `moteur.estimer(new DemandeEstimation(...))`.
-- Tests : `./mvnw test` → 18 tests (dont `ParcoursCompletTest`, `MoteurIATest`) ; `npm test` → 20 tests ;
-  `python -m pytest` dans `ia-tarification` → 20 tests.
+- **03 Gestion des trajets** (branche `03-trajets`, partie de `12-prix`) : module backend `trajet` repris de
+  l'archive (publication avec escales, estimation du prix via `MoteurTarification`, modification, annulation,
+  démarrer/terminer, « mes trajets », recherche PostGIS publique, détail public ; itinéraire Google Routes si
+  `GOOGLE_MAPS_API_KEY`, sinon vol d'oiseau ×1,25). `pom.xml` : `hibernate-spatial` remis. Écrans Angular
+  `features/trajets` (publier avec carte Leaflet et détail du prix IA, détail, mes trajets) et
+  `features/recherche` ; Leaflet ajouté (`package.json`, `angular.json`). Les **alertes de recherche** (table
+  `alerte_recherche`, code dans l'archive) attendent le module 06 Notifications. En attendant le module 07,
+  `POST /api/dev/moi/valider-conducteur` (**profil dev uniquement**, bouton « [Dev] » sur l'écran Publier)
+  valide les documents du compte connecté : à retirer quand l'administration existera.
+- Tests : `./mvnw test` → 22 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `MoteurIATest`) ;
+  `npm test` → 24 tests ; `python -m pytest` dans `ia-tarification` → 20 tests.
 
 ## Répartition du travail (2 développeurs, depuis le 27/10/2026)
 

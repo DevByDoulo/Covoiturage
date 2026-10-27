@@ -83,6 +83,30 @@ export const routes: Routes = [
         canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
         loadComponent: () => import('./features/vehicules/formulaire-vehicule').then((m) => m.FormulaireVehicule),
       },
+      // 03 — Gestion des trajets
+      {
+        path: 'rechercher',
+        title: 'Rechercher un trajet · YOBALEMAsn',
+        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
+        loadComponent: () => import('./features/recherche/recherche').then((m) => m.Recherche),
+      },
+      {
+        path: 'trajets/publier',
+        title: 'Publier un trajet · YOBALEMAsn',
+        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
+        loadComponent: () => import('./features/trajets/publier/publier').then((m) => m.Publier),
+      },
+      {
+        path: 'trajets/mes-trajets',
+        title: 'Mes trajets · YOBALEMAsn',
+        canActivate: [roleGuard('CONDUCTEUR')],
+        loadComponent: () => import('./features/trajets/mes-trajets/mes-trajets').then((m) => m.MesTrajets),
+      },
+      {
+        path: 'trajets/:id',
+        title: 'Trajet · YOBALEMAsn',
+        loadComponent: () => import('./features/trajets/detail/detail-trajet').then((m) => m.DetailTrajet),
+      },
       {
         path: 'admin',
         title: 'Back-office · YOBALEMAsn',

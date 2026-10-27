@@ -18,7 +18,8 @@ public record AppProperties(Jwt jwt, Otp otp, Cors cors, Stockage stockage, Goog
 
     public record Stockage(String repertoire) {}
 
-    public record Google(String clientId) {}
+    /** clientId : « Se connecter avec Google » ; mapsApiKey : Routes API (vide => distances à vol d'oiseau). */
+    public record Google(String clientId, String mapsApiKey) {}
 
     public record Admin(String email, String motDePasse, String telephone) {}
 

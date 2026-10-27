@@ -1,0 +1,171 @@
+@if (erreurChargement(); as e) {
+  <app-alerte type="erreur">{{ e.status === 404 ? 'Ce trajet est introuvable.' : e.message }}</app-alerte>
+  <p class="centre"><a routerLink="/accueil">Retour à l'accueil</a></p>
+} @else if (trajet(); as t) {
+  <header class="entete">
+    @if (estConducteur()) {
+      <a routerLink="/trajets/mes-trajets" class="retour"><app-icone nom="fleche-gauche" [taille]="18" /> Mes trajets</a>
+    }
+    <div class="titre">
+      <h1>{{ t.depart.lieu }} → {{ t.arrivee.lieu }}</h1>
+      <span class="statut" [attr.data-statut]="t.statut">{{ libellesStatut[t.statut] }}</span>
+    </div>
+    <p class="date">
+      <app-icone nom="calendrier" [taille]="16" />
+      {{ t.dateHeureDepart | date: "EEEE d MMMM y 'à' HH'h'mm" }} · ± {{ t.flexibiliteMinutes }} min
+    </p>
+  </header>
+
+  @if (succes(); as s) {
+    <app-alerte type="succes">{{ s }}</app-alerte>
+  }
+  @if (t.statut === 'ANNULE' && t.motifAnnulation) {
+    <app-alerte type="info" titre="Trajet annulé">{{ t.motifAnnulation }}</app-alerte>
+  }
+
+  <div class="grille">
+    <div class="colonne">
+      <app-carte class="carte-itineraire" [marqueurs]="marqueurs()" [trace]="trace()" libelle="Carte du trajet" />
+
+      <section class="carte bloc">
+        <h2><app-icone nom="route" /> Itinéraire</h2>
+        <ol class="etapes">
+          <li><span class="puce puce--depart">A</span>{{ t.depart.lieu }}</li>
+          @for (e of t.escales; track e.id; let i = $index) {
+            <li><span class="puce puce--escale">{{ i + 1 }}</span>{{ e.lieu }}</li>
+          }
+          <li><span class="puce puce--arrivee">B</span>{{ t.arrivee.lieu }}</li>
+        </ol>
+        <dl class="infos">
+          <div><dt>Distance</dt><dd>{{ t.distanceKm }} km</dd></div>
+          <div><dt>Durée estimée</dt><dd>{{ t.dureeEstimeeMin | duree }}</dd></div>
+          <div><dt>Route</dt><dd>{{ libellesRoute[t.typeRoute] }}</dd></div>
+        </dl>
+      </section>
+    </div>
+
+    <div class="colonne">
+      <section class="carte bloc">
+        <div class="prix">
+          <span>Prix par passager</span>
+          <strong>{{ t.prixParPlace | fcfa }}</strong>
+        </div>
+        <ul class="caracteristiques">
+          <li><app-icone nom="utilisateurs" [taille]="18" /> {{ t.nombrePlacesDisponibles }} place(s) libre(s) sur {{ t.nombrePlacesTotal }}</li>
+          <li><app-icone nom="valise" [taille]="18" /> {{ libellesBagage[t.tailleBagage] }}</li>
+          <li><app-icone nom="voiture" [taille]="18" /> {{ t.vehicule.marque }} {{ t.vehicule.modele }} ({{ t.vehicule.annee }})</li>
+          <li><app-icone nom="valide" [taille]="18" /> {{ t.modeReservation === 'AUTOMATIQUE' ? 'Réservation immédiate' : 'Le conducteur accepte chaque demande' }}</li>
+          @if (t.femmesUniquement) {
+            <li class="femmes"><app-icone nom="femme" [taille]="18" /> Trajet réservé aux femmes</li>
+          }
+        </ul>
+        @if (!estConducteur()) {
+          <p class="conducteur">Conducteur : <strong>{{ t.conducteur.prenom }} {{ t.conducteur.nomInitiale }}</strong></p>
+        }
+      </section>
+
+      @if (estConducteur()) {
+        @if (t.tarification; as tf) {
+          <section class="carte bloc">
+            <h2><app-icone nom="eclair" /> Tarification</h2>
+            <dl class="infos">
+              <div><dt>Prix recommandé</dt><dd>{{ tf.prixIa | fcfa }}</dd></div>
+              <div><dt>Fourchette</dt><dd>{{ tf.prixMin | fcfa }} – {{ tf.prixMax | fcfa }}</dd></div>
+              <div><dt>Modèle</dt><dd>{{ tf.versionModele }}</dd></div>
+            </dl>
+          </section>
+        }
+
+        <section class="carte bloc actions">
+          @if (erreurAction(); as e) {
+            <app-alerte type="erreur">{{ e.message }}</app-alerte>
+          }
+
+          @switch (panneau()) {
+            @case ('modifier') {
+              <form class="formulaire" [formGroup]="formModif" (ngSubmit)="enregistrer()">
+                <h2><app-icone nom="crayon" /> Modifier le trajet</h2>
+                <div class="champ">
+                  <label class="libelle" for="m-date">Date et heure de départ</label>
+                  <div class="saisie"><input id="m-date" type="datetime-local" formControlName="dateHeureDepart" /></div>
+                </div>
+                <div class="champ">
+                  <span class="libelle" id="m-flex">Flexibilité</span>
+                  <div class="bascule bascule--4" role="group" aria-labelledby="m-flex">
+                    @for (f of flexibilites; track f) {
+                      <button type="button" [attr.aria-pressed]="formModif.controls.flexibiliteMinutes.value === f"
+                              (click)="formModif.controls.flexibiliteMinutes.setValue(f)">± {{ f }}</button>
+                    }
+                  </div>
+                </div>
+                <div class="champ">
+                  <span class="libelle" id="m-places">Places proposées (au moins {{ placesReservees() }} déjà réservée(s))</span>
+                  <div class="compteur" role="group" aria-labelledby="m-places">
+                    <button type="button" (click)="changerPlaces(-1)" aria-label="Une place de moins">−</button>
+                    <output>{{ formModif.controls.nombrePlaces.value }}</output>
+                    <button type="button" (click)="changerPlaces(1)" aria-label="Une place de plus">+</button>
+                  </div>
+                </div>
+                <div class="champ">
+                  <span class="libelle" id="m-bagages">Bagages</span>
+                  <div class="bascule bascule--3" role="group" aria-labelledby="m-bagages">
+                    @for (b of bagages; track b) {
+                      <button type="button" [attr.aria-pressed]="formModif.controls.tailleBagage.value === b"
+                              (click)="formModif.controls.tailleBagage.setValue(b)">{{ libellesBagage[b] }}</button>
+                    }
+                  </div>
+                </div>
+                @if (t.tarification; as tf) {
+                  <div class="champ">
+                    <label class="libelle" for="m-prix">Prix par passager : {{ formModif.controls.prixParPlace.value | fcfa }}</label>
+                    <input id="m-prix" class="curseur" type="range" step="50" [min]="tf.prixMin" [max]="tf.prixMax"
+                           formControlName="prixParPlace" />
+                    <p class="aide">Les passagers déjà acceptés gardent le prix de leur réservation.</p>
+                  </div>
+                }
+                <div class="boutons">
+                  <button type="button" class="bouton bouton--secondaire" (click)="panneau.set('aucun')">Fermer</button>
+                  <button type="submit" class="bouton bouton--primaire" [disabled]="action()">Enregistrer</button>
+                </div>
+              </form>
+            }
+            @case ('annuler') {
+              <h2><app-icone nom="alerte" /> Annuler le trajet ?</h2>
+              <p class="aide">Les {{ placesReservees() }} passager(s) ayant réservé seront prévenus. Cette action est définitive.</p>
+              <div class="champ">
+                <label class="libelle" for="motif">Motif (facultatif, transmis aux passagers)</label>
+                <textarea id="motif" class="zone-texte" rows="3" [formControl]="motif" maxlength="500"></textarea>
+              </div>
+              <div class="boutons">
+                <button type="button" class="bouton bouton--secondaire" (click)="panneau.set('aucun')">Garder le trajet</button>
+                <button type="button" class="bouton bouton--danger" [disabled]="action()" (click)="annuler()">Annuler le trajet</button>
+              </div>
+            }
+            @default {
+              @if (modifiable()) {
+                <button type="button" class="bouton bouton--primaire" [disabled]="!demarrable() || action()" (click)="demarrer()">
+                  <app-icone nom="jouer" /> Démarrer le trajet
+                </button>
+                @if (!demarrable()) {
+                  <p class="aide centre">Le démarrage est possible à partir d'une heure avant le départ.</p>
+                }
+                <div class="boutons">
+                  <button type="button" class="bouton bouton--secondaire" (click)="ouvrirModification()"><app-icone nom="crayon" /> Modifier</button>
+                  <button type="button" class="bouton bouton--secondaire danger" (click)="panneau.set('annuler')"><app-icone nom="croix" /> Annuler</button>
+                </div>
+              } @else if (t.statut === 'EN_COURS') {
+                <button type="button" class="bouton bouton--primaire" [disabled]="action()" (click)="terminer()">
+                  <app-icone nom="drapeau" /> Terminer le trajet
+                </button>
+              } @else {
+                <p class="aide centre">Ce trajet n'est plus modifiable.</p>
+              }
+            }
+          }
+        </section>
+      }
+    </div>
+  </div>
+} @else {
+  <p class="centre"><span class="chargement chargement--sombre"></span> Chargement…</p>
+}
