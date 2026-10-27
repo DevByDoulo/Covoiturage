@@ -11,7 +11,7 @@
 | Vérification Téléphone OTP | `/auth/verification` — fait |
 | Mot de passe oublié | `/auth/mot-de-passe-oublie` — fait |
 | Mon profil CoVoitIA | `/profil` (+ `/profil/mot-de-passe`, `/profil/desactivation`) — fait |
-| Mes véhicules et documents | à faire |
+| Mes véhicules et documents | `/vehicules` (+ `/vehicules/nouveau`, `/vehicules/:id`) — fait |
 | Validation des documents (back-office) | à faire |
 | BO - Fiche utilisateur (back-office) | à faire |
 

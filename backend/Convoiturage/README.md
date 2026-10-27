@@ -59,7 +59,8 @@ de chaque exécution (PostgreSQL doit tourner, voir ci-dessus).
 sn.isep.Convoiturage
 ├── common        sécurité JWT/CORS, erreurs (ProblemDetail), téléphones, stockage fichiers
 ├── auth          inscription, codes OTP (email/SMS), connexion (email/téléphone, Google), refresh tokens, mot de passe oublié
-├── utilisateur   profil, préférences, photo, jeton FCM
+├── utilisateur   profil, préférences, photo, contacts d'urgence, jeton FCM
+├── vehicule      véhicules (photo), documents : permis, pièce d'identité, carte grise par véhicule
 └── admin         création du premier administrateur au démarrage
 ```
 Un nouveau module = un nouveau package au même niveau (`vehicule`, `trajet`, `notification`…). Pas de dépendance
@@ -81,6 +82,8 @@ circulaire entre modules : passer par des événements Spring.
 | GET/POST/DELETE | `/api/moi/contacts-urgence[/{id}]` (3 au plus) | connecté |
 | PUT | `/api/moi/mot-de-passe` (`motDePasseActuel`, `nouveauMotDePasse` ; renvoie de nouveaux jetons) ; POST `/api/moi/desactivation` (`motDePasse`) | connecté |
 | GET | `/api/utilisateurs/{id}` (profil public) | public |
+| POST/GET/PUT/DELETE | `/api/moi/vehicules[/{id}]` ; POST `/api/moi/vehicules/{id}/photo` | connecté |
+| POST/GET | `/api/moi/documents` (multipart : `type` = PERMIS_CONDUIRE, PIECE_IDENTITE ou CARTE_GRISE, `idVehicule` pour la carte grise, `fichier`) ; GET `/api/documents/{id}/fichier` (propriétaire ou admin) | connecté |
 
 Les erreurs suivent le format ProblemDetail : `{"status":409,"detail":"Cet email est déjà utilisé","champ":"email"}`
 (+ `erreurs` par champ pour les validations).
@@ -96,4 +99,9 @@ Les erreurs suivent le format ProblemDetail : `{"status":409,"detail":"Cet email
 - **Compte** : changer le mot de passe exige l'ancien (sauf compte créé avec Google), ferme les autres sessions et
   prévient le titulaire ; la désactivation (mot de passe exigé) ferme toutes les sessions, et le compte est réactivé
   à la connexion suivante. Contacts d'urgence : 3 au plus, numéro normalisé, ni le sien ni un doublon.
+- **Véhicules** : déclarer un véhicule fait passer le compte en `CONDUCTEUR` (rafraîchir le jeton). Avant validation
+  tout est modifiable ; après, seules la consommation et l'usure. Un véhicule retiré puis redéclaré est réactivé.
+- **Documents** : JPEG, PNG ou PDF (type lu dans le fichier), 5 Mo ; un nouvel envoi remplace la pièce encore en attente
+  du même emplacement. Conducteur validé = permis + pièce d'identité validés + au moins un véhicule actif dont la carte
+  grise est validée (`VehiculeService.recalculerStatutConducteur`, à appeler après chaque décision de l'admin — module 07).
 - **Jetons** : accès JWT 30 min ; refresh opaque 30 jours, haché, rotation à chaque usage, réutilisation détectée → toutes les sessions coupées.

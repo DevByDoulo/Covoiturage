@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -203,6 +204,70 @@ class ParcoursCompletTest {
         appel(post("/api/auth/connexion"), "{\"identifiant\":\"moussa@test.sn\",\"motDePasse\":\"Nouveau2026\"}")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.utilisateur.statut").value("ACTIF"));
+    }
+
+    @Test
+    void vehiculesEtDocuments() throws Exception {
+        String khady = "Bearer " + inscrire("Khady", "Ndiaye", "khady@test.sn", "776660001", "FEMME");
+        String vehicule = """
+                {"immatriculation":"dk 1234 ab","marque":"Toyota","modele":"Corolla","annee":2018,"puissanceFiscale":7,
+                 "nombrePlaces":5,"typeEnergie":"ESSENCE","consommationTheorique":6.5}""";
+
+        // Déclaration : immatriculation normalisée, rôle conducteur (visible après rafraîchissement du jeton)
+        String cree = mvc.perform(post("/api/moi/vehicules").header("Authorization", khady)
+                        .contentType(MediaType.APPLICATION_JSON).content(vehicule))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.immatriculation").value("DK-1234-AB"))
+                .andExpect(jsonPath("$.statutValidation").value("EN_ATTENTE"))
+                .andReturn().getResponse().getContentAsString();
+        long idVehicule = ((Number) JsonPath.read(cree, "$.id")).longValue();
+        mvc.perform(post("/api/moi/vehicules").header("Authorization", khady)
+                        .contentType(MediaType.APPLICATION_JSON).content(vehicule))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.champ").value("immatriculation"));
+        String conductrice = "Bearer " + jeton(appel(post("/api/auth/refresh"), "{\"refreshToken\":\"" + dernierRefresh + "\"}")
+                .andExpect(jsonPath("$.utilisateur.role").value("CONDUCTEUR")));
+
+        // Documents : permis, pièce d'identité, carte grise (rattachée au véhicule) ; un nouvel envoi remplace l'attente
+        byte[] png = {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0};
+        for (String type : new String[]{"PERMIS_CONDUIRE", "PIECE_IDENTITE", "PERMIS_CONDUIRE"}) {
+            mvc.perform(multipart("/api/moi/documents").file(new MockMultipartFile("fichier", "doc.png", "image/png", png))
+                            .param("type", type).header("Authorization", conductrice))
+                    .andExpect(status().isCreated()).andExpect(jsonPath("$.statutValidation").value("EN_ATTENTE"));
+        }
+        mvc.perform(multipart("/api/moi/documents").file(new MockMultipartFile("fichier", "cg.png", "image/png", png))
+                        .param("type", "CARTE_GRISE").header("Authorization", conductrice))
+                .andExpect(status().isBadRequest());
+        String carteGrise = mvc.perform(multipart("/api/moi/documents").file(new MockMultipartFile("fichier", "cg.png", "image/png", png))
+                        .param("type", "CARTE_GRISE").param("idVehicule", String.valueOf(idVehicule)).header("Authorization", conductrice))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.immatriculation").value("DK-1234-AB"))
+                .andReturn().getResponse().getContentAsString();
+        mvc.perform(get("/api/moi/documents").header("Authorization", conductrice))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(3));
+
+        // Le fichier n'est visible que par son propriétaire
+        String url = JsonPath.read(carteGrise, "$.urlFichier");
+        mvc.perform(get(url).header("Authorization", conductrice)).andExpect(status().isOk());
+        String autre = "Bearer " + inscrire("Bineta", "Sarr", "bineta@test.sn", "776660002", "FEMME");
+        mvc.perform(get(url).header("Authorization", autre)).andExpect(status().isNotFound());
+
+        // Avant validation tout est modifiable ; après, seulement la consommation et l'usure
+        mvc.perform(put("/api/moi/vehicules/" + idVehicule).header("Authorization", conductrice)
+                        .contentType(MediaType.APPLICATION_JSON).content(vehicule.replace("Corolla", "Yaris")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.modele").value("Yaris"));
+        jdbc.update("update vehicule set statut_validation = 'VALIDE' where id_vehicule = ?", idVehicule);
+        mvc.perform(put("/api/moi/vehicules/" + idVehicule).header("Authorization", conductrice)
+                        .contentType(MediaType.APPLICATION_JSON).content(vehicule.replace("Corolla", "Camry")))
+                .andExpect(status().isConflict());
+        mvc.perform(put("/api/moi/vehicules/" + idVehicule).header("Authorization", conductrice)
+                        .contentType(MediaType.APPLICATION_JSON).content(vehicule.replace("Corolla", "Yaris").replace("6.5", "7.2")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.consommationTheorique").value(7.2));
+
+        // Retrait puis nouvelle déclaration de la même voiture : elle est réactivée
+        mvc.perform(delete("/api/moi/vehicules/" + idVehicule).header("Authorization", conductrice)).andExpect(status().isNoContent());
+        mvc.perform(get("/api/moi/vehicules").header("Authorization", conductrice)).andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(post("/api/moi/vehicules").header("Authorization", conductrice)
+                        .contentType(MediaType.APPLICATION_JSON).content(vehicule))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.id").value(idVehicule));
     }
 
     @Test
