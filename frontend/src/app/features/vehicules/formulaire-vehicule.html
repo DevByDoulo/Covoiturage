@@ -1,0 +1,114 @@
+<div class="page">
+  <app-entete-page [titre]="modification() ? 'Modifier le véhicule' : 'Ajouter un véhicule'" retour="/vehicules" />
+
+  @if (modification() && vehicule()) {
+    <section class="carte photo">
+      <div class="photo__cadre">
+        @if (photo(); as url) {
+          <img [src]="url" alt="Photo du véhicule" />
+        } @else {
+          <app-icone nom="voiture" [taille]="36" />
+        }
+      </div>
+      <label class="bouton bouton--secondaire photo__bouton">
+        <input class="sr-only" type="file" accept="image/jpeg,image/png,image/webp" (change)="choisirPhoto($event)" [disabled]="envoiPhoto()" />
+        @if (envoiPhoto()) {
+          <span class="chargement chargement--sombre" aria-hidden="true"></span>
+        } @else {
+          <app-icone nom="camera" [taille]="18" />
+        }
+        {{ photo() ? 'Changer la photo' : 'Ajouter une photo' }}
+      </label>
+    </section>
+  }
+
+  <form class="carte formulaire" [formGroup]="form" (ngSubmit)="enregistrer()" novalidate>
+    @if (valide()) {
+      <app-alerte type="info">Carte grise validée : seules la consommation et l'usure peuvent être modifiées.</app-alerte>
+    }
+
+    <div class="champ" [class.champ--erreur]="enErreur('immatriculation') || erreur()?.champ === 'immatriculation'">
+      <label class="libelle" for="immatriculation">Immatriculation</label>
+      <div class="saisie"><input id="immatriculation" formControlName="immatriculation" placeholder="DK-1234-AB" autocapitalize="characters" /></div>
+      @if (enErreur('immatriculation')) {
+        <p class="message-erreur">4 à 20 lettres, chiffres ou tirets (ex. DK-1234-AB)</p>
+      }
+    </div>
+
+    <div class="grille">
+      <div class="champ" [class.champ--erreur]="enErreur('marque')">
+        <label class="libelle" for="marque">Marque</label>
+        <div class="saisie"><input id="marque" formControlName="marque" placeholder="Toyota" /></div>
+      </div>
+      <div class="champ" [class.champ--erreur]="enErreur('modele')">
+        <label class="libelle" for="modele">Modèle</label>
+        <div class="saisie"><input id="modele" formControlName="modele" placeholder="Corolla" /></div>
+      </div>
+      <div class="champ" [class.champ--erreur]="enErreur('annee')">
+        <label class="libelle" for="annee">Année</label>
+        <div class="saisie"><input id="annee" type="number" inputmode="numeric" formControlName="annee" placeholder="2018" /></div>
+      </div>
+      <div class="champ" [class.champ--erreur]="enErreur('puissanceFiscale')">
+        <label class="libelle" for="puissance">Puissance (CV)</label>
+        <div class="saisie"><input id="puissance" type="number" inputmode="numeric" formControlName="puissanceFiscale" placeholder="7" /></div>
+      </div>
+      <div class="champ">
+        <label class="libelle" for="places">Places (conducteur compris)</label>
+        <div class="saisie">
+          <select id="places" formControlName="nombrePlaces">
+            @for (p of places; track p) {
+              <option [ngValue]="p">{{ p }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="champ">
+        <label class="libelle" for="energie">Énergie</label>
+        <div class="saisie">
+          <select id="energie" formControlName="typeEnergie">
+            @for (e of energies; track e[0]) {
+              <option [value]="e[0]">{{ e[1] }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <fieldset>
+      <legend>Pour un prix au plus juste <small>(facultatif)</small></legend>
+      <div class="grille grille--trois">
+        <div class="champ" [class.champ--erreur]="enErreur('consommationTheorique')">
+          <label class="libelle" for="conso-t">Conso. constructeur (L/100)</label>
+          <div class="saisie"><input id="conso-t" type="number" step="0.1" formControlName="consommationTheorique" placeholder="6,5" /></div>
+        </div>
+        <div class="champ" [class.champ--erreur]="enErreur('consommationReelle')">
+          <label class="libelle" for="conso-r">Conso. réelle (L/100)</label>
+          <div class="saisie"><input id="conso-r" type="number" step="0.1" formControlName="consommationReelle" placeholder="7,2" /></div>
+        </div>
+        <div class="champ" [class.champ--erreur]="enErreur('amortissementParKm')">
+          <label class="libelle" for="usure">Usure (FCFA/km)</label>
+          <div class="saisie"><input id="usure" type="number" formControlName="amortissementParKm" placeholder="25" /></div>
+        </div>
+      </div>
+    </fieldset>
+
+    @if (erreur(); as e) {
+      <app-alerte type="erreur">{{ e.message }}</app-alerte>
+    }
+
+    <button class="bouton bouton--primaire" type="submit" [disabled]="envoi()">
+      @if (envoi()) {
+        <span class="chargement" aria-hidden="true"></span>
+      } @else {
+        <app-icone nom="valide" />
+      }
+      {{ modification() ? 'Enregistrer' : 'Ajouter le véhicule' }}
+    </button>
+
+    @if (modification() && vehicule()) {
+      <button class="bouton-lien retirer" type="button" (click)="retirer()">
+        <app-icone nom="poubelle" [taille]="16" /> Retirer ce véhicule
+      </button>
+    }
+  </form>
+</div>

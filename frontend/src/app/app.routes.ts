@@ -70,6 +70,19 @@ export const routes: Routes = [
         canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
         loadComponent: () => import('./features/profil/desactivation').then((m) => m.Desactivation),
       },
+      // 02 — Gestion des véhicules
+      {
+        path: 'vehicules',
+        title: 'Véhicules et documents · YOBALEMAsn',
+        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
+        loadComponent: () => import('./features/vehicules/vehicules').then((m) => m.VehiculesPage),
+      },
+      {
+        path: 'vehicules/:id',
+        title: 'Véhicule · YOBALEMAsn',
+        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
+        loadComponent: () => import('./features/vehicules/formulaire-vehicule').then((m) => m.FormulaireVehicule),
+      },
       {
         path: 'admin',
         title: 'Back-office · YOBALEMAsn',
