@@ -77,11 +77,6 @@ app:
   google:
     # ID client OAuth Google (vérification des idToken du « Se connecter avec Google »)
     client-id: ${GOOGLE_CLIENT_ID:}
-    # Clé Google Maps Platform (Routes API). Vide => estimation à vol d'oiseau.
-    maps-api-key: ${GOOGLE_MAPS_API_KEY:}
-  firebase:
-    # Chemin vers le JSON du compte de service Firebase. Vide => les push sont seulement journalisés.
-    credentials-path: ${FIREBASE_CREDENTIALS_PATH:}
   admin:
     email: ${ADMIN_EMAIL:}
     mot-de-passe: ${ADMIN_PASSWORD:}

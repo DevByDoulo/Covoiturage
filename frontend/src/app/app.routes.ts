@@ -46,6 +46,7 @@ export const routes: Routes = [
     canActivate: [connecteGuard],
     loadComponent: () => import('./features/espace/espace-layout').then((m) => m.EspaceLayout),
     children: [
+      // Chaque fonctionnalité ajoute ici ses écrans (fichier partagé : modifications courtes).
       {
         path: 'accueil',
         title: 'Accueil · YOBALEMAsn',
@@ -57,31 +58,6 @@ export const routes: Routes = [
         title: 'Back-office · YOBALEMAsn',
         canActivate: [roleGuard('ADMIN')],
         loadComponent: () => import('./features/accueil/accueil').then((m) => m.Accueil),
-      },
-      // F5 — Recherche
-      {
-        path: 'rechercher',
-        title: 'Rechercher un trajet · YOBALEMAsn',
-        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
-        loadComponent: () => import('./features/recherche/recherche').then((m) => m.Recherche),
-      },
-      // F4 — Trajets
-      {
-        path: 'trajets/publier',
-        title: 'Publier un trajet · YOBALEMAsn',
-        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
-        loadComponent: () => import('./features/trajets/publier/publier').then((m) => m.Publier),
-      },
-      {
-        path: 'trajets/mes-trajets',
-        title: 'Mes trajets · YOBALEMAsn',
-        canActivate: [roleGuard('CONDUCTEUR')],
-        loadComponent: () => import('./features/trajets/mes-trajets/mes-trajets').then((m) => m.MesTrajets),
-      },
-      {
-        path: 'trajets/:id',
-        title: 'Trajet · YOBALEMAsn',
-        loadComponent: () => import('./features/trajets/detail/detail-trajet').then((m) => m.DetailTrajet),
       },
     ],
   },

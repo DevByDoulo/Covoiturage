@@ -22,59 +22,49 @@ le diagramme de classes de référence est `docs/conception/CoVoiturage_Diagramm
 Les tables et entités suivent **les noms du diagramme de classes** (`utilisateur`, `trajet`, `id_trajet`,
 `reservation`…). Pour un nouvel écran, partir de la maquette correspondante dans `docs/maquettes/`.
 
-## État au 25/10/2026
+## État au 27/10/2026
 
-**Fait (lot 1) :**
-- Backend complet du lot 1 : inscription + OTP SMS, connexion email/téléphone/Google, refresh tokens,
-  blocage après 5 échecs, mot de passe oublié ; profils et préférences ; véhicules et documents avec
-  validation manuelle par l'admin ; trajets (escales, flexibilité 15–30 min, mode auto/manuel,
-  « femmes uniquement ») ; recherche PostGIS ; prix par formule de partage des frais (±10 %) ;
-  réservations ; paiement en espèces confirmé par PIN/QR ; notifications in-app + push Firebase ;
-  back-office (file de validation, blocage/bannissement, statistiques, coefficients de prix).
-- Frontend : authentification (connexion, inscription, OTP, mot de passe oublié, téléphone après Google),
-  espace connecté (`features/espace`, barre de navigation) et **F4 Trajets** : publication avec carte,
-  escales, estimation et ajustement du prix (`/trajets/publier`), mes trajets, détail avec modification,
-  annulation, démarrage et fin (`/trajets/:id`) ; **F5 Recherche** (`/rechercher`) : départ/arrivée, date,
-  passagers, filtres (heure, prix max, note, rayon, conducteur, femmes uniquement), tri, carte avec point de
-  prise en charge ; critères portés par l'URL. **Alertes de recherche** : module backend `recherche`
-  (`/api/moi/alertes`, table `alerte_recherche`), déclenchées après la publication d'un trajet
-  (événement `TrajetPublie`), notification `ALERTE_TRAJET`.
-- **Carte** : Leaflet + OpenStreetMap, sans clé. Seuls `shared/carte/carte.ts` (affichage) et
-  `core/carte/geocodage.ts` (adresse ↔ coordonnées, Nominatim : 1 requête/s, recherche à la validation
-  du champ, jamais à chaque frappe) connaissent le fournisseur. Pour passer à Google Maps, remplacer ces
-  deux implémentations sans toucher aux écrans. `features/trajets/carte-trajet` est réutilisable pour F5.
-- Tests : `./mvnw test` → 11 tests (dont `ParcoursCompletTest`, parcours complet sur PostGIS) ;
-  `npm test` → 14 tests. Tout l'auth a été testé à la main entre le front et le back.
+Le 27/10/2026, la répartition a changé et le dépôt **repart de l'authentification**. Tout le reste a été retiré
+du code ; l'ancienne version complète (backend du lot 1, écrans Trajets et Recherche avec carte Leaflet,
+alertes de recherche, prix par formule, réservations, notifications, back-office) reste consultable et
+récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archive/lot1-complet:<chemin>`, ou
+`git checkout archive/lot1-complet -- <dossier>` pour reprendre un module).
 
-**À faire, dans l'ordre conseillé :**
-1. Écrans Angular d'après les maquettes : *Mon profil* (préférences, photo), *Mes véhicules et documents*,
-   back-office *Validation des documents* et *Fiche utilisateur*.
-2. Réservations (F6 : bouton « Réserver » à ajouter sur `/trajets/:id`), code d'embarquement (PIN/QR),
-   notifications (F9 : cloche, push Angular).
-3. Lot 2 — service IA FastAPI : jeu de données synthétique à partir de la formule, XGBoost, appel depuis
-   `MoteurTarification` avec repli sur `MoteurFormule`.
-4. Ensuite : Wave / Orange Money (PayDunya ou CinetPay), chat, avis croisés, SOS et partage de position,
-   alertes de recherche, application Flutter.
+**Fait :**
+- Backend (`auth`, `utilisateur`, `common`, `admin`) : inscription avec code par email (ou SMS), connexion
+  email/téléphone/Google, jetons JWT + refresh (rotation), blocage après 5 échecs, mot de passe oublié en
+  3 étapes (code vérifié, puis jeton de 10 min ; comptes inconnus non révélés ; quotas de codes par compte et
+  par IP ; alerte au titulaire après changement) ; profil, préférences, photo (`/api/moi`) ; compte admin
+  créé au démarrage.
+- Frontend : connexion, inscription, vérification du code, mot de passe oublié (3 écrans successifs),
+  téléphone après Google ; espace connecté (`features/espace`, barre de navigation + déconnexion) et page
+  d'accueil simple (`/accueil`, `/admin` pour l'administrateur).
+- La base garde **toutes les tables** du diagramme de classes (migration V1, à ne jamais modifier) : chaque
+  module les reprend ou les fait évoluer par de nouvelles migrations datées.
+- Tests : `./mvnw test` → 6 tests (dont `ParcoursCompletTest`) ; `npm test` → 14 tests.
 
-## Répartition du travail (2 développeurs)
+## Répartition du travail (2 développeurs, depuis le 27/10/2026)
 
-Chacun porte des fonctionnalités **complètes**, du backend à l'écran Angular. Avant de commencer une tâche,
-vérifier à qui elle revient ; ne pas modifier le code d'une fonctionnalité de l'autre sans le prévenir.
+Chacun porte des fonctionnalités **complètes**, du backend à l'écran Angular, dans l'ordre indiqué.
+Avant de commencer une tâche, vérifier à qui elle revient ; ne pas modifier le code d'une fonctionnalité
+de l'autre sans le prévenir.
 
-| Doulo | Son binôme |
-|---|---|
-| **F3 Service IA de prix** — dossier `ia/` (FastAPI, XGBoost) + branchement dans `MoteurTarification` | **F1 Utilisateurs** — écrans profil, préférences, photo (backend fait) |
-| **F4 Trajets** — écrans publication (carte, escales, prix ±10 %), mes trajets, détail (fait) | **F2 Véhicules et documents** — écrans conducteur (backend fait) |
-| **F5 Recherche** — écran recherche + carte, alertes de recherche (fait) | **F6 Réservations** — écrans passager et conducteur (backend fait) |
-| **F8 Messagerie** — chat temps réel après demande de réservation (à créer) | **F7 Paiement** — PIN/QR à l'écran (backend fait), Wave / Orange Money (à créer) |
-| **F9 Notifications** — push Angular, cloche, email/SMS selon l'urgence (base faite) | **F10 Avis** — notation croisée à l'aveugle (à créer) |
-| **F11 Sécurité** — SOS, partage de position, signalements (à créer) | **F12 Administration** — écrans back-office (backend fait) |
+| Ordre | Doulo (@doulodevpro) | Abdoulaye (@abdoulayewade2) |
+|---|---|---|
+| 1 | **01 Gestion des utilisateurs** — profil, préférences, photo (backend fait, écrans à faire) | **12 Calcul automatique du prix** — formule puis service IA (FastAPI, XGBoost) |
+| 2 | **02 Gestion des véhicules** — véhicules, permis et carte grise | **03 Gestion des trajets** — publication, recherche, carte |
+| 3 | **07 Administration** — validation des documents, comptes, statistiques | **04 Facturation** |
+| 4 | **06 Notifications** — in-app, push, email/SMS | **05 Évaluations et avis** |
 
-**Non attribué :** application mobile Flutter (après les écrans web, à répartir de la même façon).
+**Non attribué :** application mobile Flutter. L'authentification (déjà faite) est commune : la faire
+évoluer en prévenant l'autre.
+
+Pour démarrer un module, regarder d'abord ce qui existait dans `archive/lot1-complet` (par exemple
+`backend/Convoiturage/src/main/java/sn/isep/Convoiturage/trajet`, `frontend/src/app/features/trajets`).
 
 **Packages backend :** garder la structure existante `sn.isep.Convoiturage.<module>` (`utilisateur`,
-`vehicule`, `trajet`, `reservation`, `notification`, `admin`…). Un nouveau module = un nouveau package
-au même niveau (ex. `messagerie`, `securite`, `avis`, `paiement`).
+`auth`, `admin`…). Un nouveau module = un nouveau package au même niveau (ex. `vehicule`, `trajet`,
+`tarification`, `facturation`, `avis`, `notification`).
 
 **Fichiers partagés, sources de conflits fréquents :** `frontend/src/app/app.routes.ts`, `styles.scss`,
 `shared/ui/icone.ts`, `pom.xml`, `SecurityConfig.java`. Y faire des modifications courtes, et fusionner
@@ -93,8 +83,9 @@ Prérequis : Java 21+, Maven, Node.js 22+, PostgreSQL 16 + PostGIS 3.x.
 2. Backend, dans `backend/Convoiturage` : `mvn spring-boot:run -Dspring-boot.run.profiles=dev` → http://localhost:8080
 3. Frontend, dans `frontend` : `npm install` puis `npm start` → http://localhost:4200
 
-En profil `dev` : **les codes OTP sont écrits dans la console du backend** (ligne `[SMS simulé]`), les push
-sont seulement journalisés, et un admin est créé au démarrage (identifiants dans `application-dev.yml`).
+En profil `dev` : les codes partent **par email** si `spring.mail` est configuré dans `application-local.yml`
+(sinon ils sont écrits dans la console du backend, ligne `[SMS simulé]`), et un admin est créé au démarrage
+(identifiants dans `application-dev.yml`).
 
 ## Conventions
 
@@ -111,8 +102,9 @@ sont seulement journalisés, et un admin est créé au démarrage (identifiants 
   côté interface ; `.avec("tentativesRestantes", n)` ajoute une information.
 - Utilisateur courant : `SecurityUtils.utilisateurCourantId()`. Rôles via `@PreAuthorize` + vérification
   d'appartenance dans les services (mon trajet, ma réservation).
-- Pas de dépendance circulaire entre modules : passer par des événements (`TrajetEvenements`).
-- Le prix passe toujours par l'interface `MoteurTarification` (le service IA viendra s'y brancher).
+- Pas de dépendance circulaire entre modules : passer par des événements Spring (ex. `TrajetPublie`).
+- Prévu pour le module prix : une interface `MoteurTarification` (formule d'abord, service IA ensuite,
+  avec repli sur la formule), voir `archive/lot1-complet`.
 
 **Frontend** :
 - Composants autonomes, signaux, sans zone.js, `ChangeDetectionStrategy.OnPush`, formulaires réactifs typés.
@@ -123,7 +115,7 @@ sont seulement journalisés, et un admin est créé au démarrage (identifiants 
 
 **Git** :
 - Jamais de travail directement sur `main`. Une branche par fonctionnalité, nommée d'après la répartition :
-  `F4-trajets`, `F3-ia-pricing`, `F1-utilisateurs`…
+  `01-utilisateurs`, `02-vehicules`, `03-trajets`, `12-prix`…
 - Chaque matin, avant de commencer : `git checkout main`, `git pull`, puis rebaser ou fusionner `main` dans sa branche.
 - Fusion dans `main` par pull request, **relue par l'autre** développeur.
 - Avant chaque commit : `./mvnw test` (backend) et `npm test` + `npx ng build` (frontend).
@@ -150,8 +142,9 @@ sont seulement journalisés, et un admin est créé au démarrage (identifiants 
 - **Port PostgreSQL** : chez Doulo, PostgreSQL 16 est sur **5433** (PostgreSQL 18 occupe le 5432).
 - La console PowerShell affiche mal les accents de `psql` (« prÃªtes ») : c'est seulement l'affichage.
 - Les avertissements git « LF will be replaced by CRLF » sont normaux sous Windows.
-- Sans `GOOGLE_MAPS_API_KEY`, les distances sont estimées à vol d'oiseau × 1,25 ; sans `GOOGLE_CLIENT_ID`,
-  le bouton Google affiche un message d'information.
+- Sans `GOOGLE_CLIENT_ID`, le bouton Google affiche un message d'information.
+- Les limites anti-abus (5 échecs de connexion, quotas de codes par IP) sont en mémoire : suffisant pour
+  une instance ; derrière un proxy, activer `server.forward-headers-strategy: framework`.
 
 Documentation détaillée : `README.md` (racine), `backend/Convoiturage/README.md` (endpoints, règles
 métier, variables), `frontend/README.md`.

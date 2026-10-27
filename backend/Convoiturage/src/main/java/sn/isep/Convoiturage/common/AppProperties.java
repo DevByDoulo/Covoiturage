@@ -6,8 +6,7 @@ import java.util.List;
 
 /** Propriétés applicatives (préfixe {@code app} dans application.yaml). */
 @ConfigurationProperties("app")
-public record AppProperties(Jwt jwt, Otp otp, Cors cors, Stockage stockage, Google google,
-                            Firebase firebase, Admin admin) {
+public record AppProperties(Jwt jwt, Otp otp, Cors cors, Stockage stockage, Google google, Admin admin) {
 
     public record Jwt(String secret, String issuer, long accessTokenMinutes, long refreshTokenDays) {}
 
@@ -18,9 +17,7 @@ public record AppProperties(Jwt jwt, Otp otp, Cors cors, Stockage stockage, Goog
 
     public record Stockage(String repertoire) {}
 
-    public record Google(String clientId, String mapsApiKey) {}
-
-    public record Firebase(String credentialsPath) {}
+    public record Google(String clientId) {}
 
     public record Admin(String email, String motDePasse, String telephone) {}
 }

@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -19,8 +18,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import sn.isep.Convoiturage.auth.EmailSender;
 import sn.isep.Convoiturage.auth.SmsSender;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,13 +25,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Parcours de bout en bout du lot 1 sur la base PostgreSQL/PostGIS locale « covoiturage_test »
+ * Parcours de bout en bout (inscription, connexion, profil, mot de passe oublié) sur la base PostgreSQL locale « covoiturage_test »
  * (créée par db/init-local.sql). Les données sont effacées au démarrage de chaque exécution.
  */
 @SpringBootTest
@@ -123,178 +119,39 @@ class ParcoursCompletTest {
     @Autowired
     JdbcTemplate jdbc;
 
-    // Points réels : Dakar (Place de l'Indépendance) -> Thiès ; le passager est à ~1 km de chaque point.
-    static final double DAKAR_LAT = 14.6681, DAKAR_LNG = -17.4318;
-    static final double THIES_LAT = 14.7910, THIES_LNG = -16.9260;
-
     @Test
-    void parcoursConducteurPassagerAdmin() throws Exception {
-        String admin = jeton(appel(post("/api/auth/connexion"), """
-                {"identifiant":"admin@test.local","motDePasse":"Admin-Test-2026!"}""").andExpect(status().isOk()));
+    void connexionProfilEtSession() throws Exception {
+        // Compte admin créé au démarrage
+        appel(post("/api/auth/connexion"), """
+                {"identifiant":"admin@test.local","motDePasse":"Admin-Test-2026!"}""")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.utilisateur.role").value("ADMIN"));
 
-        // --- Conductrice : inscription + OTP
-        String conductrice = inscrire("Awa", "Diop", "awa@test.sn", "771111111", "FEMME");
-
-        // Mauvais mot de passe / mauvais OTP
+        // Inscription + code par email, puis connexion par email ou par téléphone
+        inscrire("Awa", "Diop", "awa@test.sn", "771111111", "FEMME");
         appel(post("/api/auth/connexion"), """
                 {"identifiant":"awa@test.sn","motDePasse":"mauvais123"}""").andExpect(status().isUnauthorized());
+        String awa = jeton(appel(post("/api/auth/connexion"), """
+                {"identifiant":"77 111 11 11","motDePasse":"MotDePasse2026"}"""));
 
-        // --- Déclaration du véhicule -> rôle CONDUCTEUR (visible après rafraîchissement du jeton)
-        String vehicule = appel(post("/api/moi/vehicules").header("Authorization", "Bearer " + conductrice), """
-                {"immatriculation":"dk 1234 ab","marque":"Toyota","modele":"Corolla","annee":2018,"puissanceFiscale":7,
-                 "nombrePlaces":5,"typeEnergie":"ESSENCE","consommationReelle":7.0}""")
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.immatriculation").value("DK-1234-AB"))
-                .andExpect(jsonPath("$.statutValidation").value("EN_ATTENTE"))
-                .andReturn().getResponse().getContentAsString();
-        long idVehicule = ((Number) JsonPath.read(vehicule, "$.id")).longValue();
-        conductrice = jeton(appel(post("/api/auth/refresh"), "{\"refreshToken\":\"" + dernierRefresh + "\"}"));
-
-        String publication = """
-                {"idVehicule":%d,
-                 "depart":{"lieu":"Dakar Plateau","latitude":%s,"longitude":%s},
-                 "arrivee":{"lieu":"Thiès centre","latitude":%s,"longitude":%s},
-                 "dateHeureDepart":"%s","flexibiliteMinutes":20,"nombrePlaces":3,
-                 "modeReservation":"MANUELLE","tailleBagage":"MOYEN","femmesUniquement":false}"""
-                .formatted(idVehicule, DAKAR_LAT, DAKAR_LNG, THIES_LAT, THIES_LNG, depart());
-
-        // Publication refusée tant que les documents ne sont pas validés
-        appel(post("/api/trajets").header("Authorization", "Bearer " + conductrice), publication)
-                .andExpect(status().isForbidden());
-
-        // --- Documents
-        byte[] png = {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0};
-        byte[] pdf = "%PDF-1.4 carte grise".getBytes();
-        mvc.perform(multipart("/api/moi/documents").file(new MockMultipartFile("fichier", "permis.png", "image/png", png))
-                        .param("type", "PERMIS_CONDUIRE").header("Authorization", "Bearer " + conductrice))
-                .andExpect(status().isCreated());
-        mvc.perform(multipart("/api/moi/documents").file(new MockMultipartFile("fichier", "cg.pdf", "application/pdf", pdf))
-                        .param("type", "CARTE_GRISE").param("idVehicule", String.valueOf(idVehicule))
-                        .header("Authorization", "Bearer " + conductrice))
-                .andExpect(status().isCreated());
-        // Un faux PDF (contenu texte) est rejeté
-        mvc.perform(multipart("/api/moi/documents").file(new MockMultipartFile("fichier", "x.pdf", "application/pdf", "hello".getBytes()))
-                        .param("type", "PERMIS_CONDUIRE").header("Authorization", "Bearer " + conductrice))
-                .andExpect(status().isBadRequest());
-
-        // Un non-admin n'accède pas au back-office
-        mvc.perform(get("/api/admin/documents").header("Authorization", "Bearer " + conductrice)).andExpect(status().isForbidden());
-
-        // --- L'administrateur valide la file
-        String file = mvc.perform(get("/api/admin/documents").header("Authorization", "Bearer " + admin))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.page.totalElements").value(2))
-                .andReturn().getResponse().getContentAsString();
-        for (Object id : JsonPath.<java.util.List<Object>>read(file, "$.content[*].document.id")) {
-            mvc.perform(post("/api/admin/documents/" + id + "/valider").header("Authorization", "Bearer " + admin))
-                    .andExpect(status().isOk()).andExpect(jsonPath("$.statutValidation").value("VALIDE"));
-        }
-        mvc.perform(get("/api/moi").header("Authorization", "Bearer " + conductrice))
-                .andExpect(jsonPath("$.conducteurValide").value(true));
-
-        // --- Passager : recherche infructueuse, puis alertes de recherche (F5)
-        String passager = inscrire("Moussa", "Ndiaye", "moussa@test.sn", "781234567", "HOMME");
-        String date = LocalDate.now().plusDays(3).toString();
-        String recherche = "/api/trajets/recherche?latDepart=%s&lngDepart=%s&latArrivee=%s&lngArrivee=%s&date=%s&places=2"
-                .formatted(DAKAR_LAT + 0.008, DAKAR_LNG + 0.004, THIES_LAT - 0.005, THIES_LNG, date);
-        mvc.perform(get(recherche)).andExpect(jsonPath("$.length()").value(0));
-        String alerte = """
-                {"depart":{"lieu":"%s","latitude":%s,"longitude":%s},"arrivee":{"lieu":"%s","latitude":%s,"longitude":%s},
-                 "date":"%s","rayonKm":5%s}""";
-        // Correspond au futur trajet :
-        appel(post("/api/moi/alertes").header("Authorization", "Bearer " + passager),
-                alerte.formatted("Dakar", DAKAR_LAT + 0.008, DAKAR_LNG + 0.004, "Thiès", THIES_LAT - 0.005, THIES_LNG, date, ""))
-                .andExpect(status().isCreated());
-        // Ne correspondent pas : sens inverse, prix maximum trop bas.
-        appel(post("/api/moi/alertes").header("Authorization", "Bearer " + passager),
-                alerte.formatted("Thiès", THIES_LAT, THIES_LNG, "Dakar", DAKAR_LAT, DAKAR_LNG, date, "")).andExpect(status().isCreated());
-        appel(post("/api/moi/alertes").header("Authorization", "Bearer " + passager),
-                alerte.formatted("Dakar", DAKAR_LAT, DAKAR_LNG, "Thiès", THIES_LAT, THIES_LNG, date, ",\"prixMax\":100"))
-                .andExpect(status().isCreated());
-        mvc.perform(get("/api/moi/alertes").header("Authorization", "Bearer " + passager))
-                .andExpect(jsonPath("$.length()").value(3));
-
-        // --- Estimation puis publication
-        appel(post("/api/trajets/estimation").header("Authorization", "Bearer " + conductrice), """
-                {"idVehicule":%d,"depart":{"lieu":"Dakar","latitude":%s,"longitude":%s},
-                 "arrivee":{"lieu":"Thiès","latitude":%s,"longitude":%s},"dateHeureDepart":"%s","nombrePlaces":3}"""
-                .formatted(idVehicule, DAKAR_LAT, DAKAR_LNG, THIES_LAT, THIES_LNG, depart()))
+        // Profil et préférences
+        mvc.perform(get("/api/moi").header("Authorization", "Bearer " + awa))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.tarif.prixRecommande").isNumber())
-                .andExpect(jsonPath("$.tarif.versionModele").value("FORMULE-1.0"));
-
-        String trajet = appel(post("/api/trajets").header("Authorization", "Bearer " + conductrice), publication)
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.statut").value("PUBLIE"))
-                .andExpect(jsonPath("$.tarification.prixMin").isNumber())
-                .andReturn().getResponse().getContentAsString();
-        long idTrajet = ((Number) JsonPath.read(trajet, "$.id")).longValue();
-        double prix = ((Number) JsonPath.read(trajet, "$.prixParPlace")).doubleValue();
-
-        // Prix hors fourchette refusé
-        appel(put("/api/trajets/" + idTrajet).header("Authorization", "Bearer " + conductrice), "{\"prixParPlace\":1}")
-                .andExpect(status().isBadRequest());
-
-        // Une seule alerte déclenchée : celle qui correspond (même sens, prix accepté).
-        mvc.perform(get("/api/moi/notifications").header("Authorization", "Bearer " + passager))
-                .andExpect(jsonPath("$.page.totalElements").value(1))
-                .andExpect(jsonPath("$.content[0].type").value("ALERTE_TRAJET"));
-
-        // --- Recherche du passager
-        mvc.perform(get(recherche)).andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(idTrajet))
-                .andExpect(jsonPath("$[0].correspondance.distanceRamassageM").isNumber())
-                .andExpect(jsonPath("$[0].tarification").doesNotExist());
-        // Sens inverse (Thiès -> Dakar) : aucun résultat
-        mvc.perform(get("/api/trajets/recherche?latDepart=%s&lngDepart=%s&latArrivee=%s&lngArrivee=%s&date=%s"
-                        .formatted(THIES_LAT, THIES_LNG, DAKAR_LAT, DAKAR_LNG, date)))
-                .andExpect(jsonPath("$.length()").value(0));
-        // Prix maximum trop bas : aucun résultat
-        mvc.perform(get(recherche + "&prixMax=" + (prix - 1))).andExpect(jsonPath("$.length()").value(0));
-
-        // --- Réservation (mode manuel) puis acceptation
-        String resa = appel(post("/api/trajets/" + idTrajet + "/reservations").header("Authorization", "Bearer " + passager),
-                "{\"nombrePlaces\":2}")
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.statut").value("EN_ATTENTE"))
-                .andReturn().getResponse().getContentAsString();
-        long idResa = ((Number) JsonPath.read(resa, "$.id")).longValue();
-        appel(post("/api/trajets/" + idTrajet + "/reservations").header("Authorization", "Bearer " + passager),
-                "{\"nombrePlaces\":1}").andExpect(status().isConflict());
-        // Le passager n'est pas conducteur
-        mvc.perform(post("/api/reservations/" + idResa + "/accepter").header("Authorization", "Bearer " + passager))
-                .andExpect(status().isForbidden());
-
-        mvc.perform(post("/api/reservations/" + idResa + "/accepter").header("Authorization", "Bearer " + conductrice))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.statut").value("ACCEPTEE"))
-                .andExpect(jsonPath("$.statutPaiement").value("EN_ATTENTE"));
-        mvc.perform(get("/api/trajets/" + idTrajet)).andExpect(jsonPath("$.nombrePlacesDisponibles").value(1));
-
-        // --- Embarquement par PIN
-        String code = mvc.perform(get("/api/reservations/" + idResa + "/embarquement").header("Authorization", "Bearer " + passager))
-                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        String pin = JsonPath.read(code, "$.codePin");
-        assertThat(pin).matches("\\d{6}");
-
-        appel(post("/api/trajets/" + idTrajet + "/embarquement").header("Authorization", "Bearer " + conductrice),
-                "{\"code\":\"" + (pin.equals("000000") ? "111111" : "000000") + "\"}").andExpect(status().isNotFound());
-        appel(post("/api/trajets/" + idTrajet + "/embarquement").header("Authorization", "Bearer " + conductrice),
-                "{\"code\":\"" + pin + "\"}")
+                .andExpect(jsonPath("$.prenom").value("Awa"))
+                .andExpect(jsonPath("$.telephone").value("+221771111111"));
+        mvc.perform(put("/api/moi/preferences").header("Authorization", "Bearer " + awa)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"fumeurAccepte":false,"musiqueAcceptee":true,"animauxAcceptes":true,"discussionAcceptee":false}"""))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombrePlaces").value(2))
-                .andExpect(jsonPath("$.montantAEncaisser").value(prix * 2));
-        mvc.perform(get("/api/moi/reservations").header("Authorization", "Bearer " + passager))
-                .andExpect(jsonPath("$[0].embarque").value(true))
-                .andExpect(jsonPath("$[0].statutPaiement").value("REUSSI"));
+                .andExpect(jsonPath("$.preferences.animauxAcceptes").value(true));
+        mvc.perform(get("/api/moi")).andExpect(status().isUnauthorized());
 
-        // --- Notifications et statistiques
-        // Alerte de recherche + réservation acceptée + embarquement confirmé
-        mvc.perform(get("/api/moi/notifications").header("Authorization", "Bearer " + passager))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.page.totalElements").value(3));
-        mvc.perform(get("/api/admin/statistiques").header("Authorization", "Bearer " + admin))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.conducteursValides").value(1))
-                .andExpect(jsonPath("$.reservations.montantEncaisse").value(prix * 2));
+        // Rafraîchissement (rotation) puis déconnexion : l'ancien refresh token n'est plus utilisable
+        String refresh = dernierRefresh;
+        jeton(appel(post("/api/auth/refresh"), "{\"refreshToken\":\"" + refresh + "\"}"));
+        appel(post("/api/auth/refresh"), "{\"refreshToken\":\"" + refresh + "\"}").andExpect(status().isUnauthorized());
+        appel(post("/api/auth/deconnexion"), "{\"refreshToken\":\"" + dernierRefresh + "\"}").andExpect(status().isNoContent());
     }
 
     @Test
@@ -410,9 +267,5 @@ class ParcoursCompletTest {
         String body = r.andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         dernierRefresh = JsonPath.read(body, "$.refreshToken");
         return JsonPath.read(body, "$.accessToken");
-    }
-
-    private static String depart() {
-        return LocalDateTime.now().plusDays(3).withHour(10).withMinute(0).withSecond(0).withNano(0).toString();
     }
 }
