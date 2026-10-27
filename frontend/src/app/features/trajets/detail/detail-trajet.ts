@@ -10,6 +10,8 @@ import { decoderPolyline } from '../../../shared/carte/polyline';
 import { DureePipe, FcfaPipe } from '../../../shared/format/formats';
 import { Alerte } from '../../../shared/ui/alerte';
 import { Icone } from '../../../shared/ui/icone';
+import { DemandesTrajet } from '../../reservations/demandes-trajet';
+import { ReserverTrajet } from '../../reservations/reserver-trajet';
 import {
   LIBELLES_BAGAGE,
   LIBELLES_ROUTE,
@@ -22,10 +24,13 @@ import { TrajetsService } from '../trajets.service';
 
 type Panneau = 'aucun' | 'modifier' | 'annuler';
 
-/** F4 — Détail d'un trajet ; le conducteur peut le modifier, l'annuler, le démarrer et le terminer. */
+/**
+ * 03 — Détail d'un trajet ; le conducteur peut le modifier, l'annuler, le démarrer et le terminer.
+ * 04 — Le passager y réserve ; le conducteur y traite les demandes et valide l'embarquement.
+ */
 @Component({
   selector: 'app-detail-trajet',
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, FcfaPipe, DureePipe, Carte, Icone, Alerte],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, FcfaPipe, DureePipe, Carte, Icone, Alerte, ReserverTrajet, DemandesTrajet],
   templateUrl: './detail-trajet.html',
   styleUrl: './detail-trajet.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -68,8 +68,18 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   `alerte_recherche`, code dans l'archive) attendent le module 06 Notifications. En attendant le module 07,
   `POST /api/dev/moi/valider-conducteur` (**profil dev uniquement**, bouton « [Dev] » sur l'écran Publier)
   valide les documents du compte connecté : à retirer quand l'administration existera.
-- Tests : `./mvnw test` → 22 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `MoteurIATest`) ;
-  `npm test` → 24 tests ; `python -m pytest` dans `ia-tarification` → 20 tests.
+- **04 Facturation** (branche `04-facturation`) : comprend aussi les **réservations** (non attribuées dans la
+  répartition ; reprises de l'archive). Package `reservation` (demande avec moyen de paiement, acceptation/refus,
+  annulation, embarquement PIN/QR, événements `ReservationEvenements` à écouter par le module 06) et package
+  `facturation` (`FournisseurPaiement` : **Wave réel** via l'API Checkout + webhook signé
+  `/api/paiements/webhooks/wave` ; `OrangeMoneyFournisseur` **non branché** : l'API Sonatel n'est documentée qu'aux
+  comptes du portail developer.orange-sonatel.com ; historique `/api/moi/paiements`, reçus). Règles **provisoires,
+  à confirmer avec l'encadrant** : aucune commission, remboursement intégral de toute annulation avant le départ.
+  Wave exige HTTPS (clés `WAVE_API_KEY`, `WAVE_SECRET_WEBHOOK`, `PAIEMENT_URL_RETOUR`) : en local, tunnel ngrok.
+  Écrans : réserver (détail d'un trajet), demandes et embarquement (conducteur), `/reservations`, `/paiements`, reçu.
+- Tests : `./mvnw test` → 28 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`,
+  `ReservationsPaiementsParcoursTest`, `WaveFournisseurTest`) ; `npm test` → 27 tests ; `python -m pytest` dans
+  `ia-tarification` → 20 tests.
 
 ## Répartition du travail (2 développeurs, depuis le 27/10/2026)
 
