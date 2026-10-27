@@ -85,6 +85,19 @@ app:
     # Au-delà, le prix est calculé par la formule seule (la publication n'attend jamais l'IA).
     # Doit rester supérieur à l'attente de la météo côté service (1,5 s, ia-tarification/app/meteo.py).
     delai: ${IA_TARIFICATION_DELAI:2s}
+  paiement:
+    # Adresse HTTPS de l'application web : Wave y renvoie le passager après paiement (/reservations?paiement=...).
+    url-retour: ${PAIEMENT_URL_RETOUR:}
+    wave:
+      # Wave Business (https://business.wave.com) : clé API et secret de signature du webhook.
+      # Vides => Wave n'est pas proposé (paiement en espèces uniquement).
+      api-key: ${WAVE_API_KEY:}
+      secret-webhook: ${WAVE_SECRET_WEBHOOK:}
+    orange-money:
+      # Portail développeur Sonatel. L'intégration reste à écrire (OrangeMoneyFournisseur) : non proposé pour l'instant.
+      client-id: ${ORANGE_MONEY_CLIENT_ID:}
+      client-secret: ${ORANGE_MONEY_CLIENT_SECRET:}
+      code-marchand: ${ORANGE_MONEY_CODE_MARCHAND:}
   admin:
     email: ${ADMIN_EMAIL:}
     mot-de-passe: ${ADMIN_PASSWORD:}

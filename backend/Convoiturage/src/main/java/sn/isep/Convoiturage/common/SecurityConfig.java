@@ -50,6 +50,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**", "/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/utilisateurs/{id}", "/api/fichiers/photos/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/trajets/recherche", "/api/trajets/{id}").permitAll()
+                        // Webhooks des opérateurs de paiement : authentifiés par leur signature (FacturationService).
+                        .requestMatchers(HttpMethod.POST, "/api/paiements/webhooks/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(o -> o.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter)));

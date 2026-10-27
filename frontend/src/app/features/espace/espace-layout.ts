@@ -152,6 +152,8 @@ export class EspaceLayout {
     menu.push({ lien: '/rechercher', libelle: 'Rechercher', icone: 'recherche' });
     menu.push({ lien: '/trajets/publier', libelle: 'Publier', icone: 'plus' });
     if (role === 'CONDUCTEUR') menu.push({ lien: '/trajets/mes-trajets', libelle: 'Mes trajets', icone: 'route' });
+    // 04 — Facturation (les paiements et reçus sont accessibles depuis « Réservations »)
+    menu.push({ lien: '/reservations', libelle: 'Réservations', icone: 'valide' });
     return [...menu, profil];
   });
 }

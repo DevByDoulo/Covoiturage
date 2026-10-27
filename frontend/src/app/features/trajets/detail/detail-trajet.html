@@ -64,6 +64,14 @@
         }
       </section>
 
+      <!-- 04 — Réservation (passager) ou demandes reçues et embarquement (conducteur) -->
+      @if (!estConducteur() && t.statut === 'PUBLIE' && modifiable()) {
+        <app-reserver-trajet [trajet]="t" />
+      }
+      @if (estConducteur() && t.statut !== 'ANNULE') {
+        <app-demandes-trajet [idTrajet]="t.id" />
+      }
+
       @if (estConducteur()) {
         @if (t.tarification; as tf) {
           <section class="carte bloc">

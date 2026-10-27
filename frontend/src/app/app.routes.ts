@@ -107,6 +107,25 @@ export const routes: Routes = [
         title: 'Trajet · YOBALEMAsn',
         loadComponent: () => import('./features/trajets/detail/detail-trajet').then((m) => m.DetailTrajet),
       },
+      // 04 — Facturation (réservations, paiements, reçus)
+      {
+        path: 'reservations',
+        title: 'Mes réservations · YOBALEMAsn',
+        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
+        loadComponent: () => import('./features/reservations/mes-reservations').then((m) => m.MesReservations),
+      },
+      {
+        path: 'paiements',
+        title: 'Mes paiements · YOBALEMAsn',
+        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
+        loadComponent: () => import('./features/facturation/mes-paiements').then((m) => m.MesPaiements),
+      },
+      {
+        path: 'paiements/:reference/recu',
+        title: 'Reçu · YOBALEMAsn',
+        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
+        loadComponent: () => import('./features/facturation/recu').then((m) => m.RecuPage),
+      },
       {
         path: 'admin',
         title: 'Back-office · YOBALEMAsn',
