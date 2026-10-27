@@ -1,0 +1,65 @@
+{
+  "version": "xgb-ademe-2026-10-27",
+  "source": "https://data.ademe.fr/data-fair/api/v1/datasets/ademe-car-labelling/lines?size=10000&format=csv",
+  "nombreVehicules": 3352,
+  "marques": [
+    "ALFAROMEO",
+    "ALPINE",
+    "AUDI",
+    "BMW",
+    "CITROEN",
+    "CUPRA",
+    "DACIA",
+    "DS",
+    "FIAT",
+    "FORD",
+    "HONDA",
+    "HYUNDAI",
+    "JEEP",
+    "KIA",
+    "LEXUS",
+    "MASERATI",
+    "MERCEDES",
+    "MINI",
+    "NISSAN",
+    "OPEL",
+    "PEUGEOT",
+    "PORSCHE",
+    "RENAULT",
+    "ROLLSROYC",
+    "SKODA",
+    "SUBARU",
+    "SUZUKI",
+    "TOYOTA",
+    "VOLKSWAGEN",
+    "VOLVO"
+  ],
+  "energies": [
+    "ESSENCE",
+    "DIESEL",
+    "HYBRIDE",
+    "ELECTRIQUE"
+  ],
+  "unites": {
+    "ESSENCE": "L/100km",
+    "DIESEL": "L/100km",
+    "HYBRIDE": "L/100km",
+    "ELECTRIQUE": "kWh/100km"
+  },
+  "metriques": {
+    "maeReference": 0.821,
+    "maeTest": 0.358,
+    "maeMarqueInconnue": 0.525,
+    "maeValidationCroisee": 0.347
+  },
+  "parametres": {
+    "n_estimators": 400,
+    "max_depth": 5,
+    "learning_rate": 0.05,
+    "subsample": 0.9,
+    "colsample_bytree": 0.9,
+    "min_child_weight": 2,
+    "tree_method": "hist",
+    "random_state": 42
+  }
+}

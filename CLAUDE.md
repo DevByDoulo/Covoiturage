@@ -14,7 +14,7 @@ module IA (microservice sans interface). L'équipe parle français : code métie
 |---|---|---|
 | `backend/Convoiturage` | API REST | Spring Boot 4.1, Java 21, PostgreSQL 16 + PostGIS, Flyway, JWT |
 | `frontend` | Web passager / conducteur / back-office | Angular 21 |
-| *(à créer)* `ia/` | Service de prix | FastAPI, scikit-learn, XGBoost |
+| `ia-tarification` | Service de prix : consommation prédite (ADEME) + facteur météo (Open-Meteo) | FastAPI, XGBoost |
 | *(à créer)* `mobile/` | Application mobile | Flutter |
 
 Les maquettes (PNG) et les diagrammes UML (PowerAMC `.moo`) sont dans [`docs/`](docs/README.md) ;
@@ -51,7 +51,16 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   d'accueil simple (`/accueil`, `/admin` pour l'administrateur).
 - La base garde **toutes les tables** du diagramme de classes (migration V1, à ne jamais modifier) : chaque
   module les reprend ou les fait évoluer par de nouvelles migrations datées.
-- Tests : `./mvnw test` → 8 tests (dont `ParcoursCompletTest`) ; `npm test` → 20 tests.
+- **12 Calcul automatique du prix** (branche `12-prix`) : module backend `tarification` (repris de l'archive :
+  `MoteurFormule`, coefficients `parametre_tarification` ; sans l'entité `Tarification`, liée à `Trajet`, qui
+  reviendra avec le module 03) + `MoteurIA` : appelle `ia-tarification` (`POST /v1/estimations`) puis la
+  formule ; repli sur la formule seule si erreur, réponse incohérente ou plus de 2 s (`app.ia.delai`), et pause
+  de 30 s après un échec. Consommation : déclarée > prédite par l'IA > estimée ; la météo s'applique toujours.
+  Service `ia-tarification` : XGBoost sur ADEME Car Labelling (MAE 0,35 L/100 km), Open-Meteo attendu 1,5 s au
+  plus. En dev, `IA_TARIFICATION_URL` vaut `http://localhost:8000` ; en test, formule seule. À brancher dans
+  `TrajetService` (module 03) : `moteur.estimer(new DemandeEstimation(...))`.
+- Tests : `./mvnw test` → 18 tests (dont `ParcoursCompletTest`, `MoteurIATest`) ; `npm test` → 20 tests ;
+  `python -m pytest` dans `ia-tarification` → 20 tests.
 
 ## Répartition du travail (2 développeurs, depuis le 27/10/2026)
 
@@ -113,8 +122,8 @@ En profil `dev` : les codes partent **par email** si `spring.mail` est configur�
 - Utilisateur courant : `SecurityUtils.utilisateurCourantId()`. Rôles via `@PreAuthorize` + vérification
   d'appartenance dans les services (mon trajet, ma réservation).
 - Pas de dépendance circulaire entre modules : passer par des événements Spring (ex. `TrajetPublie`).
-- Prévu pour le module prix : une interface `MoteurTarification` (formule d'abord, service IA ensuite,
-  avec repli sur la formule), voir `archive/lot1-complet`.
+- Module prix : injecter l'interface `MoteurTarification` (bean principal : `MoteurIA` si `app.ia.url` est
+  renseignée, sinon `MoteurFormule`), jamais une implémentation directement.
 
 **Frontend** :
 - Composants autonomes, signaux, sans zone.js, `ChangeDetectionStrategy.OnPush`, formulaires réactifs typés.

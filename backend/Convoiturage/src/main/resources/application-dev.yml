@@ -15,6 +15,9 @@ app:
     # ID client OAuth de développement, le même que frontend/src/environments/environment.ts.
     # Ce n'est pas un secret (il est visible dans le navigateur) ; origine autorisée : http://localhost:4200.
     client-id: ${GOOGLE_CLIENT_ID:520088419510-nu738k1cpi6s20k5fkqupu0nfbsgautv.apps.googleusercontent.com}
+  ia:
+    # Service ia-tarification lancé en local (uvicorn app.main:app --port 8000). Éteint : repli sur la formule.
+    url: ${IA_TARIFICATION_URL:http://localhost:8000}
   admin:
     email: ${ADMIN_EMAIL:admin@covoitia.local}
     mot-de-passe: ${ADMIN_PASSWORD:Admin-Dev-2026!}
