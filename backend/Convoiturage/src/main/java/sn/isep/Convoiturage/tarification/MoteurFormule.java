@@ -119,7 +119,7 @@ public class MoteurFormule implements MoteurTarification {
             case HYBRIDE -> 3.5 + 0.25 * puissanceFiscale;
             case ELECTRIQUE -> 13.0 + 0.60 * puissanceFiscale; // kWh/100 km
         };
-        int age = Math.max(0, Year.now().getValue() - annee);
+        int age = annee <= 0 ? 0 : Math.max(0, Year.now().getValue() - annee); // année inconnue : pas de majoration
         double usure = 1 + Math.min(0.20, Math.max(0, age - 10) * 0.01);
         return base * usure;
     }
