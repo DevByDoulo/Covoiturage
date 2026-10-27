@@ -77,6 +77,12 @@ app:
   google:
     # ID client OAuth Google (vérification des idToken du « Se connecter avec Google »)
     client-id: ${GOOGLE_CLIENT_ID:}
+  ia:
+    # Service ia-tarification (FastAPI, dossier ia-tarification/). Vide => prix calculés par la formule seule.
+    url: ${IA_TARIFICATION_URL:}
+    # Au-delà, le prix est calculé par la formule seule (la publication n'attend jamais l'IA).
+    # Doit rester supérieur à l'attente de la météo côté service (1,5 s, ia-tarification/app/meteo.py).
+    delai: ${IA_TARIFICATION_DELAI:2s}
   admin:
     email: ${ADMIN_EMAIL:}
     mot-de-passe: ${ADMIN_PASSWORD:}
