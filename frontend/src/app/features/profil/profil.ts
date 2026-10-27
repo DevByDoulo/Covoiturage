@@ -22,6 +22,16 @@ import { PreferencesTrajet } from './preferences-trajet';
         }
 
         <nav class="carte menu" aria-label="Mon compte">
+          @if (u.role !== 'ADMIN') {
+            <a routerLink="/vehicules" class="menu__vehicules">
+              <span class="pictogramme"><app-icone nom="voiture" [taille]="19" /></span>
+              <span class="menu__texte">
+                Mes véhicules et documents
+                <small>{{ u.conducteurValide ? 'Conducteur vérifié' : 'Permis, carte grise, pièce d’identité' }}</small>
+              </span>
+              <app-icone nom="chevron-droite" [taille]="18" />
+            </a>
+          }
           <a routerLink="/profil/mot-de-passe">
             <span class="pictogramme"><app-icone nom="cadenas-rotation" [taille]="19" /></span>
             <span class="menu__texte">{{ u.motDePasseDefini ? 'Changer le mot de passe' : 'Définir un mot de passe' }}</span>
@@ -70,8 +80,17 @@ import { PreferencesTrajet } from './preferences-trajet';
       }
     }
     .menu__texte {
+      display: flex;
       flex: 1;
+      flex-direction: column;
       font-weight: 700;
+      small {
+        font-weight: 600;
+        color: var(--vert);
+      }
+    }
+    .menu__vehicules {
+      background: var(--surface-2);
     }
     .pictogramme {
       display: grid;
