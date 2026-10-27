@@ -155,6 +155,57 @@ class ParcoursCompletTest {
     }
 
     @Test
+    void contactsUrgenceMotDePasseEtDesactivation() throws Exception {
+        String moussa = inscrire("Moussa", "Fall", "moussa@test.sn", "775550001", "HOMME");
+        String auth = "Bearer " + moussa;
+
+        // Contacts d'urgence : numéro normalisé, pas le sien, pas de doublon, 3 au plus
+        mvc.perform(post("/api/moi/contacts-urgence").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nom\":\"Ousmane Diop\",\"telephone\":\"77 123 45 12\",\"lien\":\"Frère\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.telephone").value("+221771234512"));
+        mvc.perform(post("/api/moi/contacts-urgence").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nom\":\"Moi\",\"telephone\":\"775550001\"}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.champ").value("telephone"));
+        mvc.perform(post("/api/moi/contacts-urgence").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nom\":\"Encore\",\"telephone\":\"+221771234512\"}"))
+                .andExpect(status().isConflict());
+        for (String tel : new String[]{"761234589", "781234589"}) {
+            mvc.perform(post("/api/moi/contacts-urgence").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"nom\":\"Proche\",\"telephone\":\"" + tel + "\"}")).andExpect(status().isCreated());
+        }
+        mvc.perform(post("/api/moi/contacts-urgence").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nom\":\"Quatrième\",\"telephone\":\"701234589\"}"))
+                .andExpect(status().isConflict());
+        String liste = mvc.perform(get("/api/moi/contacts-urgence").header("Authorization", auth))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(3))
+                .andReturn().getResponse().getContentAsString();
+        long idContact = ((Number) JsonPath.read(liste, "$[0].id")).longValue();
+        mvc.perform(delete("/api/moi/contacts-urgence/" + idContact).header("Authorization", auth)).andExpect(status().isNoContent());
+
+        // Changement du mot de passe : l'ancien est vérifié, les autres sessions sont fermées, le titulaire est prévenu
+        String ancienRefresh = dernierRefresh;
+        mvc.perform(put("/api/moi/mot-de-passe").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"motDePasseActuel\":\"faux12345\",\"nouveauMotDePasse\":\"Nouveau2026\"}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.champ").value("motDePasseActuel"));
+        String nouveau = jeton(mvc.perform(put("/api/moi/mot-de-passe").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"motDePasseActuel\":\"MotDePasse2026\",\"nouveauMotDePasse\":\"Nouveau2026\"}"))
+                .andExpect(jsonPath("$.utilisateur.motDePasseDefini").value(true)));
+        appel(post("/api/auth/refresh"), "{\"refreshToken\":\"" + ancienRefresh + "\"}").andExpect(status().isUnauthorized());
+        CodesDeTest.attendreEmail("moussa@test.sn", "YOBALEMAsn - Votre mot de passe a été modifié");
+
+        // Désactivation (mot de passe exigé) puis réactivation à la connexion suivante
+        mvc.perform(post("/api/moi/desactivation").header("Authorization", "Bearer " + nouveau).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"motDePasse\":\"MotDePasse2026\"}")).andExpect(status().isBadRequest());
+        mvc.perform(post("/api/moi/desactivation").header("Authorization", "Bearer " + nouveau).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"motDePasse\":\"Nouveau2026\"}")).andExpect(status().isNoContent());
+        appel(post("/api/auth/refresh"), "{\"refreshToken\":\"" + dernierRefresh + "\"}").andExpect(status().isUnauthorized());
+        appel(post("/api/auth/connexion"), "{\"identifiant\":\"moussa@test.sn\",\"motDePasse\":\"Nouveau2026\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.utilisateur.statut").value("ACTIF"));
+    }
+
+    @Test
     void motDePasseOublieParOtp() throws Exception {
         inscrire("Fatou", "Sow", "fatou@test.sn", "761112233", "FEMME");
         String codeInscription = CodesDeTest.DERNIER_CODE.get("fatou@test.sn");

@@ -10,7 +10,7 @@
 | Inscription CoVoitIA | `/auth/inscription` — fait |
 | Vérification Téléphone OTP | `/auth/verification` — fait |
 | Mot de passe oublié | `/auth/mot-de-passe-oublie` — fait |
-| Mon profil CoVoitIA | à faire |
+| Mon profil CoVoitIA | `/profil` (+ `/profil/mot-de-passe`, `/profil/desactivation`) — fait |
 | Mes véhicules et documents | à faire |
 | Validation des documents (back-office) | à faire |
 | BO - Fiche utilisateur (back-office) | à faire |

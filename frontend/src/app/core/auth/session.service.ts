@@ -133,6 +133,21 @@ export class SessionService {
     this.router.navigateByUrl('/auth/connexion');
   }
 
+  /** Profil modifié (écran Mon profil) : toute l'application voit la nouvelle version. */
+  mettreAJourProfil(p: Profil): void {
+    this.profil.set(p);
+  }
+
+  /** Nouveaux jetons renvoyés par le serveur (ex. après changement du mot de passe). */
+  remplacerSession(r: AuthReponse): void {
+    this.ouvrirSession(r);
+  }
+
+  /** Session fermée par le serveur (ex. compte désactivé) : on oublie les jetons sans appeler /deconnexion. */
+  oublierSession(): void {
+    this.effacerSession();
+  }
+
   /** Page d'arrivée selon le rôle. */
   pageAccueil(): string {
     return this.estAdmin() ? '/admin' : '/accueil';

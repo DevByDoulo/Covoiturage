@@ -145,8 +145,9 @@ export class EspaceLayout {
 
   protected readonly entrees = computed<EntreeMenu[]>(() => {
     const role = this.session.utilisateur()?.role;
-    if (role === 'ADMIN') return [{ lien: '/admin', libelle: 'Tableau de bord', icone: 'maison' }];
+    const profil: EntreeMenu = { lien: '/profil', libelle: 'Profil', icone: 'utilisateur' };
+    if (role === 'ADMIN') return [{ lien: '/admin', libelle: 'Tableau de bord', icone: 'maison' }, profil];
     const menu: EntreeMenu[] = [{ lien: '/accueil', libelle: 'Accueil', icone: 'maison' }];
-    return menu;
+    return [...menu, profil];
   });
 }

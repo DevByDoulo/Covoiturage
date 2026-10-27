@@ -36,12 +36,17 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   3 étapes (code vérifié, puis jeton de 10 min ; comptes inconnus non révélés ; quotas de codes par compte et
   par IP ; alerte au titulaire après changement) ; profil, préférences, photo (`/api/moi`) ; compte admin
   créé au démarrage.
+- **01 Gestion des utilisateurs** (branche `01-utilisateurs`) : écran *Mon profil* (`features/profil`) — photo,
+  À propos, préférences de trajet (enregistrées à chaque bascule), contacts d'urgence (table `contact_urgence`,
+  3 au plus), changer / définir le mot de passe (`/profil/mot-de-passe`), désactiver le compte
+  (`/profil/desactivation`, réactivé à la connexion suivante). Les compteurs de la maquette (trajets, avis)
+  viendront avec les modules 03 et 05.
 - Frontend : connexion, inscription, vérification du code, mot de passe oublié (3 écrans successifs),
   téléphone après Google ; espace connecté (`features/espace`, barre de navigation + déconnexion) et page
   d'accueil simple (`/accueil`, `/admin` pour l'administrateur).
 - La base garde **toutes les tables** du diagramme de classes (migration V1, à ne jamais modifier) : chaque
   module les reprend ou les fait évoluer par de nouvelles migrations datées.
-- Tests : `./mvnw test` → 6 tests (dont `ParcoursCompletTest`) ; `npm test` → 14 tests.
+- Tests : `./mvnw test` → 7 tests (dont `ParcoursCompletTest`) ; `npm test` → 17 tests.
 
 ## Répartition du travail (2 développeurs, depuis le 27/10/2026)
 

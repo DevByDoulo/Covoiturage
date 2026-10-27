@@ -78,6 +78,8 @@ circulaire entre modules : passer par des événements Spring.
 | POST | `/api/auth/inscription`, `/otp/verifier`, `/otp/renvoyer`, `/connexion`, `/google`, `/refresh`, `/deconnexion` | public |
 | POST | `/api/auth/mot-de-passe/oublie` → `/mot-de-passe/verifier-code` (renvoie un `jeton` valable 10 min) → `/mot-de-passe/reinitialiser` (`jeton` + `nouveauMotDePasse`) | public |
 | GET/PUT | `/api/moi`, `/api/moi/preferences`, POST `/api/moi/photo`, PUT `/api/moi/fcm-token` | connecté |
+| GET/POST/DELETE | `/api/moi/contacts-urgence[/{id}]` (3 au plus) | connecté |
+| PUT | `/api/moi/mot-de-passe` (`motDePasseActuel`, `nouveauMotDePasse` ; renvoie de nouveaux jetons) ; POST `/api/moi/desactivation` (`motDePasse`) | connecté |
 | GET | `/api/utilisateurs/{id}` (profil public) | public |
 
 Les erreurs suivent le format ProblemDetail : `{"status":409,"detail":"Cet email est déjà utilisé","champ":"email"}`
@@ -91,4 +93,7 @@ Les erreurs suivent le format ProblemDetail : `{"status":409,"detail":"Cet email
   enregistré sous une clé `?…` pour les comptes inconnus) ; au plus 20 demandes de code et 30 vérifications
   par heure et par IP (`LimiteurParIp`, derrière un proxy : `server.forward-headers-strategy: framework`) ;
   après le changement, toutes les sessions sont fermées et le titulaire est prévenu par email (ou SMS).
+- **Compte** : changer le mot de passe exige l'ancien (sauf compte créé avec Google), ferme les autres sessions et
+  prévient le titulaire ; la désactivation (mot de passe exigé) ferme toutes les sessions, et le compte est réactivé
+  à la connexion suivante. Contacts d'urgence : 3 au plus, numéro normalisé, ni le sien ni un doublon.
 - **Jetons** : accès JWT 30 min ; refresh opaque 30 jours, haché, rotation à chaque usage, réutilisation détectée → toutes les sessions coupées.

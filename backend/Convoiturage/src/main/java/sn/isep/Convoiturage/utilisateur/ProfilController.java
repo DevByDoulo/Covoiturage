@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import sn.isep.Convoiturage.common.stockage.StockageService;
 import sn.isep.Convoiturage.utilisateur.UtilisateurDtos.*;
 
 import java.time.Duration;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -20,6 +22,7 @@ import java.time.Duration;
 public class ProfilController {
 
     private final ProfilService profils;
+    private final ContactUrgenceService contactsUrgence;
     private final StockageService stockage;
 
     @GetMapping("/moi")
@@ -46,6 +49,23 @@ public class ProfilController {
     @PutMapping("/moi/fcm-token")
     public ResponseEntity<Void> enregistrerFcmToken(@Valid @RequestBody FcmTokenRequete req) {
         profils.enregistrerFcmToken(SecurityUtils.utilisateurCourantId(), req.token());
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/moi/contacts-urgence")
+    public List<ContactUrgenceDto> mesContactsUrgence() {
+        return contactsUrgence.mesContacts(SecurityUtils.utilisateurCourantId());
+    }
+
+    @PostMapping("/moi/contacts-urgence")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ContactUrgenceDto ajouterContactUrgence(@Valid @RequestBody ContactUrgenceRequete req) {
+        return contactsUrgence.ajouter(SecurityUtils.utilisateurCourantId(), req);
+    }
+
+    @DeleteMapping("/moi/contacts-urgence/{id}")
+    public ResponseEntity<Void> supprimerContactUrgence(@PathVariable Long id) {
+        contactsUrgence.supprimer(SecurityUtils.utilisateurCourantId(), id);
         return ResponseEntity.noContent().build();
     }
 

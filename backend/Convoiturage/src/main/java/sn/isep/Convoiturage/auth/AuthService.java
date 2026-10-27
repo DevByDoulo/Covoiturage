@@ -101,6 +101,7 @@ public class AuthService {
         }
         limiteur.reinitialiser(cle);
         Utilisateur u = trouve.get();
+        reactiverSiDesactive(u);
         if (u.getStatut() == StatutCompte.EN_ATTENTE_OTP) {
             return envoyerCodeVerification(u);
         }
@@ -132,6 +133,7 @@ public class AuthService {
         if (u.getSexe() == null && req.sexe() != null) u.setSexe(req.sexe());
 
         if (u.estVerifie() && u.getTelephone() != null) {
+            reactiverSiDesactive(u);
             utilisateurs.save(u);
             verifierPeutSeConnecter(u);
             return AuthReponse.connecte(tokens.emettre(u), ProfilDto.de(u));
@@ -207,6 +209,55 @@ public class AuthService {
         limiteur.reinitialiser(u.getTelephone());
         if (u.getEmail() != null) limiteur.reinitialiser(u.getEmail());
         alertes.motDePasseModifie(u);
+    }
+
+    /**
+     * Utilisateur connecté : change son mot de passe (l'ancien est exigé s'il en a un), ferme toutes les autres
+     * sessions et renvoie de nouveaux jetons pour l'appareil courant. Le titulaire est prévenu.
+     */
+    @Transactional
+    public AuthReponse changerMotDePasse(Long utilisateurId, ChangementMotDePasseRequete req) {
+        Utilisateur u = charger(utilisateurId);
+        verifierMotDePasseActuel(u, req.motDePasseActuel(), "motDePasseActuel");
+        if (u.getMotDePasse() != null && encoder.matches(req.nouveauMotDePasse(), u.getMotDePasse())) {
+            throw ApiException.badRequest("Le nouveau mot de passe doit être différent de l'ancien").surChamp("nouveauMotDePasse");
+        }
+        u.setMotDePasse(encoder.encode(req.nouveauMotDePasse()));
+        tokens.revoquerTous(u.getId());
+        alertes.motDePasseModifie(u);
+        return AuthReponse.connecte(tokens.emettre(u), ProfilDto.de(u));
+    }
+
+    /**
+     * Désactivation à la demande du titulaire : le compte n'apparaît plus et toutes les sessions sont fermées.
+     * Il est réactivé à la prochaine connexion réussie.
+     */
+    @Transactional
+    public void desactiver(Long utilisateurId, DesactivationRequete req) {
+        Utilisateur u = charger(utilisateurId);
+        if (u.getRole() == Role.ADMIN) throw ApiException.forbidden("Un compte administrateur ne peut pas être désactivé ici");
+        verifierMotDePasseActuel(u, req.motDePasse(), "motDePasse");
+        u.setStatut(StatutCompte.DESACTIVE);
+        tokens.revoquerTous(u.getId());
+    }
+
+    private Utilisateur charger(Long id) {
+        return utilisateurs.findById(id).orElseThrow(() -> ApiException.notFound("Utilisateur introuvable"));
+    }
+
+    /** Contrôle du mot de passe actuel, compté comme une tentative de connexion (blocage après 5 échecs). */
+    private void verifierMotDePasseActuel(Utilisateur u, String saisi, String champ) {
+        if (u.getMotDePasse() == null) return;
+        String cle = u.getTelephone() != null ? u.getTelephone() : "id:" + u.getId();
+        limiteur.verifierAutorise(cle);
+        if (saisi == null || !encoder.matches(saisi, u.getMotDePasse())) {
+            limiteur.enregistrerEchec(cle);
+            throw ApiException.badRequest("Mot de passe incorrect").surChamp(champ);
+        }
+    }
+
+    private static void reactiverSiDesactive(Utilisateur u) {
+        if (u.getStatut() == StatutCompte.DESACTIVE) u.setStatut(StatutCompte.ACTIF);
     }
 
     /** Compte pouvant récupérer son mot de passe : actif et avec un numéro (auquel les codes sont rattachés). */

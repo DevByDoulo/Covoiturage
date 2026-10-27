@@ -38,6 +38,14 @@ public final class AuthDtos {
     /** Email ou numéro de téléphone. */
     public record IdentifiantRequete(@NotBlank String identifiant) {}
 
+    /** Utilisateur connecté. motDePasseActuel est ignoré (et peut être absent) pour un compte créé avec Google. */
+    public record ChangementMotDePasseRequete(
+            String motDePasseActuel,
+            @NotBlank @Pattern(regexp = REGLE_MDP, message = MESSAGE_MDP) String nouveauMotDePasse) {}
+
+    /** Confirmation de la désactivation par le mot de passe (sauf compte créé avec Google). */
+    public record DesactivationRequete(String motDePasse) {}
+
     /** Code accepté : le jeton autorise le choix du nouveau mot de passe pendant validiteSecondes. */
     public record CodeVerifieReponse(String jeton, long validiteSecondes) {}
 
