@@ -48,7 +48,7 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   module 07 : appeler `VehiculeService.recalculerStatutConducteur` après chaque décision.
 - Frontend : connexion, inscription, vérification du code, mot de passe oublié (3 écrans successifs),
   téléphone après Google ; espace connecté (`features/espace`, barre de navigation + déconnexion) et page
-  d'accueil simple (`/accueil`, `/admin` pour l'administrateur).
+  d'accueil simple (`/accueil`) ; l'administrateur arrive sur le back-office (`/admin`).
 - La base garde **toutes les tables** du diagramme de classes (migration V1, à ne jamais modifier) : chaque
   module les reprend ou les fait évoluer par de nouvelles migrations datées.
 - **12 Calcul automatique du prix** (branche `12-prix`) : module backend `tarification` (repris de l'archive :
@@ -68,7 +68,15 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   `alerte_recherche`, code dans l'archive) attendent le module 06 Notifications. En attendant le module 07,
   `POST /api/dev/moi/valider-conducteur` (**profil dev uniquement**, bouton « [Dev] » sur l'écran Publier)
   valide les documents du compte connecté : à retirer quand l'administration existera.
-- Tests : `./mvnw test` → 22 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `MoteurIATest`) ;
+- **07 Administration** (branche `07-administration`) : back-office `/admin` avec son propre cadre (menu latéral,
+  `features/admin`) — tableau de bord (statistiques), **validation des documents** (file filtrable, aperçu du
+  fichier, informations à vérifier, valider / refuser avec motif obligatoire ; `recalculerStatutConducteur`
+  appelé à chaque décision), liste et **fiche utilisateur** (véhicules, documents, historique), **bloquer /
+  bannir** avec motif obligatoire et **débloquer** (sessions fermées). Chaque décision est enregistrée dans
+  `action_admin` et envoyée à l'utilisateur par email (ou SMS) via `AvisUtilisateurs` ; `utilisateur.derniere_connexion`
+  est mis à jour à chaque émission de jetons (migration V2026_10_27_1500). Le raccourci de développement
+  `POST /api/dev/moi/valider-conducteur` (module 03) peut maintenant être retiré par Abdoulaye.
+- Tests : `./mvnw test` → 23 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `MoteurIATest`) ;
   `npm test` → 24 tests ; `python -m pytest` dans `ia-tarification` → 20 tests.
 
 ## Répartition du travail (2 développeurs, depuis le 27/10/2026)
