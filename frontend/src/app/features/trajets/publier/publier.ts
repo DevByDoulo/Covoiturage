@@ -53,8 +53,9 @@ export class Publier implements OnInit {
 
   protected readonly etat = signal<Etat>('chargement');
   protected readonly vehicules = signal<VehiculeConducteur[]>([]);
+  // L'API ne renvoie que les véhicules actifs (les véhicules retirés n'y figurent pas).
   protected readonly vehiculesValides = computed(() =>
-    this.vehicules().filter((v) => v.actif && v.statutValidation === 'VALIDE'),
+    this.vehicules().filter((v) => v.statutValidation === 'VALIDE'),
   );
 
   // ---- Itinéraire
