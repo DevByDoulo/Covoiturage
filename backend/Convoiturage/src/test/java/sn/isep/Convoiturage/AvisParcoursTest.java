@@ -98,6 +98,13 @@ class AvisParcoursTest {
                 .andExpect(jsonPath("$.commentaire").value("Ponctuel et prudent, voiture propre."))
                 .andExpect(jsonPath("$.roleEvalue").value("CONDUCTEUR"));
         noter(awa, resaAwa, 5, null).andExpect(status().isConflict());
+        // Le conducteur est prévenu (module 06), une seule fois malgré la tentative en double
+        mvc.perform(get("/api/moi/notifications").header("Authorization", "Bearer " + conducteur))
+                .andExpect(jsonPath("$.content[0].type").value("AVIS_RECU"))
+                .andExpect(jsonPath("$.content[0].titre").value("Nouvel avis : 4/5"))
+                .andExpect(jsonPath("$.content[0].contenu").value(org.hamcrest.Matchers.startsWith("Awa, votre passager, vous a donné 4/5")))
+                .andExpect(jsonPath("$.content[0].lien").value("/profil"))
+                .andExpect(jsonPath("$.content[1].type").value(org.hamcrest.Matchers.not("AVIS_RECU")));
         mvc.perform(get("/api/moi/avis-a-donner").header("Authorization", "Bearer " + awa))
                 .andExpect(jsonPath("$.length()").value(0));
 
@@ -109,6 +116,9 @@ class AvisParcoursTest {
         jdbc.update("update trajet set date_heure_depart = date_heure_depart + interval '15 days' where id_trajet = ?", idTrajet);
         noter(conducteur, resaAwa, 5, null).andExpect(status().isCreated())
                 .andExpect(jsonPath("$.roleEvalue").value("PASSAGER"));
+        mvc.perform(get("/api/moi/notifications").header("Authorization", "Bearer " + awa))
+                .andExpect(jsonPath("$.content[0].type").value("AVIS_RECU"))
+                .andExpect(jsonPath("$.content[0].contenu").value(org.hamcrest.Matchers.startsWith("Ibrahima, votre conducteur, vous a donné 5/5")));
 
         // --- Réputation publique (sans connexion) et moyenne reportée sur le profil
         mvc.perform(get("/api/utilisateurs/" + idConducteur + "/avis"))

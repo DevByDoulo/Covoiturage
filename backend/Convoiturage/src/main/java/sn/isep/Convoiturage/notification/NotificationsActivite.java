@@ -1,9 +1,12 @@
 package sn.isep.Convoiturage.notification;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+import sn.isep.Convoiturage.avis.AvisEvenements.AvisPublie;
+import sn.isep.Convoiturage.avis.Evaluation;
 import sn.isep.Convoiturage.reservation.Reservation;
 import sn.isep.Convoiturage.reservation.ReservationEvenements.*;
 import sn.isep.Convoiturage.reservation.ReservationRepository;
@@ -20,9 +23,9 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Traduit les événements des modules réservation et trajet en notifications. Les écouteurs s'exécutent juste avant
+ * Traduit les événements des modules réservation, trajet et avis en notifications. Les écouteurs s'exécutent juste avant
  * la validation de la transaction métier : la notification est enregistrée avec le changement qu'elle annonce, ou
- * pas du tout. Les modules réservation et trajet ne dépendent pas des notifications.
+ * pas du tout. Ces modules ne dépendent pas des notifications.
  */
 @Component
 @RequiredArgsConstructor
@@ -34,6 +37,7 @@ class NotificationsActivite {
     private final NotificationService notifications;
     private final ReservationRepository reservations;
     private final TrajetRepository trajets;
+    private final EntityManager em;
 
     // ------------------------------------------------------------------ Réservations
 
@@ -128,6 +132,20 @@ class NotificationsActivite {
                             + " Vérifiez que cela vous convient toujours.",
                     lienTrajet(t));
         }
+    }
+
+    // ------------------------------------------------------------------ Avis
+
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    public void surAvis(AvisPublie e) {
+        Evaluation a = em.find(Evaluation.class, e.idEvaluation());
+        if (a == null) return;
+        String auteur = a.getEvaluateur().getPrenom() + (a.parConducteur() ? ", votre conducteur," : ", votre passager,");
+        String commentaire = vide(a.getCommentaire()) ? "" : " : « " + a.getCommentaire() + " »";
+        notifications.notifier(a.getEvalue(), TypeNotification.AVIS_RECU, Priorite.NORMALE,
+                "Nouvel avis : " + e.note() + "/5",
+                auteur + " vous a donné " + e.note() + "/5 pour " + trajet(a.getTrajet()) + commentaire,
+                "/profil");
     }
 
     // ------------------------------------------------------------------ Textes

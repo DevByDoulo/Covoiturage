@@ -70,7 +70,8 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   (repris de l'archive) — `NotificationService.notifier(destinataire, type, priorite, titre, contenu, lien)` :
   enregistrée dans `notification` (lien vers l'écran, migration V2026_10_28_0900), push FCM si l'appareil a
   envoyé son jeton (`FIREBASE_CREDENTIALS_PATH`, sinon journalisé), et **email (sinon SMS) si `Priorite.IMPORTANTE`**.
-  `NotificationsActivite` écoute `ReservationEvenements` et `TrajetModifie` (avant validation de la transaction) ;
+  `NotificationsActivite` écoute `ReservationEvenements`, `TrajetModifie` et `AvisPublie` (« Nouvel avis : 4/5 », lien
+  vers `/profil`, qui affiche les avis reçus) avant validation de la transaction ;
   `RappelsTrajet` prévient conducteur et passagers 1 h avant le départ (toutes les 5 min, sans doublon) ; les
   décisions de l'admin passent aussi par là. Écrans : cloche avec compteur dans l'en-tête (rafraîchi toutes les
   30 s) et `/notifications`. Reste : push dans le navigateur (projet Firebase à créer).
@@ -103,7 +104,7 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   conducteur et le conducteur note ce passager : 1 à 5 étoiles + commentaire, une fois par sens, dans les 14 jours
   suivant le départ ; chaque avis recalcule `utilisateur.note_moyenne` (filtre « note minimale » de la recherche).
   API `POST /api/reservations/{id}/evaluation`, `GET /api/moi/avis-a-donner`, `GET /api/utilisateurs/{id}/avis`
-  (public). Événement `AvisEvenements.AvisPublie` à écouter par le module 06. Écrans `features/avis` : bloc
+  (public). Événement `AvisEvenements.AvisPublie`, notifié à la personne notée (module 06). Écrans `features/avis` : bloc
   « Donnez votre avis » (Mes réservations, Mes trajets), réputation du conducteur (détail d'un trajet).
   **Signalements** (classe SIGNALEMENT) : pas encore faits. Le profil (module 01) peut afficher
   `GET /api/utilisateurs/{id}/avis` pour son compteur d'avis.

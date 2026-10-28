@@ -16,5 +16,7 @@ public enum TypeNotification {
     COMPTE_SUSPENDU,
     COMPTE_REACTIVE,
     /** Un trajet correspondant à une alerte de recherche vient d'être publié. */
-    ALERTE_TRAJET
+    ALERTE_TRAJET,
+    /** Un passager ou un conducteur vient de noter l'utilisateur après un voyage. */
+    AVIS_RECU
 }
