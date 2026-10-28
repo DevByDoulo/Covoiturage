@@ -98,6 +98,8 @@ circulaire entre modules : passer par des événements Spring.
 | POST | `/api/trajets/{id}/reservations` (`nombrePlaces`, `moyenPaiement`) ; GET `/api/moi/reservations` ; POST `/api/reservations/{id}/annuler` ; GET `/api/reservations/{id}/embarquement` (PIN/QR) | passager |
 | GET | `/api/trajets/{id}/reservations` ; POST `/api/reservations/{id}/accepter`, `/refuser` ; POST `/api/trajets/{id}/embarquement` (`code`) | conducteur |
 | GET | `/api/paiements/moyens` ; POST `/api/reservations/{id}/paiement` (passager, renvoie `urlPaiement`) ; GET `/api/moi/paiements` ; GET `/api/paiements/{reference}/recu` | connecté |
+| POST | `/api/reservations/{id}/evaluation` (`note` 1–5, `commentaire`) ; GET `/api/moi/avis-a-donner` | connecté |
+| GET | `/api/utilisateurs/{id}/avis` (moyenne, répartition, derniers avis) | public |
 | POST | `/api/paiements/webhooks/wave` (signé `Wave-Signature`) | public |
 
 Les erreurs suivent le format ProblemDetail : `{"status":409,"detail":"Cet email est déjà utilisé","champ":"email"}`
@@ -136,6 +138,9 @@ Les erreurs suivent le format ProblemDetail : `{"status":409,"detail":"Cet email
   verrou pessimiste contre la sur-réservation ; une seule réservation active par passager et par trajet ; annulation
   jusqu'au départ (places remises en vente). Embarquement par PIN 6 chiffres ou QR : un paiement non réglé en ligne
   est alors encaissé en espèces par le conducteur. Événements `ReservationEvenements` pour les notifications (06).
+- **Avis** (module 05) : après un voyage effectué (réservation `TERMINEE`), le passager note son conducteur et le
+  conducteur note ce passager (1 à 5, commentaire facultatif), une fois par sens, au plus 14 jours après le départ ;
+  `utilisateur.note_moyenne` est recalculée à chaque avis.
 - **Paiements** (module 04) : espèces ; **Wave** (API Checkout, webhook signé HMAC-SHA256, anti-rejeu 5 min,
   idempotent) ; Orange Money à brancher (`OrangeMoneyFournisseur`, API Sonatel non publique). **Aucune commission ;
   annulation avant le départ = remboursement intégral** (relancé toutes les 10 min si l'opérateur échoue ; un

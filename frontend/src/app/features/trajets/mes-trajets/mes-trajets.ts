@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { ErreurApi, lireErreur } from '../../../core/api/erreur-api';
 import { Alerte } from '../../../shared/ui/alerte';
 import { Icone } from '../../../shared/ui/icone';
+import { AvisADonnerBloc } from '../../avis/avis-a-donner';
 import { CarteTrajet } from '../carte-trajet/carte-trajet';
 import { StatutTrajet, Trajet } from '../trajets.models';
 import { TrajetsService } from '../trajets.service';
@@ -12,7 +13,7 @@ const A_VENIR: StatutTrajet[] = ['PUBLIE', 'COMPLET', 'EN_COURS'];
 /** F4 — Historique des trajets proposés par le conducteur. */
 @Component({
   selector: 'app-mes-trajets',
-  imports: [RouterLink, CarteTrajet, Icone, Alerte],
+  imports: [RouterLink, CarteTrajet, Icone, Alerte, AvisADonnerBloc],
   template: `
     <header class="entete">
       <h1>Mes trajets</h1>
@@ -20,6 +21,9 @@ const A_VENIR: StatutTrajet[] = ['PUBLIE', 'COMPLET', 'EN_COURS'];
         <app-icone nom="plus" [taille]="18" /> Publier
       </a>
     </header>
+
+    <!-- 05 — passagers à noter après les trajets terminés -->
+    <app-avis-a-donner />
 
     <div class="onglets" role="tablist" aria-label="Période">
       <button role="tab" type="button" [attr.aria-selected]="onglet() === 'avenir'" (click)="onglet.set('avenir')">
