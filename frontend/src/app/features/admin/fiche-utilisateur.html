@@ -1,0 +1,144 @@
+<nav class="fil" aria-label="Fil d'Ariane"><a routerLink="/admin/utilisateurs">Utilisateurs</a> › {{ u()?.prenom }} {{ u()?.nom }}</nav>
+
+<header class="titre">
+  <h1>Fiche utilisateur</h1>
+  @if (u() && modifiable()) {
+    <div class="sanctions">
+      <button class="bouton debloquer" type="button" [disabled]="!suspendu() || envoi()" (click)="reactiver()">Débloquer</button>
+      <button class="bouton bloquer" type="button" [disabled]="suspendu() || envoi()" (click)="ouvrir('bloquer')">Bloquer</button>
+      <button class="bouton bannir" type="button" [disabled]="u()?.statut === 'BANNI' || envoi()" (click)="ouvrir('bannir')">Bannir</button>
+    </div>
+  }
+</header>
+
+@if (succes(); as s) {
+  <app-alerte type="succes">{{ s }}</app-alerte>
+}
+@if (erreur(); as e) {
+  @if (!sanction()) {
+    <app-alerte type="erreur">{{ e.message }}</app-alerte>
+  }
+}
+
+@if (fiche(); as f) {
+  <div class="ecran">
+    <aside class="carte identite">
+      <span class="avatar">{{ initiales() }}</span>
+      <h2>{{ f.utilisateur.prenom }} {{ f.utilisateur.nom }}</h2>
+      <div class="pastilles">
+        <span class="pastille" [class.pastille--succes]="f.utilisateur.statut === 'ACTIF'"
+          [class.pastille--erreur]="suspendu()" [class.pastille--attente]="f.utilisateur.statut === 'DESACTIVE' || f.utilisateur.statut === 'EN_ATTENTE_OTP'">
+          {{ libellesStatut[f.utilisateur.statut] }}</span>
+        <span class="pastille pastille--succes">{{ f.utilisateur.role === 'CONDUCTEUR' ? 'Conducteur' : f.utilisateur.role === 'ADMIN' ? 'Administrateur' : 'Passager' }}</span>
+      </div>
+      @if (f.noteMoyenne; as n) {
+        <p class="note"><app-icone nom="etoile" [taille]="16" /> {{ n | number: '1.1-1' : 'fr' }}</p>
+      }
+      <dl>
+        <dt>Email</dt>
+        <dd>{{ f.utilisateur.email || '—' }} @if (f.emailVerifie) { <small>(vérifié)</small> }</dd>
+        <dt>Téléphone</dt>
+        <dd>{{ telephone(f.utilisateur.telephone) }} @if (f.telephoneVerifie) { <small>(vérifié)</small> }</dd>
+        <dt>Sexe</dt>
+        <dd>{{ f.sexe === 'FEMME' ? 'Femme' : f.sexe === 'HOMME' ? 'Homme' : '—' }}</dd>
+        <dt>Inscrit le</dt>
+        <dd>{{ f.utilisateur.dateCreation | date: 'dd/MM/yyyy' }}</dd>
+        <dt>Dernière connexion</dt>
+        <dd>{{ f.utilisateur.derniereConnexion ? (f.utilisateur.derniereConnexion | date: "dd/MM/yyyy 'à' HH'h'mm") : 'Jamais' }}</dd>
+      </dl>
+    </aside>
+
+    <section class="principal">
+      <div class="onglets" role="tablist">
+        <button role="tab" type="button" [attr.aria-selected]="onglet() === 'informations'" (click)="onglet.set('informations')">Informations</button>
+        <button role="tab" type="button" [attr.aria-selected]="onglet() === 'vehicules'" (click)="onglet.set('vehicules')">Véhicules ({{ f.vehicules.length }})</button>
+        <button role="tab" type="button" [attr.aria-selected]="onglet() === 'documents'" (click)="onglet.set('documents')">Documents ({{ f.documents.length }})</button>
+      </div>
+
+      @switch (onglet()) {
+        @case ('informations') {
+          <div class="carte bloc">
+            <h3>Informations du compte</h3>
+            <div class="tuiles">
+              <div><small>Conducteur validé</small><strong>{{ f.utilisateur.conducteurValide ? 'Oui' : 'Non' }}</strong></div>
+              <div><small>Véhicule</small><strong>{{ f.vehicules[0] ? f.vehicules[0].marque + ' ' + f.vehicules[0].modele + ' • ' + f.vehicules[0].immatriculation : 'Aucun' }}</strong></div>
+              <div><small>Présentation</small><strong class="bio">{{ f.bio || '—' }}</strong></div>
+            </div>
+          </div>
+          <div class="carte bloc">
+            <h3>Historique</h3>
+            <ol class="historique">
+              @for (a of f.historique; track $index) {
+                <li>
+                  <span class="historique__date">{{ a.date | date: 'dd/MM/yyyy HH:mm' }}</span>
+                  <span>{{ libellesAction[a.type] }}@if (a.detail) { — {{ a.detail }} } par {{ a.admin }}</span>
+                </li>
+              }
+              <li>
+                <span class="historique__date">{{ f.utilisateur.dateCreation | date: 'dd/MM/yyyy HH:mm' }}</span>
+                <span>Compte créé</span>
+              </li>
+            </ol>
+          </div>
+        }
+        @case ('vehicules') {
+          @for (v of f.vehicules; track v.id) {
+            <div class="carte element">
+              <app-icone nom="voiture" [taille]="22" />
+              <span><strong>{{ v.marque }} {{ v.modele }} {{ v.annee }}</strong><small>{{ v.immatriculation }} • {{ v.nombrePlaces }} places • {{ v.puissanceFiscale }} CV • {{ energies[v.typeEnergie] }}</small></span>
+              <span class="pastille" [class.pastille--succes]="v.statutValidation === 'VALIDE'" [class.pastille--attente]="v.statutValidation === 'EN_ATTENTE'"
+                [class.pastille--erreur]="v.statutValidation === 'REFUSE'">{{ v.statutValidation === 'VALIDE' ? 'Validé' : v.statutValidation === 'REFUSE' ? 'Refusé' : 'En attente' }}</span>
+            </div>
+          } @empty {
+            <p class="vide">Aucun véhicule déclaré.</p>
+          }
+        }
+        @case ('documents') {
+          @for (d of f.documents; track d.id) {
+            <div class="carte element">
+              <app-icone nom="document" [taille]="22" />
+              <span>
+                <strong>{{ libellesDocument[d.typeDocument] }}@if (d.immatriculation) { ({{ d.immatriculation }}) }</strong>
+                <small>Envoyé le {{ d.dateSoumission | date: 'dd/MM/yyyy' }}@if (d.commentaireAdmin) { • {{ d.commentaireAdmin }} }</small>
+              </span>
+              <span class="pastille" [class.pastille--succes]="d.statutValidation === 'VALIDE'" [class.pastille--attente]="d.statutValidation === 'EN_ATTENTE'"
+                [class.pastille--erreur]="d.statutValidation === 'REFUSE'">{{ d.statutValidation === 'VALIDE' ? 'Validé' : d.statutValidation === 'REFUSE' ? 'Refusé' : 'En attente' }}</span>
+              <button class="bouton-lien" type="button" (click)="voir(d)">Voir</button>
+            </div>
+          } @empty {
+            <p class="vide">Aucun document envoyé.</p>
+          }
+        }
+      }
+    </section>
+  </div>
+}
+
+@if (sanction(); as s) {
+  <div class="voile" (click)="sanction.set(null)"></div>
+  <div class="carte fenetre" role="dialog" aria-modal="true" aria-labelledby="titre-sanction">
+    <h2 id="titre-sanction">{{ s === 'bloquer' ? 'Bloquer ce compte' : 'Bannir ce compte' }}</h2>
+    <p>
+      {{ u()?.prenom }} {{ u()?.nom }} ne pourra plus se connecter
+      {{ s === 'bloquer' ? 'tant que son compte sera bloqué. Le blocage est réversible : un administrateur peut le débloquer à tout moment.'
+        : 'à YOBALEMAsn. Le bannissement est réservé aux manquements graves.' }}
+    </p>
+    <div class="champ" [class.champ--erreur]="erreur()?.champ === 'motif'">
+      <label class="libelle" for="motif-sanction">Motif <span class="obligatoire">(obligatoire)</span></label>
+      <div class="saisie saisie--texte">
+        <textarea id="motif-sanction" [formControl]="motif" rows="3" maxlength="500"
+          placeholder="Ex. : 3 signalements en un mois pour annulations de dernière minute."></textarea>
+      </div>
+      <p class="aide">Le motif est enregistré dans l'historique et communiqué à l'utilisateur.</p>
+    </div>
+    @if (erreur(); as e) {
+      <app-alerte type="erreur">{{ e.message }}</app-alerte>
+    }
+    <div class="fenetre__actions">
+      <button class="bouton bouton--secondaire" type="button" (click)="sanction.set(null)">Annuler</button>
+      <button class="bouton" [class.bloquer]="s === 'bloquer'" [class.bannir]="s === 'bannir'" type="button" [disabled]="envoi()" (click)="confirmer()">
+        {{ s === 'bloquer' ? 'Confirmer le blocage' : 'Confirmer le bannissement' }}
+      </button>
+    </div>
+  </div>
+}

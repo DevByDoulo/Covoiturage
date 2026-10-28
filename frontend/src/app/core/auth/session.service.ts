@@ -124,6 +124,14 @@ export class SessionService {
     return this.rafraichissementEnCours;
   }
 
+  /** Fenêtre « Se déconnecter ? » ouverte (affichée par ConfirmationDeconnexion, à la racine). */
+  readonly confirmationDeconnexion = signal(false);
+
+  /** Boutons Déconnexion : demandent d'abord une confirmation. */
+  demanderDeconnexion(): void {
+    this.confirmationDeconnexion.set(true);
+  }
+
   deconnexion(): void {
     const refresh = stockage.lire(CLE_REFRESH);
     if (refresh) {

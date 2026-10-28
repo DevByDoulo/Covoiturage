@@ -65,7 +65,7 @@ sn.isep.Convoiturage
 ├── auth          inscription, codes OTP (email/SMS), connexion (email/téléphone, Google), refresh tokens, mot de passe oublié
 ├── utilisateur   profil, préférences, photo, contacts d'urgence, jeton FCM
 ├── vehicule      véhicules (photo), documents : permis, pièce d'identité, carte grise par véhicule
-└── admin         création du premier administrateur au démarrage
+└── admin         back-office : statistiques, validation des documents, utilisateurs, blocage, journal des décisions
 ```
 Un nouveau module = un nouveau package au même niveau (`vehicule`, `trajet`, `notification`…). Pas de dépendance
 circulaire entre modules : passer par des événements Spring.
@@ -87,6 +87,8 @@ circulaire entre modules : passer par des événements Spring.
 | PUT | `/api/moi/mot-de-passe` (`motDePasseActuel`, `nouveauMotDePasse` ; renvoie de nouveaux jetons) ; POST `/api/moi/desactivation` (`motDePasse`) | connecté |
 | GET | `/api/utilisateurs/{id}` (profil public) | public |
 | POST/GET/PUT/DELETE | `/api/moi/vehicules[/{id}]` ; POST `/api/moi/vehicules/{id}/photo` | connecté |
+| GET | `/api/admin/statistiques` ; `/api/admin/documents?type&recherche&plusAnciensDabord&page` (file de validation) ; `/api/admin/utilisateurs?recherche&statut&page` ; `/api/admin/utilisateurs/{id}` (fiche) | admin |
+| POST | `/api/admin/documents/{id}/valider`, `/refuser` (`motif`) ; `/api/admin/utilisateurs/{id}/bloquer`, `/bannir` (`motif`), `/reactiver` | admin |
 | POST/GET | `/api/moi/documents` (multipart : `type` = PERMIS_CONDUIRE, PIECE_IDENTITE ou CARTE_GRISE, `idVehicule` pour la carte grise, `fichier`) ; GET `/api/documents/{id}/fichier` (propriétaire ou admin) | connecté |
 | GET | `/api/trajets/recherche?latDepart&lngDepart&latArrivee&lngArrivee&date[&places&rayonKm&prixMax&noteMin&femmesUniquement&heureMin&heureMax&conducteur]`, `/api/trajets/{id}` | public |
 | POST | `/api/trajets/estimation`, `/api/trajets` ; PUT `/api/trajets/{id}` ; POST `/api/trajets/{id}/annuler`, `/demarrer`, `/terminer` ; GET `/api/moi/trajets` | conducteur |
@@ -94,7 +96,6 @@ circulaire entre modules : passer par des événements Spring.
 | GET | `/api/trajets/{id}/reservations` ; POST `/api/reservations/{id}/accepter`, `/refuser` ; POST `/api/trajets/{id}/embarquement` (`code`) | conducteur |
 | GET | `/api/paiements/moyens` ; POST `/api/reservations/{id}/paiement` (passager, renvoie `urlPaiement`) ; GET `/api/moi/paiements` ; GET `/api/paiements/{reference}/recu` | connecté |
 | POST | `/api/paiements/webhooks/wave` (signé `Wave-Signature`) | public |
-| POST | `/api/dev/moi/valider-conducteur` — **profil dev uniquement**, en attendant la validation admin (module 07) | connecté |
 
 Les erreurs suivent le format ProblemDetail : `{"status":409,"detail":"Cet email est déjà utilisé","champ":"email"}`
 (+ `erreurs` par champ pour les validations).
@@ -115,6 +116,9 @@ Les erreurs suivent le format ProblemDetail : `{"status":409,"detail":"Cet email
 - **Documents** : JPEG, PNG ou PDF (type lu dans le fichier), 5 Mo ; un nouvel envoi remplace la pièce encore en attente
   du même emplacement. Conducteur validé = permis + pièce d'identité validés + au moins un véhicule actif dont la carte
   grise est validée (`VehiculeService.recalculerStatutConducteur`, à appeler après chaque décision de l'admin — module 07).
+- **Administration** : refus d'un document, blocage et bannissement exigent un motif, communiqué à l'utilisateur
+  (email, sinon SMS) et enregistré dans `action_admin` ; un admin ne peut agir ni sur lui-même ni sur un autre admin ;
+  bloquer ou bannir ferme toutes les sessions. Une pièce déjà traitée ne peut plus l'être (409).
 - **Trajets** : départ ≥ 30 min après publication, flexibilité 15–30 min, places ≤ places du véhicule − 1, conducteur
   validé ; « femmes uniquement » réservé aux conductrices. Recherche PostGIS : le tracé passe à moins de `rayonKm`
   du départ et de l'arrivée du passager, dans le bon sens.

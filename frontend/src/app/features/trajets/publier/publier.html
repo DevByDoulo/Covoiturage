@@ -23,12 +23,6 @@
       <p>Vous pourrez publier dès que votre permis, votre pièce d'identité et la carte grise de votre véhicule
         seront validés.</p>
       <a class="bouton bouton--secondaire" routerLink="/vehicules">Voir mes véhicules et documents</a>
-      @if (modeDev) {
-        <!-- Profil dev uniquement : en attendant la validation par l'administrateur (module 07). -->
-        <button type="button" class="bouton-lien" [disabled]="validationDevEnCours()" (click)="validerConducteurDev()">
-          [Dev] Valider mes documents et véhicules maintenant
-        </button>
-      }
     </section>
   }
   @case ('sans-vehicule') {
@@ -37,12 +31,6 @@
       <h2>Aucun véhicule validé</h2>
       <p>Aucun de vos véhicules n'est encore validé. Vérifiez vos cartes grises dans « Mes véhicules et documents ».</p>
       <a class="bouton bouton--secondaire" routerLink="/vehicules">Voir mes véhicules et documents</a>
-      @if (modeDev) {
-        <!-- Profil dev uniquement : en attendant la validation par l'administrateur (module 07). -->
-        <button type="button" class="bouton-lien" [disabled]="validationDevEnCours()" (click)="validerConducteurDev()">
-          [Dev] Valider mes documents et véhicules maintenant
-        </button>
-      }
     </section>
   }
   @case ('pret') {

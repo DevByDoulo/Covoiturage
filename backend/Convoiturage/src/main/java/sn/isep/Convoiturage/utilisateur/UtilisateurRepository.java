@@ -20,6 +20,8 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
 
     long countByStatut(StatutCompte statut);
 
+    long countByRole(Role role);
+
     long countByConducteurValideTrue();
 
     @Query("""

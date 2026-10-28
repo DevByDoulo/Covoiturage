@@ -2,6 +2,9 @@ package sn.isep.Convoiturage.vehicule;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,6 +15,7 @@ import sn.isep.Convoiturage.utilisateur.Utilisateur;
 import sn.isep.Convoiturage.utilisateur.UtilisateurRepository;
 import sn.isep.Convoiturage.vehicule.VehiculeDtos.DocumentDto;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -65,6 +69,61 @@ public class DocumentService {
     @Transactional(readOnly = true)
     public List<DocumentDto> mesDocuments(Long utilisateurId) {
         return documents.findByUtilisateurIdOrderByDateSoumissionDesc(utilisateurId).stream().map(DocumentDto::de).toList();
+    }
+
+    // ------------------------------------------------------------------ Décisions de l'administrateur (module 07)
+
+    @Transactional(readOnly = true)
+    public Page<Document> fileDeValidation(StatutValidation statut, TypeDocument type, String recherche,
+                                           boolean plusAnciensDabord, int page, int taille) {
+        String motif = recherche == null || recherche.isBlank() ? null : "%" + recherche.trim().toLowerCase() + "%";
+        Sort tri = Sort.by(plusAnciensDabord ? Sort.Direction.ASC : Sort.Direction.DESC, "dateSoumission");
+        return documents.fileDeValidation(statut, type, motif, PageRequest.of(page, Math.min(taille, 100), tri));
+    }
+
+    /** Valide une pièce en attente et recalcule le statut conducteur de son titulaire. */
+    @Transactional
+    public Document valider(Long documentId, Long adminId) {
+        Document d = chargerEnAttente(documentId);
+        d.setStatutValidation(StatutValidation.VALIDE);
+        d.setCommentaireAdmin(null);
+        tracer(d, adminId);
+        if (d.getTypeDocument() == TypeDocument.CARTE_GRISE) d.getVehicule().setStatutValidation(StatutValidation.VALIDE);
+        vehiculeService.recalculerStatutConducteur(d.getUtilisateur());
+        return d;
+    }
+
+    /** Refuse une pièce en attente ; le motif est montré au titulaire, qui peut en envoyer une nouvelle. */
+    @Transactional
+    public Document refuser(Long documentId, Long adminId, String motif) {
+        if (motif == null || motif.isBlank()) throw ApiException.badRequest("Indiquez le motif du refus").surChamp("motif");
+        Document d = chargerEnAttente(documentId);
+        d.setStatutValidation(StatutValidation.REFUSE);
+        d.setCommentaireAdmin(motif.trim());
+        tracer(d, adminId);
+        if (d.getTypeDocument() == TypeDocument.CARTE_GRISE) d.getVehicule().setStatutValidation(StatutValidation.REFUSE);
+        vehiculeService.recalculerStatutConducteur(d.getUtilisateur());
+        return d;
+    }
+
+    private Document chargerEnAttente(Long documentId) {
+        Document d = documents.findById(documentId).orElseThrow(() -> ApiException.notFound("Document introuvable"));
+        if (d.getStatutValidation() != StatutValidation.EN_ATTENTE) throw ApiException.conflict("Ce document a déjà été traité");
+        return d;
+    }
+
+    private void tracer(Document d, Long adminId) {
+        d.setAdminValidateur(utilisateurs.getReferenceById(adminId));
+        d.setDateValidation(LocalDateTime.now());
+    }
+
+    /** Libellé lisible d'une pièce, pour les messages : « permis de conduire », « carte grise (DK-1234-AB) »… */
+    public static String libelle(Document d) {
+        return switch (d.getTypeDocument()) {
+            case PERMIS_CONDUIRE -> "permis de conduire";
+            case PIECE_IDENTITE -> "pièce d'identité";
+            case CARTE_GRISE -> "carte grise (" + d.getVehicule().getImmatriculation() + ")";
+        };
     }
 
     /** Le fichier n'est accessible qu'à son propriétaire et aux administrateurs. */

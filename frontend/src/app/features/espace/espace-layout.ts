@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { SessionService } from '../../core/auth/session.service';
 import { Icone, NomIcone } from '../../shared/ui/icone';
 import { Logo } from '../../shared/ui/logo';
+import { initiales, urlFichier } from '../profil/profil.service';
 
 interface EntreeMenu {
   lien: string;
@@ -11,7 +12,8 @@ interface EntreeMenu {
 }
 
 /**
- * Cadre de l'espace connecté : barre du haut (grand écran) et barre d'onglets en bas (mobile).
+ * Cadre de l'espace connecté : menu latéral à gauche et en-tête avec le nom, le rôle et l'avatar (grand écran) ;
+ * sur téléphone, barre du haut avec le logo et l'avatar, et barre d'onglets en bas.
  * Chaque fonctionnalité ajoute son entrée dans `entrees` (fichier partagé : modification courte).
  */
 @Component({
@@ -19,7 +21,7 @@ interface EntreeMenu {
   imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Logo],
   template: `
     <header class="barre">
-      <a [routerLink]="session.pageAccueil()" aria-label="Accueil YOBALEMAsn"><app-logo /></a>
+      <a class="barre__logo" [routerLink]="session.pageAccueil()" aria-label="Accueil YOBALEMAsn"><app-logo /></a>
       <nav class="menu" aria-label="Navigation principale">
         @for (e of entrees(); track e.lien) {
           <a [routerLink]="e.lien" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">
@@ -27,12 +29,25 @@ interface EntreeMenu {
           </a>
         }
       </nav>
-      <button class="deconnexion" type="button" (click)="session.deconnexion()" aria-label="Se déconnecter">
+      <a class="avatar avatar--mobile" routerLink="/profil" [attr.aria-label]="'Mon profil : ' + nom()">
+        @if (photo(); as url) { <img [src]="url" alt="" /> } @else { {{ initiales() }} }
+      </a>
+      <button class="deconnexion" type="button" (click)="session.demanderDeconnexion()" aria-label="Se déconnecter">
         <app-icone nom="deconnexion" [taille]="18" /> <span>Déconnexion</span>
       </button>
     </header>
 
-    <main class="contenu"><router-outlet /></main>
+    <div class="principal">
+      <header class="entete">
+        <a class="moi" routerLink="/profil">
+          <span class="moi__texte"><strong>{{ nom() }}</strong><small>{{ role() }}</small></span>
+          <span class="avatar">
+            @if (photo(); as url) { <img [src]="url" alt="" /> } @else { {{ initiales() }} }
+          </span>
+        </a>
+      </header>
+      <main class="contenu"><router-outlet /></main>
+    </div>
 
     <nav class="onglets" aria-label="Navigation principale">
       @for (e of entrees(); track e.lien) {
@@ -89,13 +104,60 @@ interface EntreeMenu {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      margin-left: auto;
       padding: 8px 12px;
       border: 0;
       border-radius: 10px;
       background: var(--surface-2);
       font-weight: 600;
       cursor: pointer;
+    }
+    .entete {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: none;
+      justify-content: flex-end;
+      padding: 12px 32px;
+      background: var(--surface);
+      box-shadow: var(--ombre);
+    }
+    .moi {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--texte);
+      text-align: right;
+      text-decoration: none !important;
+      small {
+        display: block;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--texte-3);
+      }
+    }
+    .avatar {
+      display: grid;
+      place-items: center;
+      flex: none;
+      width: 42px;
+      height: 42px;
+      overflow: hidden;
+      border-radius: 50%;
+      background: var(--vert);
+      font-weight: 800;
+      color: #fff;
+      text-decoration: none !important;
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+    .avatar--mobile {
+      width: 36px;
+      height: 36px;
+      margin-left: auto;
+      font-size: 14px;
     }
     .contenu {
       max-width: 1080px;
@@ -120,13 +182,63 @@ interface EntreeMenu {
     }
     @media (min-width: 768px) {
       :host {
+        display: grid;
+        grid-template-columns: 240px 1fr;
         padding-bottom: 0;
+      }
+      /* Même vert que le back-office. */
+      .barre {
+        --logo-texte: #fff;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 28px;
+        height: 100dvh;
+        padding: 24px 16px;
+        background: #0d3d2b;
+        box-shadow: none;
+      }
+      .barre__logo {
+        padding: 0 8px;
+      }
+      .avatar--mobile {
+        display: none;
+      }
+      .entete {
+        display: flex;
+      }
+      .menu a {
+        color: #d7ebe0;
+        &:hover {
+          background: rgba(255, 255, 255, 0.08);
+        }
+      }
+      .menu a.actif {
+        background: var(--vert);
+        color: #fff;
       }
       .menu {
         display: flex;
+        flex-direction: column;
+        margin-right: 0;
+      }
+      .menu a {
+        gap: 10px;
+        padding: 11px 12px;
       }
       .deconnexion {
-        margin-left: 0;
+        justify-content: flex-start;
+        gap: 10px;
+        margin: auto 0 0;
+        padding: 11px 12px;
+        background: none;
+        color: #f6c27a;
+        &:hover {
+          background: rgba(255, 255, 255, 0.08);
+        }
+      }
+      .contenu {
+        width: 100%;
+        padding: 28px 32px 40px;
       }
       .onglets {
         display: none;
@@ -142,6 +254,23 @@ interface EntreeMenu {
 })
 export class EspaceLayout {
   protected readonly session = inject(SessionService);
+
+  protected readonly nom = computed(() => {
+    const u = this.session.utilisateur();
+    return u ? `${u.prenom} ${u.nom}` : '';
+  });
+  protected readonly initiales = computed(() => initiales(this.nom()));
+  protected readonly photo = computed(() => urlFichier(this.session.utilisateur()?.photoProfil ?? null));
+  protected readonly role = computed(() => {
+    const u = this.session.utilisateur();
+    if (!u) return '';
+    const femme = u.sexe === 'FEMME';
+    if (u.role === 'ADMIN') return 'Administrateur';
+    if (u.role === 'CONDUCTEUR') {
+      return (femme ? 'Conductrice' : 'Conducteur') + (u.conducteurValide ? (femme ? ' vérifiée' : ' vérifié') : '');
+    }
+    return femme ? 'Passagère' : 'Passager';
+  });
 
   protected readonly entrees = computed<EntreeMenu[]>(() => {
     const role = this.session.utilisateur()?.role;

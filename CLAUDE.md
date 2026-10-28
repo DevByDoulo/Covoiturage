@@ -48,7 +48,7 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   module 07 : appeler `VehiculeService.recalculerStatutConducteur` après chaque décision.
 - Frontend : connexion, inscription, vérification du code, mot de passe oublié (3 écrans successifs),
   téléphone après Google ; espace connecté (`features/espace`, barre de navigation + déconnexion) et page
-  d'accueil simple (`/accueil`, `/admin` pour l'administrateur).
+  d'accueil simple (`/accueil`) ; l'administrateur arrive sur le back-office (`/admin`).
 - La base garde **toutes les tables** du diagramme de classes (migration V1, à ne jamais modifier) : chaque
   module les reprend ou les fait évoluer par de nouvelles migrations datées.
 - **12 Calcul automatique du prix** (branche `12-prix`) : module backend `tarification` (repris de l'archive :
@@ -65,9 +65,15 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   `GOOGLE_MAPS_API_KEY`, sinon vol d'oiseau ×1,25). `pom.xml` : `hibernate-spatial` remis. Écrans Angular
   `features/trajets` (publier avec carte Leaflet et détail du prix IA, détail, mes trajets) et
   `features/recherche` ; Leaflet ajouté (`package.json`, `angular.json`). Les **alertes de recherche** (table
-  `alerte_recherche`, code dans l'archive) attendent le module 06 Notifications. En attendant le module 07,
-  `POST /api/dev/moi/valider-conducteur` (**profil dev uniquement**, bouton « [Dev] » sur l'écran Publier)
-  valide les documents du compte connecté : à retirer quand l'administration existera.
+  `alerte_recherche`, code dans l'archive) attendent le module 06 Notifications.
+- **07 Administration** (branche `07-administration`) : back-office `/admin` avec son propre cadre (menu latéral,
+  `features/admin`) — tableau de bord (statistiques), **validation des documents** (file filtrable, aperçu du
+  fichier, informations à vérifier, valider / refuser avec motif obligatoire ; `recalculerStatutConducteur`
+  appelé à chaque décision), liste et **fiche utilisateur** (véhicules, documents, historique), **bloquer /
+  bannir** avec motif obligatoire et **débloquer** (sessions fermées). Chaque décision est enregistrée dans
+  `action_admin` et envoyée à l'utilisateur par email (ou SMS) via `AvisUtilisateurs` ; `utilisateur.derniere_connexion`
+  est mis à jour à chaque émission de jetons (migration V2026_10_27_1500). Le raccourci de développement
+  `POST /api/dev/moi/valider-conducteur` (module 03) a été retiré : l'admin valide désormais les documents.
 - **04 Facturation** (branche `04-facturation`) : comprend aussi les **réservations** (non attribuées dans la
   répartition ; reprises de l'archive). Package `reservation` (demande avec moyen de paiement, acceptation/refus,
   annulation, embarquement PIN/QR, événements `ReservationEvenements` à écouter par le module 06) et package
@@ -77,7 +83,7 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   à confirmer avec l'encadrant** : aucune commission, remboursement intégral de toute annulation avant le départ.
   Wave exige HTTPS (clés `WAVE_API_KEY`, `WAVE_SECRET_WEBHOOK`, `PAIEMENT_URL_RETOUR`) : en local, tunnel ngrok.
   Écrans : réserver (détail d'un trajet), demandes et embarquement (conducteur), `/reservations`, `/paiements`, reçu.
-- Tests : `./mvnw test` → 28 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`,
+- Tests : `./mvnw test` → 29 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `WaveFournisseurTest`) ; `npm test` → 27 tests ; `python -m pytest` dans
   `ia-tarification` → 20 tests.
 
