@@ -32,7 +32,7 @@ import { AdminService } from './admin.service';
           }
         </a>
       </nav>
-      <button class="menu__sortie" type="button" (click)="session.deconnexion()">
+      <button class="menu__sortie" type="button" (click)="session.demanderDeconnexion()">
         <app-icone nom="deconnexion" [taille]="19" /> <span>Se déconnecter</span>
       </button>
     </aside>

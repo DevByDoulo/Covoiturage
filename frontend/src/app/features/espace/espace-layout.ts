@@ -32,7 +32,7 @@ interface EntreeMenu {
       <a class="avatar avatar--mobile" routerLink="/profil" [attr.aria-label]="'Mon profil : ' + nom()">
         @if (photo(); as url) { <img [src]="url" alt="" /> } @else { {{ initiales() }} }
       </a>
-      <button class="deconnexion" type="button" (click)="session.deconnexion()" aria-label="Se déconnecter">
+      <button class="deconnexion" type="button" (click)="session.demanderDeconnexion()" aria-label="Se déconnecter">
         <app-icone nom="deconnexion" [taille]="18" /> <span>Déconnexion</span>
       </button>
     </header>
