@@ -7,7 +7,8 @@ import java.util.List;
 
 /** Propriétés applicatives (préfixe {@code app} dans application.yaml). */
 @ConfigurationProperties("app")
-public record AppProperties(Jwt jwt, Otp otp, Cors cors, Stockage stockage, Google google, Admin admin, Ia ia) {
+public record AppProperties(Jwt jwt, Otp otp, Cors cors, Stockage stockage, Google google, Admin admin, Ia ia,
+                            Firebase firebase) {
 
     public record Jwt(String secret, String issuer, long accessTokenMinutes, long refreshTokenDays) {}
 
@@ -22,6 +23,9 @@ public record AppProperties(Jwt jwt, Otp otp, Cors cors, Stockage stockage, Goog
     public record Google(String clientId, String mapsApiKey) {}
 
     public record Admin(String email, String motDePasse, String telephone) {}
+
+    /** Compte de service Firebase (push FCM). Chemin vide : les push sont seulement journalisés. */
+    public record Firebase(String credentialsPath) {}
 
     /** Service ia-tarification (FastAPI). URL vide : formule seule. */
     public record Ia(String url, Duration delai) {}

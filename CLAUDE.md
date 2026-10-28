@@ -66,6 +66,15 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   `features/trajets` (publier avec carte Leaflet et détail du prix IA, détail, mes trajets) et
   `features/recherche` ; Leaflet ajouté (`package.json`, `angular.json`). Les **alertes de recherche** (table
   `alerte_recherche`, code dans l'archive) attendent le module 06 Notifications.
+- **06 Notifications** (branche `06-notifications`, partie de `07-administration`) : module backend `notification`
+  (repris de l'archive) — `NotificationService.notifier(destinataire, type, priorite, titre, contenu, lien)` :
+  enregistrée dans `notification` (lien vers l'écran, migration V2026_10_28_0900), push FCM si l'appareil a
+  envoyé son jeton (`FIREBASE_CREDENTIALS_PATH`, sinon journalisé), et **email (sinon SMS) si `Priorite.IMPORTANTE`**.
+  `NotificationsActivite` écoute `ReservationEvenements` et `TrajetModifie` (avant validation de la transaction) ;
+  `RappelsTrajet` prévient conducteur et passagers 1 h avant le départ (toutes les 5 min, sans doublon) ; les
+  décisions de l'admin passent aussi par là. Écrans : cloche avec compteur dans l'en-tête (rafraîchi toutes les
+  30 s) et `/notifications`. Reste : alertes de recherche (`ALERTE_TRAJET` prévu, module recherche à reprendre de
+  l'archive) et push dans le navigateur (projet Firebase à créer).
 - **07 Administration** (branche `07-administration`) : back-office `/admin` avec son propre cadre (menu latéral,
   `features/admin`) — tableau de bord (statistiques), **validation des documents** (file filtrable, aperçu du
   fichier, informations à vérifier, valider / refuser avec motif obligatoire ; `recalculerStatutConducteur`
@@ -83,7 +92,7 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   à confirmer avec l'encadrant** : aucune commission, remboursement intégral de toute annulation avant le départ.
   Wave exige HTTPS (clés `WAVE_API_KEY`, `WAVE_SECRET_WEBHOOK`, `PAIEMENT_URL_RETOUR`) : en local, tunnel ngrok.
   Écrans : réserver (détail d'un trajet), demandes et embarquement (conducteur), `/reservations`, `/paiements`, reçu.
-- Tests : `./mvnw test` → 29 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`,
+- Tests : `./mvnw test` → 30 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `WaveFournisseurTest`) ; `npm test` → 27 tests ; `python -m pytest` dans
   `ia-tarification` → 20 tests.
 

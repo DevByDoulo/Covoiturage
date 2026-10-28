@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import sn.isep.Convoiturage.admin.AdminDtos.*;
 import sn.isep.Convoiturage.auth.TokenService;
 import sn.isep.Convoiturage.common.ApiException;
+import sn.isep.Convoiturage.notification.TypeNotification;
 import sn.isep.Convoiturage.utilisateur.Role;
 import sn.isep.Convoiturage.utilisateur.StatutCompte;
 import sn.isep.Convoiturage.utilisateur.Utilisateur;
@@ -73,8 +74,8 @@ public class AdminService {
             throw ApiException.conflict("Ce compte est déjà bloqué ou banni");
         }
         suspendre(adminId, u, StatutCompte.BLOQUE, TypeActionAdmin.COMPTE_BLOQUE, motif,
-                "Votre compte a été temporairement bloqué par l'équipe YOBALEMAsn pour le motif suivant :\n« " + motif.trim()
-                        + " »\nPour toute question, répondez à ce message.");
+                "Votre compte a été temporairement bloqué par l'équipe YOBALEMAsn pour le motif suivant : « " + motif.trim()
+                        + " ». Pour toute question, répondez à ce message.");
         return fiche(id);
     }
 
@@ -84,7 +85,7 @@ public class AdminService {
         Utilisateur u = chargerModifiable(adminId, id);
         if (u.getStatut() == StatutCompte.BANNI) throw ApiException.conflict("Ce compte est déjà banni");
         suspendre(adminId, u, StatutCompte.BANNI, TypeActionAdmin.COMPTE_BANNI, motif,
-                "Votre compte a été banni de YOBALEMAsn pour le motif suivant :\n« " + motif.trim() + " »");
+                "Votre compte a été banni de YOBALEMAsn pour le motif suivant : « " + motif.trim() + " ».");
         return fiche(id);
     }
 
@@ -97,7 +98,8 @@ public class AdminService {
         }
         u.setStatut(StatutCompte.ACTIF);
         tracer(adminId, u, TypeActionAdmin.COMPTE_REACTIVE, null);
-        avis.envoyer(u, "Votre compte est de nouveau actif", "Votre compte a été débloqué : vous pouvez de nouveau vous connecter.");
+        avis.envoyer(u, TypeNotification.COMPTE_REACTIVE, "Votre compte est de nouveau actif",
+                "Votre compte a été débloqué : vous pouvez de nouveau vous connecter.", "/accueil");
         return fiche(id);
     }
 
@@ -116,9 +118,9 @@ public class AdminService {
         Utilisateur u = d.getUtilisateur();
         String libelle = DocumentService.libelle(d);
         tracer(adminId, u, TypeActionAdmin.DOCUMENT_VALIDE, majuscule(libelle));
-        avis.envoyer(u, "Document validé", u.isConducteurValide()
+        avis.envoyer(u, TypeNotification.DOCUMENT_VALIDE, "Document validé", u.isConducteurValide()
                 ? "Votre " + libelle + " a été validé(e). Tous vos documents sont validés : vous pouvez publier des trajets !"
-                : "Votre " + libelle + " a été validé(e).");
+                : "Votre " + libelle + " a été validé(e).", "/vehicules");
         return DocumentDto.de(d);
     }
 
@@ -128,8 +130,9 @@ public class AdminService {
         Utilisateur u = d.getUtilisateur();
         String libelle = DocumentService.libelle(d);
         tracer(adminId, u, TypeActionAdmin.DOCUMENT_REFUSE, majuscule(libelle) + " : " + motif.trim());
-        avis.envoyer(u, "Document à renvoyer", "Votre " + libelle + " a été refusé(e) pour le motif suivant :\n« " + motif.trim()
-                + " »\nVous pouvez en envoyer un nouveau depuis « Mes véhicules et documents ».");
+        avis.envoyer(u, TypeNotification.DOCUMENT_REFUSE, "Document à renvoyer", "Votre " + libelle
+                + " a été refusé(e) pour le motif suivant : « " + motif.trim()
+                + " ». Vous pouvez en envoyer un nouveau depuis « Mes véhicules et documents ».", "/vehicules");
         return DocumentDto.de(d);
     }
 
@@ -156,7 +159,8 @@ public class AdminService {
         u.setStatut(statut);
         tokens.revoquerTous(u.getId());
         tracer(adminId, u, type, motif.trim());
-        avis.envoyer(u, statut == StatutCompte.BANNI ? "Compte banni" : "Compte bloqué", message);
+        avis.envoyer(u, TypeNotification.COMPTE_SUSPENDU, statut == StatutCompte.BANNI ? "Compte banni" : "Compte bloqué",
+                message, null);
     }
 
     private void tracer(Long adminId, Utilisateur u, TypeActionAdmin type, String detail) {
