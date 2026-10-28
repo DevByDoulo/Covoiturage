@@ -38,7 +38,8 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       font-size: 22px;
       font-weight: 800;
       letter-spacing: -0.03em;
-      color: #0c6b3f;
+      /* Surchargeable par le parent (ex. blanc sur le menu vert). */
+      color: var(--logo-texte, #0c6b3f);
     }
     .logo__suffixe {
       color: #f29a1f;

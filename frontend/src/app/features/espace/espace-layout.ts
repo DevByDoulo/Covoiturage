@@ -125,16 +125,29 @@ interface EntreeMenu {
         grid-template-columns: 240px 1fr;
         padding-bottom: 0;
       }
+      /* Même vert que le back-office. */
       .barre {
+        --logo-texte: #fff;
         flex-direction: column;
         align-items: stretch;
         gap: 28px;
         height: 100dvh;
         padding: 24px 16px;
-        box-shadow: 1px 0 0 var(--bord);
+        background: #0d3d2b;
+        box-shadow: none;
       }
       .barre__logo {
         padding: 0 8px;
+      }
+      .menu a {
+        color: #d7ebe0;
+        &:hover {
+          background: rgba(255, 255, 255, 0.08);
+        }
+      }
+      .menu a.actif {
+        background: var(--vert);
+        color: #fff;
       }
       .menu {
         display: flex;
@@ -151,9 +164,9 @@ interface EntreeMenu {
         margin: auto 0 0;
         padding: 11px 12px;
         background: none;
-        color: var(--texte-2);
+        color: #f6c27a;
         &:hover {
-          background: var(--surface-2);
+          background: rgba(255, 255, 255, 0.08);
         }
       }
       .contenu {
