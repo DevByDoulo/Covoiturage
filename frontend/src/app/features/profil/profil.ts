@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SessionService } from '../../core/auth/session.service';
 import { Icone } from '../../shared/ui/icone';
+import { ReputationBloc } from '../avis/reputation';
 import { APropos } from './a-propos';
 import { ContactsUrgence } from './contacts-urgence';
 import { EnteteProfil } from './entete-profil';
@@ -10,7 +11,7 @@ import { PreferencesTrajet } from './preferences-trajet';
 /** Écran « Mon profil » (01 Gestion des utilisateurs), d'après la maquette docs/maquettes/Mon profil CoVoitIA.png. */
 @Component({
   selector: 'app-profil',
-  imports: [RouterLink, Icone, EnteteProfil, APropos, PreferencesTrajet, ContactsUrgence],
+  imports: [RouterLink, Icone, EnteteProfil, APropos, PreferencesTrajet, ContactsUrgence, ReputationBloc],
   template: `
     @if (session.utilisateur(); as u) {
       <div class="pile">
@@ -19,6 +20,7 @@ import { PreferencesTrajet } from './preferences-trajet';
         @if (u.role !== 'ADMIN') {
           <app-preferences-trajet [valeurs]="u.preferences" />
           <app-contacts-urgence />
+          <app-reputation [idUtilisateur]="u.id" titre="Avis reçus" />
         }
 
         <nav class="carte menu" aria-label="Mon compte">

@@ -17,7 +17,8 @@ export type TypeNotification =
   | 'DOCUMENT_REFUSE'
   | 'COMPTE_SUSPENDU'
   | 'COMPTE_REACTIVE'
-  | 'ALERTE_TRAJET';
+  | 'ALERTE_TRAJET'
+  | 'AVIS_RECU';
 
 export interface Notification {
   id: number;
