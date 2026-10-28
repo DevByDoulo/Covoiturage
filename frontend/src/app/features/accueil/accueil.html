@@ -52,15 +52,6 @@
       </section>
     </div>
 
-    <section class="raccourcis" aria-label="Raccourcis">
-      @for (r of raccourcis(); track r.lien) {
-        <a class="carte raccourci" [routerLink]="r.lien">
-          <span class="raccourci__icone"><app-icone [nom]="r.icone" [taille]="22" /></span>
-          <span><strong>{{ r.titre }}</strong><small>{{ r.detail }}</small></span>
-        </a>
-      }
-    </section>
-
     <section class="carte bloc">
       <header class="bloc__entete">
         <h2><app-icone nom="cloche" /> Dernières notifications</h2>

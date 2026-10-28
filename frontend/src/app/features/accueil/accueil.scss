@@ -142,40 +142,6 @@
   color: var(--erreur);
 }
 
-.raccourcis {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-}
-
-.raccourci {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--texte);
-  font-weight: 400;
-  text-decoration: none !important;
-
-  &:hover {
-    box-shadow: 0 0 0 2px var(--vert-clair), var(--ombre);
-  }
-  small {
-    display: block;
-    color: var(--texte-3);
-  }
-}
-
-.raccourci__icone {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  background: var(--vert-clair);
-  color: var(--vert);
-}
-
 .notification {
   display: flex;
   align-items: flex-start;

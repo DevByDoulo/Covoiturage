@@ -30,12 +30,6 @@ interface Tache {
   ton: 'attente' | 'erreur' | 'info';
 }
 
-interface Raccourci {
-  icone: NomIcone;
-  titre: string;
-  detail: string;
-  lien: string;
-}
 
 interface Donnees {
   trajets: Trajet[];
@@ -49,7 +43,7 @@ interface Donnees {
 
 const A_VENIR = ['PUBLIE', 'COMPLET', 'EN_COURS'];
 
-/** Accueil de l'espace connecté : prochain trajet, choses à faire, raccourcis et dernières notifications. */
+/** Accueil de l'espace connecté : recherche, prochain trajet, choses à faire et dernières notifications. */
 @Component({
   selector: 'app-accueil',
   imports: [RouterLink, DatePipe, Icone],
@@ -155,17 +149,6 @@ export class Accueil {
     return liste;
   });
 
-  protected readonly raccourcis = computed<Raccourci[]>(() => {
-    const liste: Raccourci[] = [
-      { icone: 'recherche', titre: 'Trouver un trajet', detail: 'Au départ de chez vous', lien: '/rechercher' },
-      { icone: 'plus', titre: 'Publier un trajet', detail: 'Le prix est calculé pour vous', lien: '/trajets/publier' },
-      { icone: 'valide', titre: 'Mes réservations', detail: 'Codes d’embarquement, paiements', lien: '/reservations' },
-    ];
-    if (this.conducteur()) {
-      liste.push({ icone: 'route', titre: 'Mes trajets', detail: 'Demandes, départ, arrivée', lien: '/trajets/mes-trajets' });
-    }
-    return liste;
-  });
 
   constructor() {
     const sur = <T>(appel: Observable<T>, defaut: T) => appel.pipe(catchError(() => of(defaut)));
