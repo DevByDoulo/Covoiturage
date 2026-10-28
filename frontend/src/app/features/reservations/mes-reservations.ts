@@ -5,6 +5,7 @@ import { ErreurApi, lireErreur } from '../../core/api/erreur-api';
 import { FcfaPipe } from '../../shared/format/formats';
 import { Alerte } from '../../shared/ui/alerte';
 import { Icone } from '../../shared/ui/icone';
+import { AvisADonnerBloc } from '../avis/avis-a-donner';
 import {
   CodeEmbarquement,
   LIBELLES_MOYEN,
@@ -22,12 +23,15 @@ import { ReservationsService } from './reservations.service';
  */
 @Component({
   selector: 'app-mes-reservations',
-  imports: [RouterLink, DatePipe, FcfaPipe, Icone, Alerte],
+  imports: [RouterLink, DatePipe, FcfaPipe, Icone, Alerte, AvisADonnerBloc],
   template: `
     <header class="entete">
       <h1>Mes réservations</h1>
       <a routerLink="/paiements" class="bouton-lien"><app-icone nom="info" [taille]="16" /> Mes paiements et reçus</a>
     </header>
+
+    <!-- 05 — voyages terminés à noter -->
+    <app-avis-a-donner />
 
     @if (paiement() === 'succes') {
       <app-alerte type="succes">Paiement envoyé. La confirmation de Wave peut prendre quelques secondes.</app-alerte>

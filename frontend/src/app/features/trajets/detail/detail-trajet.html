@@ -72,6 +72,11 @@
         <app-demandes-trajet [idTrajet]="t.id" />
       }
 
+      <!-- 05 — réputation du conducteur, pour les passagers -->
+      @if (!estConducteur()) {
+        <app-reputation [idUtilisateur]="t.conducteur.id" [titre]="'Avis sur ' + t.conducteur.prenom" />
+      }
+
       @if (estConducteur()) {
         @if (t.tarification; as tf) {
           <section class="carte bloc">

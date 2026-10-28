@@ -98,9 +98,19 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   à confirmer avec l'encadrant** : aucune commission, remboursement intégral de toute annulation avant le départ.
   Wave exige HTTPS (clés `WAVE_API_KEY`, `WAVE_SECRET_WEBHOOK`, `PAIEMENT_URL_RETOUR`) : en local, tunnel ngrok.
   Écrans : réserver (détail d'un trajet), demandes et embarquement (conducteur), `/reservations`, `/paiements`, reçu.
-- Tests : `./mvnw test` → 31 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
-  `ReservationsPaiementsParcoursTest`, `WaveFournisseurTest`) ; `npm test` → 27 tests ; `python -m pytest` dans
-  `ia-tarification` → 20 tests.
+- **05 Évaluations et avis** (branche `05-avis`) : package `avis`, table `evaluation` (migration
+  V2026_10_28_1400, classe EVALUATION). Après un voyage effectué (réservation `TERMINEE`), le passager note son
+  conducteur et le conducteur note ce passager : 1 à 5 étoiles + commentaire, une fois par sens, dans les 14 jours
+  suivant le départ ; chaque avis recalcule `utilisateur.note_moyenne` (filtre « note minimale » de la recherche).
+  API `POST /api/reservations/{id}/evaluation`, `GET /api/moi/avis-a-donner`, `GET /api/utilisateurs/{id}/avis`
+  (public). Événement `AvisEvenements.AvisPublie` à écouter par le module 06. Écrans `features/avis` : bloc
+  « Donnez votre avis » (Mes réservations, Mes trajets), réputation du conducteur (détail d'un trajet).
+  **Signalements** (classe SIGNALEMENT) : pas encore faits. Le profil (module 01) peut afficher
+  `GET /api/utilisateurs/{id}/avis` pour son compteur d'avis.
+- Tests : `./mvnw test` → 32 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
+  `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `WaveFournisseurTest`) ; `npm test` → 29 tests ;
+  `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
+  téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 
 ## Répartition du travail (2 développeurs, depuis le 27/10/2026)
 

@@ -10,6 +10,7 @@ import { decoderPolyline } from '../../../shared/carte/polyline';
 import { DureePipe, FcfaPipe } from '../../../shared/format/formats';
 import { Alerte } from '../../../shared/ui/alerte';
 import { Icone } from '../../../shared/ui/icone';
+import { ReputationBloc } from '../../avis/reputation';
 import { DemandesTrajet } from '../../reservations/demandes-trajet';
 import { ReserverTrajet } from '../../reservations/reserver-trajet';
 import {
@@ -30,7 +31,7 @@ type Panneau = 'aucun' | 'modifier' | 'annuler';
  */
 @Component({
   selector: 'app-detail-trajet',
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, FcfaPipe, DureePipe, Carte, Icone, Alerte, ReserverTrajet, DemandesTrajet],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, FcfaPipe, DureePipe, Carte, Icone, Alerte, ReserverTrajet, DemandesTrajet, ReputationBloc],
   templateUrl: './detail-trajet.html',
   styleUrl: './detail-trajet.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
