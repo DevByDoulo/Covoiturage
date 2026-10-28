@@ -91,6 +91,7 @@
       <button type="submit" class="bouton bouton--primaire"><app-icone nom="recherche" /> Rechercher</button>
     </form>
 
+    <app-mes-alertes />
   </div>
 
   <div class="colonne">
@@ -133,9 +134,25 @@
           <section class="carte vide">
             <app-icone nom="route" [taille]="32" />
             <p><strong>Aucun trajet ne correspond ce jour-là.</strong><br />
-              Essayez une autre date ou un rayon plus large.</p>
+              Essayez une autre date ou un rayon plus large, ou créez une alerte.</p>
           </section>
         }
+
+        <div class="alerte-recherche">
+          @if (alerteExistante()) {
+            <p><app-icone nom="valide" [taille]="18" /> Alerte active : vous serez prévenu dès qu'un trajet correspondant
+              sera publié.</p>
+          } @else {
+            <p>{{ liste.length ? 'Aucun ne vous convient ?' : 'Ne manquez pas le prochain :' }}
+              recevez une notification dès qu'un conducteur publie ce trajet.</p>
+            <button type="button" class="bouton bouton--secondaire" [disabled]="creationAlerte()" (click)="creerAlerte()">
+              <app-icone nom="cloche" [taille]="18" /> Créer une alerte
+            </button>
+          }
+          @if (erreurAlerte(); as e) {
+            <p class="message-erreur">{{ e }}</p>
+          }
+        </div>
       } @else {
         <p class="info">Indiquez votre départ et votre arrivée : les trajets qui passent à proximité s'afficheront ici, avec le
           point où le conducteur peut vous prendre.</p>

@@ -89,6 +89,7 @@ circulaire entre modules : passer par des événements Spring.
 | GET | `/api/utilisateurs/{id}` (profil public) | public |
 | POST/GET/PUT/DELETE | `/api/moi/vehicules[/{id}]` ; POST `/api/moi/vehicules/{id}/photo` | connecté |
 | GET | `/api/moi/notifications?page&taille`, `/api/moi/notifications/non-lues` ; POST `/api/moi/notifications/{id}/lue`, `/lues` | connecté |
+| POST, GET | `/api/moi/alertes` — créer (départ, arrivée, date, rayon, prix max) / lister ses alertes de recherche à venir ; DELETE `/api/moi/alertes/{id}` | passager |
 | GET | `/api/admin/statistiques` ; `/api/admin/documents?type&recherche&plusAnciensDabord&page` (file de validation) ; `/api/admin/utilisateurs?recherche&statut&page` ; `/api/admin/utilisateurs/{id}` (fiche) | admin |
 | POST | `/api/admin/documents/{id}/valider`, `/refuser` (`motif`) ; `/api/admin/utilisateurs/{id}/bloquer`, `/bannir` (`motif`), `/reactiver` | admin |
 | POST/GET | `/api/moi/documents` (multipart : `type` = PERMIS_CONDUIRE, PIECE_IDENTITE ou CARTE_GRISE, `idVehicule` pour la carte grise, `fichier`) ; GET `/api/documents/{id}/fichier` (propriétaire ou admin) | connecté |

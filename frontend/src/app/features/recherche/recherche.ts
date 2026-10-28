@@ -11,6 +11,8 @@ import { Carte, MarqueurCarte } from '../../shared/carte/carte';
 import { Coordonnee, decoderPolyline } from '../../shared/carte/polyline';
 import { Alerte } from '../../shared/ui/alerte';
 import { Icone } from '../../shared/ui/icone';
+import { AlertesService } from '../alertes/alertes.service';
+import { MesAlertes } from '../alertes/mes-alertes';
 import { CarteTrajet } from '../trajets/carte-trajet/carte-trajet';
 import { ChampLieu } from '../trajets/champ-lieu/champ-lieu';
 import { CriteresRecherche, Trajet } from '../trajets/trajets.models';
@@ -24,7 +26,7 @@ type Tri = 'heure' | 'prix' | 'proximite';
  */
 @Component({
   selector: 'app-recherche',
-  imports: [ReactiveFormsModule, DatePipe, Carte, ChampLieu, CarteTrajet, Icone, Alerte],
+  imports: [ReactiveFormsModule, DatePipe, Carte, ChampLieu, CarteTrajet, Icone, Alerte, MesAlertes],
   templateUrl: './recherche.html',
   styleUrl: './recherche.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,6 +36,7 @@ export class Recherche {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   protected readonly session = inject(SessionService);
+  private readonly alertes = inject(AlertesService);
 
   // ---- Paramètres d'URL (liés automatiquement)
   readonly de = input<string>();
@@ -107,6 +110,16 @@ export class Recherche {
       liste.sort((x, y) => distanceTotale(x) - distanceTotale(y));
     else liste.sort((x, y) => x.dateHeureDepart.localeCompare(y.dateHeureDepart));
     return liste;
+  });
+  protected readonly creationAlerte = signal(false);
+  protected readonly erreurAlerte = signal<string | null>(null);
+  /** Une alerte existe déjà pour ce trajet et ce jour (coordonnées arrondies à ~10 m). */
+  protected readonly alerteExistante = computed(() => {
+    const c = this.criteres();
+    const proche = (x: number, y: number) => Math.abs(x - y) < 1e-4;
+    return !!c && !!this.alertes.alertes()?.some((a) => a.date === c.date
+      && proche(a.depart.latitude, c.latDepart) && proche(a.depart.longitude, c.lngDepart)
+      && proche(a.arrivee.latitude, c.latArrivee) && proche(a.arrivee.longitude, c.lngArrivee));
   });
   protected readonly trajetSelectionne = computed(() => this.resultats()?.find((t) => t.id === this.selection()) ?? null);
 
@@ -225,6 +238,29 @@ export class Recherche {
         conducteur: v.conducteur.trim() || null,
       },
     });
+  }
+
+  /** Enregistre la recherche courante comme alerte : une notification arrivera à la publication d'un trajet correspondant. */
+  protected creerAlerte(): void {
+    const c = this.criteres();
+    if (!c) return;
+    this.creationAlerte.set(true);
+    this.erreurAlerte.set(null);
+    this.alertes
+      .creer({
+        depart: { lieu: this.de() ?? 'Départ', latitude: c.latDepart, longitude: c.lngDepart },
+        arrivee: { lieu: this.a() ?? 'Arrivée', latitude: c.latArrivee, longitude: c.lngArrivee },
+        date: c.date,
+        rayonKm: c.rayonKm,
+        prixMax: c.prixMax,
+      })
+      .subscribe({
+        next: () => this.creationAlerte.set(false),
+        error: (e) => {
+          this.creationAlerte.set(false);
+          this.erreurAlerte.set(lireErreur(e).message);
+        },
+      });
   }
 
   protected reinitialiserFiltres(): void {

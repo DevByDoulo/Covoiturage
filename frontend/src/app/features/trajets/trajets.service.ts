@@ -14,7 +14,7 @@ import {
 
 /**
  * Accès à l'API des trajets (module 03) : publication, gestion et recherche.
- * Les alertes de recherche reviendront avec les notifications (module 06).
+ * Les alertes de recherche sont dans `features/alertes`.
  */
 @Injectable({ providedIn: 'root' })
 export class TrajetsService {
