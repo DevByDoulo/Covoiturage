@@ -11,6 +11,8 @@ interface EntreeMenu {
   lien: string;
   libelle: string;
   icone: NomIcone;
+  /** Absente de la barre d'onglets du téléphone (trop d'entrées) : accessible autrement (ex. depuis Profil). */
+  bureauSeulement?: boolean;
 }
 
 /**
@@ -54,7 +56,7 @@ interface EntreeMenu {
     </div>
 
     <nav class="onglets" aria-label="Navigation principale">
-      @for (e of entrees(); track e.lien) {
+      @for (e of onglets(); track e.lien) {
         <a [routerLink]="e.lien" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">
           <app-icone [nom]="e.icone" [taille]="22" />
           <span>{{ e.libelle }}</span>
@@ -297,8 +299,12 @@ export class EspaceLayout {
     menu.push({ lien: '/rechercher', libelle: 'Rechercher', icone: 'recherche' });
     menu.push({ lien: '/trajets/publier', libelle: 'Publier', icone: 'plus' });
     if (role === 'CONDUCTEUR') menu.push({ lien: '/trajets/mes-trajets', libelle: 'Mes trajets', icone: 'route' });
+    // 02 — Véhicules et documents (sur téléphone : depuis Profil)
+    menu.push({ lien: '/vehicules', libelle: 'Véhicules', icone: 'voiture', bureauSeulement: true });
     // 04 — Facturation (les paiements et reçus sont accessibles depuis « Réservations »)
     menu.push({ lien: '/reservations', libelle: 'Réservations', icone: 'valide' });
     return [...menu, profil];
   });
+
+  protected readonly onglets = computed(() => this.entrees().filter((e) => !e.bureauSeulement));
 }
