@@ -1,0 +1,75 @@
+@if (session.utilisateur(); as u) {
+  <div class="accueil">
+    <section class="heros">
+      <h1>{{ salutation() }}, {{ u.prenom }} 👋</h1>
+      <p>Où allez-vous aujourd'hui ?</p>
+      <a class="heros__recherche" routerLink="/rechercher">
+        <app-icone nom="recherche" [taille]="20" />
+        <span>Rechercher un trajet : départ, arrivée, date…</span>
+        <app-icone nom="fleche-droite" [taille]="20" />
+      </a>
+    </section>
+
+    <div class="grille">
+      <section class="carte bloc prochain">
+        <h2><app-icone nom="calendrier" /> Mon prochain trajet</h2>
+        @if (!donnees()) {
+          <p class="vide">Chargement…</p>
+        } @else if (prochain(); as p) {
+          <a class="trajet" [routerLink]="p.lien">
+            <span class="pastille" [class.pastille--succes]="p.role === 'conducteur'" [class.pastille--attente]="p.role === 'passager'">
+              {{ p.role === 'conducteur' ? 'Vous conduisez' : 'Vous êtes passager' }}
+            </span>
+            <strong class="trajet__date">{{ p.date | date: "EEEE d MMMM 'à' HH'h'mm" }}</strong>
+            <span class="trajet__lieux">
+              <span>{{ p.depart }}</span>
+              <app-icone nom="fleche-droite" [taille]="18" />
+              <span>{{ p.arrivee }}</span>
+            </span>
+            <small>{{ p.detail }}</small>
+          </a>
+        } @else {
+          <p class="vide">Aucun trajet prévu pour l'instant.</p>
+          <a class="bouton bouton--secondaire" [routerLink]="conducteur() ? '/trajets/publier' : '/rechercher'">
+            {{ conducteur() ? 'Publier un trajet' : 'Trouver un trajet' }}
+          </a>
+        }
+      </section>
+
+      <section class="carte bloc">
+        <h2><app-icone nom="liste" /> À faire</h2>
+        @for (t of taches(); track t.texte) {
+          <a class="tache" [routerLink]="t.lien">
+            <span class="tache__icone" [class]="'tache__icone tache__icone--' + t.ton"><app-icone [nom]="t.icone" [taille]="18" /></span>
+            <span>{{ t.texte }}</span>
+            <app-icone nom="chevron-droite" [taille]="18" />
+          </a>
+        } @empty {
+          @if (donnees()) {
+            <p class="vide vide--ok"><app-icone nom="valide" /> Tout est en ordre.</p>
+          }
+        }
+      </section>
+    </div>
+
+    <section class="carte bloc">
+      <header class="bloc__entete">
+        <h2><app-icone nom="cloche" /> Dernières notifications</h2>
+        <a routerLink="/notifications">Tout voir</a>
+      </header>
+      @for (n of donnees()?.notifications; track n.id) {
+        <a class="notification" [routerLink]="n.lien || '/notifications'" [class.notification--non-lue]="!n.lu">
+          <span>
+            <strong>{{ n.titre }}</strong>
+            <small>{{ n.contenu }}</small>
+          </span>
+          <small class="notification__date">{{ n.dateEnvoi | date: 'd MMM, HH:mm' }}</small>
+        </a>
+      } @empty {
+        @if (donnees()) {
+          <p class="vide">Aucune notification pour le moment.</p>
+        }
+      }
+    </section>
+  </div>
+}
