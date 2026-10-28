@@ -64,8 +64,8 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   démarrer/terminer, « mes trajets », recherche PostGIS publique, détail public ; itinéraire Google Routes si
   `GOOGLE_MAPS_API_KEY`, sinon vol d'oiseau ×1,25). `pom.xml` : `hibernate-spatial` remis. Écrans Angular
   `features/trajets` (publier avec carte Leaflet et détail du prix IA, détail, mes trajets) et
-  `features/recherche` ; Leaflet ajouté (`package.json`, `angular.json`). Les **alertes de recherche** (table
-  `alerte_recherche`, code dans l'archive) attendent le module 06 Notifications.
+  `features/recherche` ; Leaflet ajouté (`package.json`, `angular.json`). Les **alertes de recherche** sont décrites
+  plus bas (branche `alertes-recherche`).
 - **06 Notifications** (branche `06-notifications`, partie de `07-administration`) : module backend `notification`
   (repris de l'archive) — `NotificationService.notifier(destinataire, type, priorite, titre, contenu, lien)` :
   enregistrée dans `notification` (lien vers l'écran, migration V2026_10_28_0900), push FCM si l'appareil a
@@ -73,8 +73,14 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   `NotificationsActivite` écoute `ReservationEvenements` et `TrajetModifie` (avant validation de la transaction) ;
   `RappelsTrajet` prévient conducteur et passagers 1 h avant le départ (toutes les 5 min, sans doublon) ; les
   décisions de l'admin passent aussi par là. Écrans : cloche avec compteur dans l'en-tête (rafraîchi toutes les
-  30 s) et `/notifications`. Reste : alertes de recherche (`ALERTE_TRAJET` prévu, module recherche à reprendre de
-  l'archive) et push dans le navigateur (projet Firebase à créer).
+  30 s) et `/notifications`. Reste : push dans le navigateur (projet Firebase à créer).
+- **Alertes de recherche** (branche `alertes-recherche`, complète le module 03) : package backend `recherche` repris
+  de l'archive (table `alerte_recherche`, migration V2026_10_25_1600) — `/api/moi/alertes` (créer, lister, supprimer ;
+  10 alertes à venir au plus). À la publication d'un trajet (`TrajetPublie`, après validation de la transaction,
+  sans jamais faire échouer la publication), chaque alerte du même jour dont le départ et l'arrivée sont proches
+  du tracé, dans le bon sens, reçoit une notification `ALERTE_TRAJET` (lien vers le trajet ; prix max et
+  « femmes uniquement » respectés). Écran : bouton « Créer une alerte » sous les résultats de Rechercher et bloc
+  « Mes alertes » (`features/alertes`).
 - **07 Administration** (branche `07-administration`) : back-office `/admin` avec son propre cadre (menu latéral,
   `features/admin`) — tableau de bord (statistiques), **validation des documents** (file filtrable, aperçu du
   fichier, informations à vérifier, valider / refuser avec motif obligatoire ; `recalculerStatutConducteur`
@@ -92,7 +98,7 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   à confirmer avec l'encadrant** : aucune commission, remboursement intégral de toute annulation avant le départ.
   Wave exige HTTPS (clés `WAVE_API_KEY`, `WAVE_SECRET_WEBHOOK`, `PAIEMENT_URL_RETOUR`) : en local, tunnel ngrok.
   Écrans : réserver (détail d'un trajet), demandes et embarquement (conducteur), `/reservations`, `/paiements`, reçu.
-- Tests : `./mvnw test` → 30 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`,
+- Tests : `./mvnw test` → 31 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `WaveFournisseurTest`) ; `npm test` → 27 tests ; `python -m pytest` dans
   `ia-tarification` → 20 tests.
 
