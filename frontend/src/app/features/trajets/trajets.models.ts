@@ -141,7 +141,6 @@ export interface VehiculeConducteur {
   nombrePlaces: number;
   typeEnergie: TypeEnergie;
   statutValidation: 'EN_ATTENTE' | 'VALIDE' | 'REFUSE';
-  actif: boolean;
 }
 
 export const LIBELLES_STATUT: Record<StatutTrajet, string> = {
