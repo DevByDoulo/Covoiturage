@@ -50,6 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**", "/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/utilisateurs/{id}", "/api/fichiers/photos/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/trajets/recherche", "/api/trajets/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/utilisateurs/{id}/avis").permitAll()
                         // Webhooks des opérateurs de paiement : authentifiés par leur signature (FacturationService).
                         .requestMatchers(HttpMethod.POST, "/api/paiements/webhooks/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
