@@ -10,15 +10,15 @@
   gap: 6px;
   padding: 24px;
   border-radius: 20px;
-  background: linear-gradient(135deg, #0d3d2b 0%, var(--vert) 100%);
-  color: #fff;
+  background: var(--surface);
+  box-shadow: var(--ombre);
 
   h1 {
     font-size: 26px;
   }
   p {
     margin: 0 0 8px;
-    color: #cfe9db;
+    color: var(--texte-2);
   }
 }
 
@@ -27,11 +27,16 @@
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
+  border: 1.5px solid transparent;
   border-radius: var(--rayon);
-  background: var(--surface);
+  background: var(--surface-2);
   color: var(--texte-3);
   font-weight: 500;
   text-decoration: none !important;
+
+  &:hover {
+    border-color: var(--vert);
+  }
 
   span {
     flex: 1;
