@@ -3,7 +3,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 import { ErreurApi, lireErreur } from '../../../core/api/erreur-api';
 import { SessionService } from '../../../core/auth/session.service';
 import { Geocodage, Lieu } from '../../../core/carte/geocodage';
@@ -119,24 +118,6 @@ export class Publier implements OnInit {
   protected readonly erreur = signal<ErreurApi | null>(null);
   protected readonly publication = signal(false);
 
-  // ---- Profil dev : validation immédiate des documents (en attendant le module 07)
-  protected readonly modeDev = !environment.production;
-  protected readonly validationDevEnCours = signal(false);
-
-  protected validerConducteurDev(): void {
-    this.validationDevEnCours.set(true);
-    this.trajets.validerConducteurDev().subscribe({
-      next: () => {
-        this.validationDevEnCours.set(false);
-        this.etat.set('chargement');
-        this.ngOnInit();
-      },
-      error: (e) => {
-        this.validationDevEnCours.set(false);
-        this.erreur.set(lireErreur(e));
-      },
-    });
-  }
 
   ngOnInit(): void {
     // Jeton et profil frais : le rôle CONDUCTEUR ou la validation des documents ont pu changer depuis la connexion.

@@ -68,9 +68,4 @@ export class TrajetsService {
   mesVehicules(): Observable<VehiculeConducteur[]> {
     return this.http.get<VehiculeConducteur[]>(`${this.api}/moi/vehicules`);
   }
-
-  /** Profil dev du backend uniquement (404 ailleurs) : valide les documents du compte connecté. */
-  validerConducteurDev(): Observable<unknown> {
-    return this.http.post(`${this.api}/dev/moi/valider-conducteur`, {});
-  }
 }

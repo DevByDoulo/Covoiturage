@@ -65,9 +65,7 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   `GOOGLE_MAPS_API_KEY`, sinon vol d'oiseau ×1,25). `pom.xml` : `hibernate-spatial` remis. Écrans Angular
   `features/trajets` (publier avec carte Leaflet et détail du prix IA, détail, mes trajets) et
   `features/recherche` ; Leaflet ajouté (`package.json`, `angular.json`). Les **alertes de recherche** (table
-  `alerte_recherche`, code dans l'archive) attendent le module 06 Notifications. En attendant le module 07,
-  `POST /api/dev/moi/valider-conducteur` (**profil dev uniquement**, bouton « [Dev] » sur l'écran Publier)
-  valide les documents du compte connecté : à retirer quand l'administration existera.
+  `alerte_recherche`, code dans l'archive) attendent le module 06 Notifications.
 - **07 Administration** (branche `07-administration`) : back-office `/admin` avec son propre cadre (menu latéral,
   `features/admin`) — tableau de bord (statistiques), **validation des documents** (file filtrable, aperçu du
   fichier, informations à vérifier, valider / refuser avec motif obligatoire ; `recalculerStatutConducteur`
@@ -75,9 +73,19 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   bannir** avec motif obligatoire et **débloquer** (sessions fermées). Chaque décision est enregistrée dans
   `action_admin` et envoyée à l'utilisateur par email (ou SMS) via `AvisUtilisateurs` ; `utilisateur.derniere_connexion`
   est mis à jour à chaque émission de jetons (migration V2026_10_27_1500). Le raccourci de développement
-  `POST /api/dev/moi/valider-conducteur` (module 03) peut maintenant être retiré par Abdoulaye.
-- Tests : `./mvnw test` → 23 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `MoteurIATest`) ;
-  `npm test` → 24 tests ; `python -m pytest` dans `ia-tarification` → 20 tests.
+  `POST /api/dev/moi/valider-conducteur` (module 03) a été retiré : l'admin valide désormais les documents.
+- **04 Facturation** (branche `04-facturation`) : comprend aussi les **réservations** (non attribuées dans la
+  répartition ; reprises de l'archive). Package `reservation` (demande avec moyen de paiement, acceptation/refus,
+  annulation, embarquement PIN/QR, événements `ReservationEvenements` à écouter par le module 06) et package
+  `facturation` (`FournisseurPaiement` : **Wave réel** via l'API Checkout + webhook signé
+  `/api/paiements/webhooks/wave` ; `OrangeMoneyFournisseur` **non branché** : l'API Sonatel n'est documentée qu'aux
+  comptes du portail developer.orange-sonatel.com ; historique `/api/moi/paiements`, reçus). Règles **provisoires,
+  à confirmer avec l'encadrant** : aucune commission, remboursement intégral de toute annulation avant le départ.
+  Wave exige HTTPS (clés `WAVE_API_KEY`, `WAVE_SECRET_WEBHOOK`, `PAIEMENT_URL_RETOUR`) : en local, tunnel ngrok.
+  Écrans : réserver (détail d'un trajet), demandes et embarquement (conducteur), `/reservations`, `/paiements`, reçu.
+- Tests : `./mvnw test` → 29 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`,
+  `ReservationsPaiementsParcoursTest`, `WaveFournisseurTest`) ; `npm test` → 27 tests ; `python -m pytest` dans
+  `ia-tarification` → 20 tests.
 
 ## Répartition du travail (2 développeurs, depuis le 27/10/2026)
 

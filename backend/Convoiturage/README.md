@@ -43,6 +43,10 @@ leurs responsables ; l'ancienne version reste sous l'étiquette Git `archive/lot
 | `CORS_ALLOWED_ORIGINS` | Origines autorisées, séparées par des virgules |
 | `GOOGLE_CLIENT_ID` | Vérification du « Se connecter avec Google » |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_TELEPHONE` | Premier administrateur |
+| `GOOGLE_MAPS_API_KEY` | Itinéraires Google Routes (sinon distance à vol d'oiseau × 1,25) |
+| `IA_TARIFICATION_URL`, `IA_TARIFICATION_DELAI` | Service `ia-tarification` (vide : prix par la formule seule ; délai 2 s) |
+| `WAVE_API_KEY`, `WAVE_SECRET_WEBHOOK` | Wave Business (vides : Wave non proposé) |
+| `PAIEMENT_URL_RETOUR` | Adresse **HTTPS** du site, où Wave renvoie le passager après paiement |
 
 ## Tests
 
@@ -86,6 +90,12 @@ circulaire entre modules : passer par des événements Spring.
 | GET | `/api/admin/statistiques` ; `/api/admin/documents?type&recherche&plusAnciensDabord&page` (file de validation) ; `/api/admin/utilisateurs?recherche&statut&page` ; `/api/admin/utilisateurs/{id}` (fiche) | admin |
 | POST | `/api/admin/documents/{id}/valider`, `/refuser` (`motif`) ; `/api/admin/utilisateurs/{id}/bloquer`, `/bannir` (`motif`), `/reactiver` | admin |
 | POST/GET | `/api/moi/documents` (multipart : `type` = PERMIS_CONDUIRE, PIECE_IDENTITE ou CARTE_GRISE, `idVehicule` pour la carte grise, `fichier`) ; GET `/api/documents/{id}/fichier` (propriétaire ou admin) | connecté |
+| GET | `/api/trajets/recherche?latDepart&lngDepart&latArrivee&lngArrivee&date[&places&rayonKm&prixMax&noteMin&femmesUniquement&heureMin&heureMax&conducteur]`, `/api/trajets/{id}` | public |
+| POST | `/api/trajets/estimation`, `/api/trajets` ; PUT `/api/trajets/{id}` ; POST `/api/trajets/{id}/annuler`, `/demarrer`, `/terminer` ; GET `/api/moi/trajets` | conducteur |
+| POST | `/api/trajets/{id}/reservations` (`nombrePlaces`, `moyenPaiement`) ; GET `/api/moi/reservations` ; POST `/api/reservations/{id}/annuler` ; GET `/api/reservations/{id}/embarquement` (PIN/QR) | passager |
+| GET | `/api/trajets/{id}/reservations` ; POST `/api/reservations/{id}/accepter`, `/refuser` ; POST `/api/trajets/{id}/embarquement` (`code`) | conducteur |
+| GET | `/api/paiements/moyens` ; POST `/api/reservations/{id}/paiement` (passager, renvoie `urlPaiement`) ; GET `/api/moi/paiements` ; GET `/api/paiements/{reference}/recu` | connecté |
+| POST | `/api/paiements/webhooks/wave` (signé `Wave-Signature`) | public |
 
 Les erreurs suivent le format ProblemDetail : `{"status":409,"detail":"Cet email est déjà utilisé","champ":"email"}`
 (+ `erreurs` par champ pour les validations).
@@ -109,4 +119,18 @@ Les erreurs suivent le format ProblemDetail : `{"status":409,"detail":"Cet email
 - **Administration** : refus d'un document, blocage et bannissement exigent un motif, communiqué à l'utilisateur
   (email, sinon SMS) et enregistré dans `action_admin` ; un admin ne peut agir ni sur lui-même ni sur un autre admin ;
   bloquer ou bannir ferme toutes les sessions. Une pièce déjà traitée ne peut plus l'être (409).
+- **Trajets** : départ ≥ 30 min après publication, flexibilité 15–30 min, places ≤ places du véhicule − 1, conducteur
+  validé ; « femmes uniquement » réservé aux conductrices. Recherche PostGIS : le tracé passe à moins de `rayonKm`
+  du départ et de l'arrivée du passager, dans le bon sens.
+- **Prix** (module 12) : `MoteurIA` (consommation prédite par `ia-tarification` + facteur météo) puis `MoteurFormule`
+  (`(carburant + usure + péages) / (places + 1)`, arrondi à 50 FCFA, plancher 500, fourchette ±10 %) ; consommation
+  déclarée > prédite > estimée ; repli sur la formule seule si l'IA ne répond pas en 2 s.
+- **Réservations** (module 04) : paiement créé dès la demande avec le moyen choisi ; mode automatique ou manuel ;
+  verrou pessimiste contre la sur-réservation ; une seule réservation active par passager et par trajet ; annulation
+  jusqu'au départ (places remises en vente). Embarquement par PIN 6 chiffres ou QR : un paiement non réglé en ligne
+  est alors encaissé en espèces par le conducteur. Événements `ReservationEvenements` pour les notifications (06).
+- **Paiements** (module 04) : espèces ; **Wave** (API Checkout, webhook signé HMAC-SHA256, anti-rejeu 5 min,
+  idempotent) ; Orange Money à brancher (`OrangeMoneyFournisseur`, API Sonatel non publique). **Aucune commission ;
+  annulation avant le départ = remboursement intégral** (relancé toutes les 10 min si l'opérateur échoue ; un
+  paiement arrivé après l'annulation est remboursé). Règles provisoires, à confirmer avec l'encadrant.
 - **Jetons** : accès JWT 30 min ; refresh opaque 30 jours, haché, rotation à chaque usage, réutilisation détectée → toutes les sessions coupées.

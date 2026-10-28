@@ -25,3 +25,16 @@ covoitia:
 #    properties:
 #      mail.smtp.auth: true
 #      mail.smtp.starttls.enable: true
+
+# Paiement Wave (réel). Sans cette section, seules les espèces sont proposées.
+# 1. Compte Wave Business (https://business.wave.com) > Développeurs : créer une clé API (droit « Checkout »)
+#    et déclarer le webhook https://<adresse publique de l'API>/api/paiements/webhooks/wave
+#    (événements checkout.session.completed et checkout.session.payment_failed) ; noter son secret.
+# 2. Wave exige des adresses HTTPS : en local, exposer l'API et le site par un tunnel (ngrok, cloudflared),
+#    et mettre ici l'adresse HTTPS du site Angular (Wave y renvoie le passager après paiement).
+#app:
+#  paiement:
+#    url-retour: https://votre-tunnel-front.ngrok-free.app
+#    wave:
+#      api-key: wave_sn_prod_xxxxxxxx
+#      secret-webhook: wave_sn_WHS_xxxxxxxx
