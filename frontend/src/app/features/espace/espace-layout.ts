@@ -11,7 +11,8 @@ interface EntreeMenu {
 }
 
 /**
- * Cadre de l'espace connecté : barre du haut (grand écran) et barre d'onglets en bas (mobile).
+ * Cadre de l'espace connecté : menu latéral à gauche (grand écran) ; sur téléphone, barre du haut avec le logo
+ * et barre d'onglets en bas.
  * Chaque fonctionnalité ajoute son entrée dans `entrees` (fichier partagé : modification courte).
  */
 @Component({
@@ -19,7 +20,7 @@ interface EntreeMenu {
   imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Logo],
   template: `
     <header class="barre">
-      <a [routerLink]="session.pageAccueil()" aria-label="Accueil YOBALEMAsn"><app-logo /></a>
+      <a class="barre__logo" [routerLink]="session.pageAccueil()" aria-label="Accueil YOBALEMAsn"><app-logo /></a>
       <nav class="menu" aria-label="Navigation principale">
         @for (e of entrees(); track e.lien) {
           <a [routerLink]="e.lien" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">
@@ -120,13 +121,44 @@ interface EntreeMenu {
     }
     @media (min-width: 768px) {
       :host {
+        display: grid;
+        grid-template-columns: 240px 1fr;
         padding-bottom: 0;
+      }
+      .barre {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 28px;
+        height: 100dvh;
+        padding: 24px 16px;
+        box-shadow: 1px 0 0 var(--bord);
+      }
+      .barre__logo {
+        padding: 0 8px;
       }
       .menu {
         display: flex;
+        flex-direction: column;
+        margin-right: 0;
+      }
+      .menu a {
+        gap: 10px;
+        padding: 11px 12px;
       }
       .deconnexion {
-        margin-left: 0;
+        justify-content: flex-start;
+        gap: 10px;
+        margin: auto 0 0;
+        padding: 11px 12px;
+        background: none;
+        color: var(--texte-2);
+        &:hover {
+          background: var(--surface-2);
+        }
+      }
+      .contenu {
+        width: 100%;
+        padding: 28px 32px 40px;
       }
       .onglets {
         display: none;
