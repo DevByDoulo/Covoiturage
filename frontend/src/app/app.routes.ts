@@ -98,6 +98,12 @@ export const routes: Routes = [
         canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
         loadComponent: () => import('./features/profil/desactivation').then((m) => m.Desactivation),
       },
+      // 06 — Notifications
+      {
+        path: 'notifications',
+        title: 'Notifications · YOBALEMAsn',
+        loadComponent: () => import('./features/notifications/notifications').then((m) => m.NotificationsPage),
+      },
       // 02 — Gestion des véhicules
       {
         path: 'vehicules',

@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { SessionService } from '../../core/auth/session.service';
 import { Icone, NomIcone } from '../../shared/ui/icone';
 import { Logo } from '../../shared/ui/logo';
+import { Cloche } from '../notifications/cloche';
+import { NotificationsService } from '../notifications/notifications.service';
 import { initiales, urlFichier } from '../profil/profil.service';
 
 interface EntreeMenu {
@@ -18,7 +20,7 @@ interface EntreeMenu {
  */
 @Component({
   selector: 'app-espace-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Logo],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Logo, Cloche],
   template: `
     <header class="barre">
       <a class="barre__logo" [routerLink]="session.pageAccueil()" aria-label="Accueil YOBALEMAsn"><app-logo /></a>
@@ -29,6 +31,7 @@ interface EntreeMenu {
           </a>
         }
       </nav>
+      <app-cloche class="cloche--mobile" />
       <a class="avatar avatar--mobile" routerLink="/profil" [attr.aria-label]="'Mon profil : ' + nom()">
         @if (photo(); as url) { <img [src]="url" alt="" /> } @else { {{ initiales() }} }
       </a>
@@ -39,6 +42,7 @@ interface EntreeMenu {
 
     <div class="principal">
       <header class="entete">
+        <app-cloche />
         <a class="moi" routerLink="/profil">
           <span class="moi__texte"><strong>{{ nom() }}</strong><small>{{ role() }}</small></span>
           <span class="avatar">
@@ -116,7 +120,9 @@ interface EntreeMenu {
       top: 0;
       z-index: 5;
       display: none;
+      align-items: center;
       justify-content: flex-end;
+      gap: 16px;
       padding: 12px 32px;
       background: var(--surface);
       box-shadow: var(--ombre);
@@ -153,10 +159,12 @@ interface EntreeMenu {
         object-fit: cover;
       }
     }
+    .cloche--mobile {
+      margin-left: auto;
+    }
     .avatar--mobile {
       width: 36px;
       height: 36px;
-      margin-left: auto;
       font-size: 14px;
     }
     .contenu {
@@ -200,7 +208,8 @@ interface EntreeMenu {
       .barre__logo {
         padding: 0 8px;
       }
-      .avatar--mobile {
+      .avatar--mobile,
+      .cloche--mobile {
         display: none;
       }
       .entete {
@@ -254,6 +263,7 @@ interface EntreeMenu {
 })
 export class EspaceLayout {
   protected readonly session = inject(SessionService);
+  private readonly notifications = inject(NotificationsService);
 
   protected readonly nom = computed(() => {
     const u = this.session.utilisateur();
@@ -271,6 +281,12 @@ export class EspaceLayout {
     }
     return femme ? 'Passagère' : 'Passager';
   });
+
+  constructor() {
+    // Compteur de la cloche, rafraîchi tant que l'espace connecté est affiché.
+    this.notifications.suivre(true);
+    inject(DestroyRef).onDestroy(() => this.notifications.suivre(false));
+  }
 
   protected readonly entrees = computed<EntreeMenu[]>(() => {
     const role = this.session.utilisateur()?.role;
