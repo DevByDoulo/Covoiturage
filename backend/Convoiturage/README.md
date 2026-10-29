@@ -129,7 +129,10 @@ Les erreurs suivent le format ProblemDetail : `{"status":409,"detail":"Cet email
   (email, sinon SMS) et enregistré dans `action_admin` ; un admin ne peut agir ni sur lui-même ni sur un autre admin ;
   bloquer ou bannir ferme toutes les sessions. Une pièce déjà traitée ne peut plus l'être (409).
 - **Trajets** : départ ≥ 30 min après publication, flexibilité 15–30 min, places ≤ places du véhicule − 1, conducteur
-  validé ; « femmes uniquement » réservé aux conductrices. Recherche PostGIS : le tracé passe à moins de `rayonKm`
+  validé ; « femmes uniquement » réservé aux conductrices. Le conducteur choisit **autoroute à péage** ou **route nationale**
+  (`typeRoute` à l'estimation et à la publication) et peut saisir le montant des péages (`montantPeages`, 0 à
+  50 000 FCFA) : sur la nationale, aucun péage ; sur l'autoroute sans montant saisi, celui de l'itinéraire (Google
+  Routes, sinon 0). Recherche PostGIS : le tracé passe à moins de `rayonKm`
   du départ et de l'arrivée du passager, dans le bon sens.
 - **Prix** (module 12) : `MoteurIA` (consommation prédite par `ia-tarification` + facteur météo) puis `MoteurFormule`
   (`(carburant + usure + péages) / (places + 1)`, arrondi à 50 FCFA, plancher 500, fourchette ±10 %) ; consommation

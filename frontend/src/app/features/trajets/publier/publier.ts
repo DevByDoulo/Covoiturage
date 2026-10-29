@@ -74,6 +74,8 @@ export class Publier implements OnInit {
     modeReservation: ['MANUELLE' as ModeReservation],
     tailleBagage: ['MOYEN' as TailleBagage],
     femmesUniquement: [false],
+    typeRoute: ['NATIONALE' as 'AUTOROUTE' | 'NATIONALE'],
+    peages: [null as number | null, [Validators.min(0), Validators.max(50_000)]],
   });
   private readonly valeurs = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
   protected readonly vehiculeChoisi = computed(() =>
@@ -89,6 +91,7 @@ export class Publier implements OnInit {
     const escales = this.escales();
     const v = this.valeurs();
     if (!d || !a || escales.some((e) => !e) || !v.idVehicule || !v.dateHeureDepart || !v.nombrePlaces) return null;
+    if (this.form.controls.peages.invalid) return null;
     return {
       idVehicule: v.idVehicule,
       depart: versPoint(d),
@@ -96,6 +99,9 @@ export class Publier implements OnInit {
       escales: escales.map((e) => versPoint(e!)),
       dateHeureDepart: v.dateHeureDepart,
       nombrePlaces: v.nombrePlaces,
+      typeRoute: v.typeRoute,
+      // Sur la nationale, pas de péage ; sur l'autoroute, le montant saisi (vide : estimation de l'itinéraire).
+      montantPeages: v.typeRoute === 'AUTOROUTE' && v.peages != null && `${v.peages}` !== '' ? Number(v.peages) : null,
     };
   });
   private readonly cleDemande = computed(() => JSON.stringify(this.demande()));

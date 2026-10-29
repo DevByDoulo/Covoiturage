@@ -58,7 +58,8 @@ public class TrajetService {
         Vehicule v = vehicules.findByIdAndProprietaireId(req.idVehicule(), conducteurId)
                 .filter(Vehicule::isActif)
                 .orElseThrow(() -> ApiException.notFound("Véhicule introuvable"));
-        Calcul c = calculer(v, req.depart(), req.escales(), req.arrivee(), req.dateHeureDepart(), req.nombrePlaces());
+        Calcul c = calculer(v, req.depart(), req.escales(), req.arrivee(), req.dateHeureDepart(), req.nombrePlaces(),
+                req.choixRoute());
         return EstimationReponse.de(c.itineraire(), c.tarif());
     }
 
@@ -80,7 +81,8 @@ public class TrajetService {
             throw ApiException.badRequest("Le départ doit avoir lieu au moins " + DELAI_MIN_PUBLICATION_MIN + " minutes après la publication");
         }
 
-        Calcul c = calculer(v, req.depart(), req.escales(), req.arrivee(), req.dateHeureDepart(), req.nombrePlaces());
+        Calcul c = calculer(v, req.depart(), req.escales(), req.arrivee(), req.dateHeureDepart(), req.nombrePlaces(),
+                req.choixRoute());
         Itineraire it = c.itineraire();
 
         Trajet t = new Trajet();
@@ -134,7 +136,7 @@ public class TrajetService {
     }
 
     private Calcul calculer(Vehicule v, PointDto depart, List<PointDto> escales, PointDto arrivee,
-                            LocalDateTime dateDepart, int nombrePlaces) {
+                            LocalDateTime dateDepart, int nombrePlaces, ChoixRoute route) {
         if (nombrePlaces > v.getNombrePlaces() - 1) {
             throw ApiException.badRequest("Ce véhicule permet de proposer au maximum " + (v.getNombrePlaces() - 1) + " place(s)");
         }
@@ -145,7 +147,7 @@ public class TrajetService {
         if (GeoUtils.distanceKm(points.getFirst(), points.getLast()) < 1) {
             throw ApiException.badRequest("Le départ et l'arrivée sont trop proches");
         }
-        Itineraire it = itineraires.calculer(points);
+        Itineraire it = appliquerChoixRoute(itineraires.calculer(points), route);
         // Moteur IA (consommation prédite + météo au départ) avec repli sur la formule : voir TarificationConfig.
         EstimationPrix prix = moteur.estimer(new DemandeEstimation(
                 v.getMarque(), v.getTypeEnergie(), v.getPuissanceFiscale(), v.getAnnee() == null ? 0 : v.getAnnee(),
@@ -153,6 +155,18 @@ public class TrajetService {
                 it.distanceKm(), it.deniveleM(), it.typeRoute(), it.montantPeages(),
                 nombrePlaces, dateDepart, depart.latitude(), depart.longitude()));
         return new Calcul(it, prix);
+    }
+
+    /** Le conducteur sait par où il passe : son choix l'emporte sur le type de route et les péages calculés. */
+    private static Itineraire appliquerChoixRoute(Itineraire it, ChoixRoute route) {
+        if (route == null || (route.typeRoute() == null && route.montantPeages() == null)) return it;
+        TypeRoute type = route.typeRoute() == null ? it.typeRoute() : route.typeRoute();
+        if (type != TypeRoute.AUTOROUTE && type != TypeRoute.NATIONALE) {
+            throw ApiException.badRequest("Choisissez l'autoroute ou la route nationale").surChamp("typeRoute");
+        }
+        BigDecimal peages = type == TypeRoute.NATIONALE ? BigDecimal.ZERO
+                : route.montantPeages() != null ? route.montantPeages().setScale(0, RoundingMode.HALF_UP) : it.montantPeages();
+        return new Itineraire(it.distanceKm(), it.dureeMin(), peages, type, it.deniveleM(), it.trace(), it.source());
     }
 
     // ------------------------------------------------------------------ Cycle de vie (conducteur)

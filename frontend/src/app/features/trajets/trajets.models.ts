@@ -50,6 +50,10 @@ export interface DemandeEstimation {
   escales: PointTrajet[];
   dateHeureDepart: string;
   nombrePlaces: number;
+  /** Route choisie par le conducteur ; absente : déduite de l'itinéraire. */
+  typeRoute?: 'AUTOROUTE' | 'NATIONALE';
+  /** Péages en FCFA (autoroute seulement) ; null : estimés avec l'itinéraire. */
+  montantPeages?: number | null;
 }
 
 export interface PublicationTrajet extends DemandeEstimation {
