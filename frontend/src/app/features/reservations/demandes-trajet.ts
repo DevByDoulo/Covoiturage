@@ -1,3 +1,4 @@
+import { BoutonMessage } from '../messages/bouton-message';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ErreurApi, lireErreur } from '../../core/api/erreur-api';
@@ -16,7 +17,7 @@ import { ReservationsService } from './reservations.service';
 /** 04 — Côté conducteur : demandes reçues sur un trajet (accepter / refuser) et embarquement par PIN. */
 @Component({
   selector: 'app-demandes-trajet',
-  imports: [FormsModule, FcfaPipe, Icone, Alerte],
+  imports: [FormsModule, FcfaPipe, Icone, Alerte, BoutonMessage],
   template: `
     <section class="carte bloc" aria-labelledby="titre-passagers">
       <h2 id="titre-passagers"><app-icone nom="utilisateurs" /> Passagers</h2>
@@ -38,6 +39,8 @@ import { ReservationsService } from './reservations.service';
                 }
                 @if (r.embarque) { · <span class="ok">à bord</span> }
               </small>
+              <br /><app-bouton-message variante="lien" [idTrajet]="idTrajet()" [idPassager]="r.passager.id"
+                                        [libelle]="'Écrire à ' + r.passager.prenom" />
             </div>
             @if (r.statut === 'EN_ATTENTE') {
               <div class="actions">

@@ -20,6 +20,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     /** Évite d'envoyer deux fois le même rappel (même type, même destinataire, même écran). */
     boolean existsByDestinataireIdAndTypeAndLien(Long utilisateurId, TypeNotification type, String lien);
 
+    boolean existsByDestinataireIdAndTypeAndLienAndLuFalse(Long utilisateurId, TypeNotification type, String lien);
+
     @Modifying
     @Query("update Notification n set n.lu = true where n.destinataire.id = :utilisateurId and n.lu = false")
     int marquerToutesLues(@Param("utilisateurId") Long utilisateurId);

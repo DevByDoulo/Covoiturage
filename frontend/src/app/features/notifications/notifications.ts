@@ -21,6 +21,7 @@ const ICONES: Record<TypeNotification, NomIcone> = {
   COMPTE_REACTIVE: 'bouclier',
   ALERTE_TRAJET: 'recherche',
   AVIS_RECU: 'etoile',
+  MESSAGE_RECU: 'discussion',
 };
 
 /** Ton de l'icône : vert (bonne nouvelle), orange (à regarder), rouge (annulation, refus). */

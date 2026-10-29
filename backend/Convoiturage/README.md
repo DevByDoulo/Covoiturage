@@ -89,6 +89,8 @@ circulaire entre modules : passer par des événements Spring.
 | GET | `/api/utilisateurs/{id}` (profil public) | public |
 | POST/GET/PUT/DELETE | `/api/moi/vehicules[/{id}]` ; POST `/api/moi/vehicules/{id}/photo` | connecté |
 | GET | `/api/moi/notifications?page&taille`, `/api/moi/notifications/non-lues` ; POST `/api/moi/notifications/{id}/lue`, `/lues` | connecté |
+| POST | `/api/trajets/{id}/conversation` — ouvrir (ou retrouver) la conversation d'un trajet ; le conducteur envoie `{"idPassager"}` | connecté |
+| GET | `/api/moi/conversations`, `/api/moi/conversations/non-lus`, `/api/moi/conversations/{id}` (marque les messages reçus comme lus) ; POST `/api/moi/conversations/{id}/messages` `{"contenu"}` | participant |
 | POST, GET | `/api/moi/alertes` — créer (départ, arrivée, date, rayon, prix max) / lister ses alertes de recherche à venir ; DELETE `/api/moi/alertes/{id}` | passager |
 | GET | `/api/admin/statistiques` ; `/api/admin/documents?type&recherche&plusAnciensDabord&page` (file de validation) ; `/api/admin/utilisateurs?recherche&statut&page` ; `/api/admin/utilisateurs/{id}` (fiche) | admin |
 | POST | `/api/admin/documents/{id}/valider`, `/refuser` (`motif`) ; `/api/admin/utilisateurs/{id}/bloquer`, `/bannir` (`motif`), `/reactiver` | admin |
@@ -141,6 +143,10 @@ Les erreurs suivent le format ProblemDetail : `{"status":409,"detail":"Cet email
   verrou pessimiste contre la sur-réservation ; une seule réservation active par passager et par trajet ; annulation
   jusqu'au départ (places remises en vente). Embarquement par PIN 6 chiffres ou QR : un paiement non réglé en ligne
   est alors encaissé en espèces par le conducteur. Événements `ReservationEvenements` pour les notifications (06).
+- **Messagerie** (09) : une conversation par trajet et par passager. Le passager écrit au conducteur d'un trajet
+  à venir ou réservé ; le conducteur n'écrit qu'aux passagers qui ont réservé ; seuls les deux participants voient
+  la conversation (404 sinon). Messages de 1 à 1 000 caractères, 30 au plus par 10 minutes ; écriture fermée
+  7 jours après le départ. Notification `MESSAGE_RECU` : une seule non lue par conversation.
 - **Avis** (module 05) : après un voyage effectué (réservation `TERMINEE`), le passager note son conducteur et le
   conducteur note ce passager (1 à 5, commentaire facultatif), une fois par sens, au plus 14 jours après le départ ;
   `utilisateur.note_moyenne` est recalculée à chaque avis.

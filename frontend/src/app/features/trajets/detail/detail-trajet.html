@@ -61,6 +61,8 @@
         </ul>
         @if (!estConducteur()) {
           <p class="conducteur">Conducteur : <strong>{{ t.conducteur.prenom }} {{ t.conducteur.nomInitiale }}</strong></p>
+          <!-- 09 — Messagerie -->
+          <div><app-bouton-message [idTrajet]="t.id" [libelle]="'Écrire à ' + t.conducteur.prenom" /></div>
         }
       </section>
 

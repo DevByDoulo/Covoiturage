@@ -1,0 +1,51 @@
+@if (erreur(); as e) {
+  <a class="retour bouton-lien" routerLink="/messages"><app-icone nom="fleche-gauche" [taille]="16" /> Messages</a>
+  <app-alerte type="erreur">{{ e.message }}</app-alerte>
+} @else if (conversation(); as c) {
+  <section class="carte conversation">
+    <header class="tete">
+      <a class="bouton-rond" routerLink="/messages" aria-label="Retour aux messages"><app-icone nom="fleche-gauche" [taille]="18" /></a>
+      <span class="avatar">
+        @if (photo(); as url) { <img [src]="url" alt="" /> } @else { {{ initiales() }} }
+      </span>
+      <span class="qui">
+        <strong>{{ c.interlocuteur.prenom }} {{ c.interlocuteur.nomInitiale }}</strong>
+        <a [routerLink]="['/trajets', c.trajet.id]">{{ c.jeSuisConducteur ? 'Passager' : 'Conducteur' }} ·
+          {{ c.trajet.lieuDepart }} → {{ c.trajet.lieuArrivee }}, {{ c.trajet.dateHeureDepart | date: "d MMM 'à' HH'h'mm" }}</a>
+      </span>
+    </header>
+
+    <div class="fil" #fil aria-live="polite" aria-label="Messages">
+      @for (l of lignes(); track l.message.id) {
+        @if (l.jour) {
+          <p class="jour">{{ l.jour | date: 'EEEE d MMMM' }}</p>
+        }
+        <div class="bulle" [class.bulle--moi]="l.message.deMoi">
+          <p>{{ l.message.contenu }}</p>
+          <small>{{ l.message.dateEnvoi | date: 'HH:mm' }}
+            @if (l.message.deMoi && l.message.id === dernierEnvoyeId()) { · {{ l.message.lu ? 'Lu' : 'Envoyé' }} }</small>
+        </div>
+      } @empty {
+        <p class="debut">Écrivez votre premier message à {{ c.interlocuteur.prenom }} : point de rendez-vous, bagages, horaire…</p>
+      }
+    </div>
+
+    @if (c.fermeture) {
+      <p class="ferme"><app-icone nom="cadenas" [taille]="16" /> {{ c.fermeture }}</p>
+    } @else {
+      <form class="saisie-message" (submit)="$event.preventDefault(); envoyer()">
+        <label class="sr-only" for="message">Votre message</label>
+        <textarea id="message" rows="1" [maxLength]="maxCaracteres" [value]="texte()" (input)="saisir($event)"
+                  (keydown)="touche($event)" placeholder="Votre message…"></textarea>
+        <button type="submit" class="bouton bouton--primaire" [disabled]="envoi() || !texte().trim()" aria-label="Envoyer">
+          <app-icone nom="envoyer" [taille]="18" />
+        </button>
+      </form>
+      @if (erreurEnvoi(); as e) {
+        <p class="message-erreur">{{ e }}</p>
+      }
+    }
+  </section>
+} @else {
+  <p class="aide">Chargement…</p>
+}

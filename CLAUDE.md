@@ -108,8 +108,17 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   « Donnez votre avis » (Mes réservations, Mes trajets), réputation du conducteur (détail d'un trajet).
   **Signalements** (classe SIGNALEMENT) : pas encore faits. Le profil (module 01) peut afficher
   `GET /api/utilisateurs/{id}/avis` pour son compteur d'avis.
-- Tests : `./mvnw test` → 32 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
-  `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `WaveFournisseurTest`) ; `npm test` → 29 tests ;
+- **09 Messagerie** (fonctionnalité facultative, branche `09-messagerie`) : package `messagerie`, tables `conversation`
+  (une par trajet et par passager ; le conducteur est celui du trajet) et `message` (migration V2026_10_29_1000).
+  Un passager écrit au conducteur d'un trajet à venir (même sans réserver) ou d'un trajet réservé ; le conducteur
+  écrit aux passagers qui ont réservé ; on peut écrire jusqu'à 7 jours après le départ (ensuite lecture seule) ;
+  30 messages au plus par 10 minutes. API `POST /api/trajets/{id}/conversation`, `/api/moi/conversations` (liste,
+  `/non-lus`, `/{id}` qui marque lus, `/{id}/messages`). Événement `MessageEnvoye` → notification `MESSAGE_RECU`
+  (une seule non lue par conversation). Écrans `features/messages` : icône Messages avec compteur dans l'en-tête,
+  `/messages`, `/messages/:id` (rafraîchi toutes les 5 s), bouton « Écrire à … » (détail d'un trajet, Mes
+  réservations, demandes reçues par le conducteur).
+- Tests : `./mvnw test` → 33 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
+  `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `WaveFournisseurTest`) ; `npm test` → 29 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 

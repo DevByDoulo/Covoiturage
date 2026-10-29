@@ -3,6 +3,8 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { SessionService } from '../../core/auth/session.service';
 import { Icone, NomIcone } from '../../shared/ui/icone';
 import { Logo } from '../../shared/ui/logo';
+import { LienMessages } from '../messages/lien-messages';
+import { MessagesService } from '../messages/messages.service';
 import { Cloche } from '../notifications/cloche';
 import { NotificationsService } from '../notifications/notifications.service';
 import { initiales, urlFichier } from '../profil/profil.service';
@@ -22,7 +24,7 @@ interface EntreeMenu {
  */
 @Component({
   selector: 'app-espace-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Logo, Cloche],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Logo, Cloche, LienMessages],
   template: `
     <header class="barre">
       <a class="barre__logo" [routerLink]="session.pageAccueil()" aria-label="Accueil YOBALEMAsn"><app-logo /></a>
@@ -33,7 +35,10 @@ interface EntreeMenu {
           </a>
         }
       </nav>
-      <app-cloche class="cloche--mobile" />
+      <span class="cloche--mobile icones-mobile">
+        @if (!estAdmin()) { <app-lien-messages /> }
+        <app-cloche />
+      </span>
       <a class="avatar avatar--mobile" routerLink="/profil" [attr.aria-label]="'Mon profil : ' + nom()">
         @if (photo(); as url) { <img [src]="url" alt="" /> } @else { {{ initiales() }} }
       </a>
@@ -44,6 +49,7 @@ interface EntreeMenu {
 
     <div class="principal">
       <header class="entete">
+        @if (!estAdmin()) { <app-lien-messages /> }
         <app-cloche />
         <a class="moi" routerLink="/profil">
           <span class="moi__texte"><strong>{{ nom() }}</strong><small>{{ role() }}</small></span>
@@ -164,6 +170,10 @@ interface EntreeMenu {
     .cloche--mobile {
       margin-left: auto;
     }
+    .icones-mobile {
+      display: flex;
+      gap: 8px;
+    }
     .avatar--mobile {
       width: 36px;
       height: 36px;
@@ -266,6 +276,8 @@ interface EntreeMenu {
 export class EspaceLayout {
   protected readonly session = inject(SessionService);
   private readonly notifications = inject(NotificationsService);
+  private readonly messages = inject(MessagesService);
+  protected readonly estAdmin = computed(() => this.session.utilisateur()?.role === 'ADMIN');
 
   protected readonly nom = computed(() => {
     const u = this.session.utilisateur();
@@ -287,7 +299,12 @@ export class EspaceLayout {
   constructor() {
     // Compteur de la cloche, rafraîchi tant que l'espace connecté est affiché.
     this.notifications.suivre(true);
-    inject(DestroyRef).onDestroy(() => this.notifications.suivre(false));
+    // 09 — Compteur des messages non lus (l'administrateur n'a pas de messagerie).
+    this.messages.suivre(!this.estAdmin());
+    inject(DestroyRef).onDestroy(() => {
+      this.notifications.suivre(false);
+      this.messages.suivre(false);
+    });
   }
 
   protected readonly entrees = computed<EntreeMenu[]>(() => {

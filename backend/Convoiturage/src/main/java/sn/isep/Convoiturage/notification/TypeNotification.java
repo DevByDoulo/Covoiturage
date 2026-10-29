@@ -18,5 +18,7 @@ public enum TypeNotification {
     /** Un trajet correspondant à une alerte de recherche vient d'être publié. */
     ALERTE_TRAJET,
     /** Un passager ou un conducteur vient de noter l'utilisateur après un voyage. */
-    AVIS_RECU
+    AVIS_RECU,
+    /** Nouveau message dans une conversation (une seule notification non lue par conversation). */
+    MESSAGE_RECU
 }

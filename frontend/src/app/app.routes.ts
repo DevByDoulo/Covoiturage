@@ -98,6 +98,19 @@ export const routes: Routes = [
         canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
         loadComponent: () => import('./features/profil/desactivation').then((m) => m.Desactivation),
       },
+      // 09 — Messagerie
+      {
+        path: 'messages',
+        title: 'Messages · YOBALEMAsn',
+        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
+        loadComponent: () => import('./features/messages/messages').then((m) => m.MessagesPage),
+      },
+      {
+        path: 'messages/:id',
+        title: 'Conversation · YOBALEMAsn',
+        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
+        loadComponent: () => import('./features/messages/conversation').then((m) => m.ConversationPage),
+      },
       // 06 — Notifications
       {
         path: 'notifications',

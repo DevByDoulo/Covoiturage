@@ -105,6 +105,12 @@ public class NotificationService {
         return notifications.existsByDestinataireIdAndTypeAndLien(utilisateurId, type, lien);
     }
 
+    /** Une notification de ce type, vers cet écran, attend encore d'être lue. */
+    @Transactional(readOnly = true)
+    public boolean nonLueEnAttente(Long utilisateurId, TypeNotification type, String lien) {
+        return notifications.existsByDestinataireIdAndTypeAndLienAndLuFalse(utilisateurId, type, lien);
+    }
+
     @Transactional
     public void marquerLue(Long utilisateurId, Long notificationId) {
         notifications.findByIdAndDestinataireId(notificationId, utilisateurId)
