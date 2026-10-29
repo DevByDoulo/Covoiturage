@@ -14,13 +14,14 @@ import {
   LIBELLES_STATUT_RESERVATION,
   MoyenPaiement,
   Reservation,
+  StatutPaiement,
   paiementEnLigneAttendu,
 } from './reservations.models';
 import { ReservationsService } from './reservations.service';
 
 /**
- * 04 — Réservations du passager : suivi, paiement en ligne (Wave), code d'embarquement et annulation.
- * Wave renvoie ici après paiement : /reservations?paiement=succes|echec&ref=…
+ * 04 — Réservations du passager : suivi, paiement en ligne (Wave ou Orange Money), code d'embarquement et annulation.
+ * La page de paiement (Wave, ou PayDunya) renvoie ici : /reservations?paiement=succes|echec&ref=…
  */
 @Component({
   selector: 'app-mes-reservations',
@@ -35,7 +36,11 @@ import { ReservationsService } from './reservations.service';
     <app-avis-a-donner />
 
     @if (paiement() === 'succes') {
-      <app-alerte type="succes">Paiement envoyé. La confirmation de Wave peut prendre quelques secondes.</app-alerte>
+      @if (statutRetour() === 'REUSSI') {
+        <app-alerte type="succes">Paiement reçu, merci ! Votre réservation est réglée.</app-alerte>
+      } @else {
+        <app-alerte type="succes">Paiement envoyé. La confirmation de l'opérateur peut prendre quelques secondes.</app-alerte>
+      }
     } @else if (paiement() === 'echec') {
       <app-alerte type="avertissement">Le paiement n'a pas abouti. Vous pouvez réessayer ou payer en espèces au conducteur.</app-alerte>
     }
@@ -183,8 +188,11 @@ export class MesReservations implements OnInit {
   private readonly service = inject(ReservationsService);
   private readonly destroyRef = inject(DestroyRef);
 
-  /** Paramètres de retour de Wave (liés depuis l'URL). */
+  /** Paramètres de retour de la page de paiement (liés depuis l'URL). */
   readonly paiement = input<string>();
+  readonly ref = input<string>();
+  /** État du paiement vérifié auprès de l'opérateur au retour du passager. */
+  protected readonly statutRetour = signal<StatutPaiement | null>(null);
 
   protected readonly statuts = LIBELLES_STATUT_RESERVATION;
   protected readonly paiements = LIBELLES_STATUT_PAIEMENT;
@@ -197,7 +205,19 @@ export class MesReservations implements OnInit {
 
   ngOnInit(): void {
     this.charger();
-    // Retour de Wave : le webhook confirme le paiement quelques secondes après ; on rafraîchit une fois.
+    // Retour de la page de paiement : on demande l'état à l'opérateur (utile si sa notification n'arrive pas
+    // jusqu'au serveur, par exemple en local). PayDunya ajoute « ?token=… » à l'adresse : on l'enlève de la référence.
+    const reference = this.ref()?.split('?')[0];
+    if (this.paiement() && reference) {
+      this.service.verifierPaiement(reference).subscribe({
+        next: (r) => {
+          this.statutRetour.set(r.statut);
+          this.charger();
+        },
+        error: () => {},
+      });
+    }
+    // Le webhook de Wave confirme le paiement quelques secondes après ; on rafraîchit une fois.
     if (this.paiement() === 'succes') {
       const minuteur = setTimeout(() => this.charger(), 4000);
       this.destroyRef.onDestroy(() => clearTimeout(minuteur));
@@ -212,7 +232,7 @@ export class MesReservations implements OnInit {
     this.service.payer(r.id, moyen).subscribe({
       next: (s) => {
         if (s.urlPaiement) {
-          // Page de paiement de l'opérateur (Wave interdit de l'ouvrir dans une vue intégrée).
+          // Page de paiement de l'opérateur (Wave et PayDunya interdisent de l'ouvrir dans une vue intégrée).
           window.location.href = s.urlPaiement;
           return;
         }

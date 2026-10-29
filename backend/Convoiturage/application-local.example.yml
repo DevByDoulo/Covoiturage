@@ -38,3 +38,20 @@ covoitia:
 #    wave:
 #      api-key: wave_sn_prod_xxxxxxxx
 #      secret-webhook: wave_sn_WHS_xxxxxxxx
+
+# Paiement par PayDunya (Wave et Orange Money Sénégal, mode test sans argent réel).
+# 1. Compte PayDunya Business > « Intégrez notre API » > « Configurer une nouvelle application » :
+#    mode test, cocher Wave Sénégal et Orange Money Sénégal ; « Afficher les clés api ».
+# 2. Recopier ci-dessous la clé principale, la clé privée DE TEST (test_private_...) et le jeton DE TEST.
+#    La clé publique ne sert pas. Ne jamais commiter ce fichier ni partager ces clés.
+# 3. url-retour peut rester en http://localhost:4200 en mode test ; url-api (adresse publique de l'API,
+#    tunnel HTTPS vers le port 8080) est facultative : sans elle, le paiement est vérifié au retour du passager.
+#app:
+#  paiement:
+#    url-retour: http://localhost:4200
+#    url-api: https://votre-tunnel-api.ngrok-free.app
+#    paydunya:
+#      master-key: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+#      private-key: test_private_xxxxxxxxxxxxxxxxxxxxxxxxxxx
+#      token: xxxxxxxxxxxxxxxxxxxx
+#      mode: test
