@@ -103,6 +103,8 @@ circulaire entre modules : passer par des événements Spring.
 | POST | `/api/reservations/{id}/evaluation` (`note` 1–5, `commentaire`) ; GET `/api/moi/avis-a-donner` | connecté |
 | GET | `/api/utilisateurs/{id}/avis` (moyenne, répartition, derniers avis) | public |
 | POST | `/api/paiements/webhooks/wave` (signé `Wave-Signature`) | public |
+| POST | `/api/paiements/webhooks/paydunya` (IPN PayDunya, formulaire ; `data[hash]` = SHA-512 de la clé principale) | public |
+| POST | `/api/paiements/{reference}/verifier` — état du paiement redemandé à l'opérateur (retour du passager) | passager |
 
 Les erreurs suivent le format ProblemDetail : `{"status":409,"detail":"Cet email est déjà utilisé","champ":"email"}`
 (+ `erreurs` par champ pour les validations).
@@ -150,6 +152,10 @@ Les erreurs suivent le format ProblemDetail : `{"status":409,"detail":"Cet email
 - **Avis** (module 05) : après un voyage effectué (réservation `TERMINEE`), le passager note son conducteur et le
   conducteur note ce passager (1 à 5, commentaire facultatif), une fois par sens, au plus 14 jours après le départ ;
   `utilisateur.note_moyenne` est recalculée à chaque avis.
+- **PayDunya** (module 04) : Wave et Orange Money Sénégal par un seul intermédiaire, en mode `test` (sandbox) ou
+  `production`. La facture ne propose que le canal choisi par le passager ; le résultat arrive par l'IPN (hash SHA-512
+  de la clé principale vérifié, puis état redemandé à PayDunya) ou au retour du passager. Remboursement par
+  déboursement vers son numéro (production seulement). Wave direct, s'il est configuré, passe avant PayDunya.
 - **Paiements** (module 04) : espèces ; **Wave** (API Checkout, webhook signé HMAC-SHA256, anti-rejeu 5 min,
   idempotent) ; Orange Money à brancher (`OrangeMoneyFournisseur`, API Sonatel non publique). **Aucune commission ;
   annulation avant le départ = remboursement intégral** (relancé toutes les 10 min si l'opérateur échoue ; un

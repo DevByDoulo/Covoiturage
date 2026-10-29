@@ -91,11 +91,23 @@ app:
   paiement:
     # Adresse HTTPS de l'application web : Wave y renvoie le passager après paiement (/reservations?paiement=...).
     url-retour: ${PAIEMENT_URL_RETOUR:}
+    # Adresse publique de l'API (tunnel HTTPS en local) : PayDunya y envoie son IPN
+    # (/api/paiements/webhooks/paydunya). Vide => le paiement est vérifié au retour du passager.
+    url-api: ${PAIEMENT_URL_API:}
     wave:
       # Wave Business (https://business.wave.com) : clé API et secret de signature du webhook.
       # Vides => Wave n'est pas proposé (paiement en espèces uniquement).
       api-key: ${WAVE_API_KEY:}
       secret-webhook: ${WAVE_SECRET_WEBHOOK:}
+    paydunya:
+      # PayDunya (https://paydunya.com) : Wave et Orange Money Sénégal par un seul intermédiaire.
+      # Clé principale, clé privée et jeton de l'application créée dans le tableau de bord PayDunya.
+      # mode : test (sandbox, aucun argent réel) ou production. Vides => PayDunya n'est pas proposé.
+      # Si Wave direct est aussi configuré, Wave passe par Wave direct (pas de frais d'intermédiaire).
+      master-key: ${PAYDUNYA_MASTER_KEY:}
+      private-key: ${PAYDUNYA_PRIVATE_KEY:}
+      token: ${PAYDUNYA_TOKEN:}
+      mode: ${PAYDUNYA_MODE:test}
     orange-money:
       # Portail développeur Sonatel. L'intégration reste à écrire (OrangeMoneyFournisseur) : non proposé pour l'instant.
       client-id: ${ORANGE_MONEY_CLIENT_ID:}

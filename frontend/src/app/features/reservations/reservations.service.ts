@@ -11,6 +11,7 @@ import {
   Recu,
   Reservation,
   SessionPaiement,
+  StatutPaiement,
 } from './reservations.models';
 
 /** API du module 04 : réservations (passager et conducteur), paiements, historique et reçus. */
@@ -40,6 +41,11 @@ export class ReservationsService {
   /** Ouvre le paiement en ligne (ou passe aux espèces si moyen = ESPECES). */
   payer(id: number, moyen?: MoyenPaiement): Observable<SessionPaiement> {
     return this.http.post<SessionPaiement>(`${this.api}/reservations/${id}/paiement`, moyen ? { moyen } : {});
+  }
+
+  /** Retour de la page de paiement : demande au serveur l'état du paiement auprès de l'opérateur. */
+  verifierPaiement(reference: string): Observable<{ statut: StatutPaiement }> {
+    return this.http.post<{ statut: StatutPaiement }>(`${this.api}/paiements/${encodeURIComponent(reference)}/verifier`, {});
   }
 
   // ---- Conducteur

@@ -99,6 +99,15 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   à confirmer avec l'encadrant** : aucune commission, remboursement intégral de toute annulation avant le départ.
   Wave exige HTTPS (clés `WAVE_API_KEY`, `WAVE_SECRET_WEBHOOK`, `PAIEMENT_URL_RETOUR`) : en local, tunnel ngrok.
   Écrans : réserver (détail d'un trajet), demandes et embarquement (conducteur), `/reservations`, `/paiements`, reçu.
+  **PayDunya** (branche `04-paydunya`) : agrégateur qui relaie **Wave et Orange Money Sénégal** (`PayDunyaClient`,
+  `PayDunyaFournisseur`, un bean par moyen dans `PayDunyaConfig`). Clés `PAYDUNYA_MASTER_KEY`, `PAYDUNYA_PRIVATE_KEY`,
+  `PAYDUNYA_TOKEN`, `PAYDUNYA_MODE` (`test` = sandbox, sans argent réel). Facture « paiement avec redirection »
+  limitée au canal choisi ; IPN `/api/paiements/webhooks/paydunya` (formulaire, `data[hash]` = SHA-512 de la clé
+  principale), envoyé seulement si `PAIEMENT_URL_API` (adresse publique de l'API) est renseignée ; dans tous les cas,
+  l'état est redemandé à PayDunya (`checkout-invoice/confirm`) et vérifié au retour du passager
+  (`POST /api/paiements/{ref}/verifier`). Remboursement par déboursement vers le portefeuille du passager : production
+  seulement (en test, le paiement reste « remboursement demandé »). Si Wave direct est aussi configuré, il passe avant
+  PayDunya pour Wave (pas de frais d'intermédiaire). `paiement.fournisseur` vaut `PAYDUNYA`, `WAVE`… 
 - **05 Évaluations et avis** (branche `05-avis`) : package `avis`, table `evaluation` (migration
   V2026_10_28_1400, classe EVALUATION). Après un voyage effectué (réservation `TERMINEE`), le passager note son
   conducteur et le conducteur note ce passager : 1 à 5 étoiles + commentaire, une fois par sens, dans les 14 jours
@@ -117,8 +126,9 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   (une seule non lue par conversation). Écrans `features/messages` : icône Messages avec compteur dans l'en-tête,
   `/messages`, `/messages/:id` (rafraîchi toutes les 5 s), bouton « Écrire à … » (détail d'un trajet, Mes
   réservations, demandes reçues par le conducteur).
-- Tests : `./mvnw test` → 33 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
-  `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `WaveFournisseurTest`) ; `npm test` → 29 tests ;
+- Tests : `./mvnw test` → 42 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
+  `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 29 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 
