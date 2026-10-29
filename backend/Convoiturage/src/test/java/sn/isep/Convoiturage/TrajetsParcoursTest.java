@@ -83,6 +83,30 @@ class TrajetsParcoursTest {
                 .andExpect(jsonPath("$.tarif.sourceConsommation").value("REELLE"))
                 .andExpect(jsonPath("$.tarif.versionModele").value("FORMULE-1.0"));
 
+        // --- Route choisie par le conducteur : autoroute avec péages saisis, nationale sans péage
+        String estimation = """
+                {"idVehicule":%d,"depart":{"lieu":"Dakar","latitude":%s,"longitude":%s},
+                 "arrivee":{"lieu":"Thiès","latitude":%s,"longitude":%s},"dateHeureDepart":"%sT10:00:00","nombrePlaces":3,
+                 "typeRoute":"%s","montantPeages":3000}""";
+        String autoroute = appel(post("/api/trajets/estimation").header("Authorization", "Bearer " + conductrice),
+                estimation.formatted(idVehicule, DAKAR_LAT, DAKAR_LNG, THIES_LAT, THIES_LNG, date, "AUTOROUTE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.typeRoute").value("AUTOROUTE"))
+                .andExpect(jsonPath("$.montantPeages").value(3000))
+                .andExpect(jsonPath("$.tarif.coutPeages").value(3000))
+                .andReturn().getResponse().getContentAsString();
+        String nationale = appel(post("/api/trajets/estimation").header("Authorization", "Bearer " + conductrice),
+                estimation.formatted(idVehicule, DAKAR_LAT, DAKAR_LNG, THIES_LAT, THIES_LNG, date, "NATIONALE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.typeRoute").value("NATIONALE"))
+                .andExpect(jsonPath("$.montantPeages").value(0))
+                .andReturn().getResponse().getContentAsString();
+        org.assertj.core.api.Assertions.assertThat(((Number) JsonPath.read(autoroute, "$.tarif.coutTotal")).doubleValue())
+                .isGreaterThan(((Number) JsonPath.read(nationale, "$.tarif.coutTotal")).doubleValue());
+        appel(post("/api/trajets/estimation").header("Authorization", "Bearer " + conductrice),
+                estimation.formatted(idVehicule, DAKAR_LAT, DAKAR_LNG, THIES_LAT, THIES_LNG, date, "VILLE"))
+                .andExpect(status().isBadRequest());
+
         // --- Publication
         String trajet = appel(post("/api/trajets").header("Authorization", "Bearer " + conductrice), publication)
                 .andExpect(status().isCreated())

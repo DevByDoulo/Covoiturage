@@ -37,7 +37,19 @@ public final class TrajetDtos {
             @NotNull @Valid PointDto arrivee,
             @Size(max = 5) List<@Valid PointDto> escales,
             @NotNull @Future LocalDateTime dateHeureDepart,
-            @NotNull @Min(1) @Max(8) Integer nombrePlaces) {}
+            @NotNull @Min(1) @Max(8) Integer nombrePlaces,
+            /* Facultatifs : voir ChoixRoute. */
+            TypeRoute typeRoute,
+            @DecimalMin("0") @DecimalMax("50000") BigDecimal montantPeages) {
+        ChoixRoute choixRoute() { return new ChoixRoute(typeRoute, montantPeages); }
+    }
+
+    /**
+     * Route choisie par le conducteur : AUTOROUTE (à péage) ou NATIONALE (sans péage). Le montant des péages,
+     * en FCFA pour le véhicule, remplace celui de l'itinéraire calculé ; il ne vaut que pour l'autoroute.
+     * Les deux champs absents : type de route et péages déduits de l'itinéraire, comme avant.
+     */
+    public record ChoixRoute(TypeRoute typeRoute, BigDecimal montantPeages) {}
 
     public record EstimationReponse(double distanceKm, int dureeEstimeeMin, TypeRoute typeRoute,
                                     BigDecimal montantPeages, String sourceItineraire, String itinerairePolyline,
@@ -60,7 +72,12 @@ public final class TrajetDtos {
             @NotNull TailleBagage tailleBagage,
             boolean femmesUniquement,
             /* Facultatif : prix choisi dans la fourchette proposée ; par défaut le prix recommandé. */
-            @DecimalMin("0") BigDecimal prixParPlace) {}
+            @DecimalMin("0") BigDecimal prixParPlace,
+            /* Facultatifs : voir ChoixRoute. */
+            TypeRoute typeRoute,
+            @DecimalMin("0") @DecimalMax("50000") BigDecimal montantPeages) {
+        ChoixRoute choixRoute() { return new ChoixRoute(typeRoute, montantPeages); }
+    }
 
     /** Tous les champs sont facultatifs : seuls ceux fournis sont modifiés. L'itinéraire ne se modifie pas. */
     public record ModificationTrajetRequete(

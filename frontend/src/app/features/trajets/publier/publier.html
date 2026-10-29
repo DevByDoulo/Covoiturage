@@ -82,6 +82,34 @@
             </button>
           </div>
           <p class="aide">Astuce : touchez la carte pour placer le point du champ sélectionné.</p>
+
+          <div class="champ" [formGroup]="form">
+            <span class="libelle" id="libelle-route">Par où passez-vous ?</span>
+            <div class="bascule" role="group" aria-labelledby="libelle-route">
+              <button type="button" [attr.aria-pressed]="form.controls.typeRoute.value === 'AUTOROUTE'"
+                      (click)="form.controls.typeRoute.setValue('AUTOROUTE')">Autoroute à péage</button>
+              <button type="button" [attr.aria-pressed]="form.controls.typeRoute.value === 'NATIONALE'"
+                      (click)="form.controls.typeRoute.setValue('NATIONALE')">Route nationale</button>
+            </div>
+          </div>
+          @if (form.controls.typeRoute.value === 'AUTOROUTE') {
+            <div class="champ" [formGroup]="form" [class.champ--erreur]="form.controls.peages.invalid">
+              <label class="libelle" for="peages">Péages pour ce trajet (FCFA)</label>
+              <div class="saisie">
+                <app-icone nom="route" />
+                <input id="peages" type="number" min="0" max="50000" step="100" inputmode="numeric"
+                       formControlName="peages" placeholder="Ex. 2000" />
+              </div>
+              @if (form.controls.peages.invalid) {
+                <p class="message-erreur">Indiquez un montant entre 0 et 50 000 FCFA.</p>
+              } @else {
+                <p class="aide">Total payé aux péages pour votre véhicule ; il entre dans le prix partagé avec vos passagers.
+                  Laissé vide, il est estimé avec l'itinéraire (souvent 0 faute de données).</p>
+              }
+            </div>
+          } @else {
+            <p class="aide">Route nationale : aucun péage n'est compté dans le prix.</p>
+          }
         </section>
 
         <!-- Date et options -->
