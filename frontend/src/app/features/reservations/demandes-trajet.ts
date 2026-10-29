@@ -61,15 +61,16 @@ import { ReservationsService } from './reservations.service';
             <button type="submit" class="bouton bouton--primaire" [disabled]="action() || !code.trim()">Valider</button>
           </div>
         </form>
-        @if (embarque(); as e) {
-          <app-alerte type="succes" [titre]="e.passager.prenom + ' est à bord'">
-            @if (e.montantAEncaisser > 0) {
-              Encaissez {{ e.montantAEncaisser | fcfa }} en espèces.
-            } @else {
-              Déjà payé en ligne : rien à encaisser.
-            }
-          </app-alerte>
-        }
+      }
+      <!-- Hors du formulaire : il disparaît quand le dernier passager est à bord, le montant à encaisser doit rester. -->
+      @if (embarque(); as e) {
+        <app-alerte type="succes" [titre]="e.passager.prenom + ' est à bord'">
+          @if (e.montantAEncaisser > 0) {
+            Encaissez {{ e.montantAEncaisser | fcfa }} en espèces.
+          } @else {
+            Déjà payé en ligne : rien à encaisser.
+          }
+        </app-alerte>
       }
     </section>
   `,
@@ -110,6 +111,13 @@ import { ReservationsService } from './reservations.service';
     .embarquement input {
       flex: 1;
       letter-spacing: 0.2em;
+    }
+    /* Le style commun .bouton prend toute la largeur : ici il écrasait le champ du code. */
+    .embarquement .bouton {
+      flex: none;
+      width: auto;
+      min-height: 40px;
+      margin-right: -8px;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
