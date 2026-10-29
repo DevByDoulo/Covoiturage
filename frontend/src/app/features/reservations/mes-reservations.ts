@@ -1,3 +1,4 @@
+import { BoutonMessage } from '../messages/bouton-message';
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -23,7 +24,7 @@ import { ReservationsService } from './reservations.service';
  */
 @Component({
   selector: 'app-mes-reservations',
-  imports: [RouterLink, DatePipe, FcfaPipe, Icone, Alerte, AvisADonnerBloc],
+  imports: [RouterLink, DatePipe, FcfaPipe, Icone, Alerte, AvisADonnerBloc, BoutonMessage],
   template: `
     <header class="entete">
       <h1>Mes réservations</h1>
@@ -67,6 +68,7 @@ import { ReservationsService } from './reservations.service';
           @if (r.motifAnnulation && (r.statut === 'ANNULEE' || r.statut === 'REFUSEE')) {
             <p class="aide">{{ r.motifAnnulation }}</p>
           }
+          <div><app-bouton-message variante="lien" [idTrajet]="r.trajet.id" [libelle]="'Écrire à ' + r.trajet.conducteur.prenom" /></div>
 
           @if (r.statut === 'ACCEPTEE' && !r.embarque) {
             <div class="actions">

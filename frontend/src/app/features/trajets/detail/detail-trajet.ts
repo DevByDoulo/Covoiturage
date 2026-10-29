@@ -1,3 +1,4 @@
+import { BoutonMessage } from '../../messages/bouton-message';
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -31,7 +32,10 @@ type Panneau = 'aucun' | 'modifier' | 'annuler';
  */
 @Component({
   selector: 'app-detail-trajet',
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, FcfaPipe, DureePipe, Carte, Icone, Alerte, ReserverTrajet, DemandesTrajet, ReputationBloc],
+  imports: [
+    ReactiveFormsModule, RouterLink, DatePipe, FcfaPipe, DureePipe, Carte, Icone, Alerte, ReserverTrajet, DemandesTrajet,
+    ReputationBloc, BoutonMessage,
+  ],
   templateUrl: './detail-trajet.html',
   styleUrl: './detail-trajet.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

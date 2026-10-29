@@ -1,0 +1,140 @@
+:host {
+  display: block;
+  max-width: 760px;
+}
+
+.conversation {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 190px);
+  min-height: 420px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.tete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--surface-2);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--vert-clair);
+  color: var(--vert);
+  font-weight: 800;
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+.qui {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  a {
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--texte-2);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.fil {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 14px;
+  overflow-y: auto;
+  background: var(--fond);
+}
+
+.jour, .debut {
+  margin: 8px 0;
+  font-size: 12px;
+  text-align: center;
+  color: var(--texte-3);
+}
+.jour::first-letter { text-transform: uppercase; }
+
+.bulle {
+  align-self: flex-start;
+  max-width: 78%;
+  padding: 8px 12px;
+  border-radius: 16px 16px 16px 4px;
+  background: var(--surface);
+  box-shadow: var(--ombre);
+  p {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  small {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    text-align: right;
+    color: var(--texte-3);
+  }
+}
+
+.bulle--moi {
+  align-self: flex-end;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--vert);
+  color: #fff;
+  small { color: rgba(255, 255, 255, 0.8); }
+}
+
+.saisie-message {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--surface-2);
+  textarea {
+    flex: 1;
+    max-height: 120px;
+    padding: 10px 14px;
+    border: 1.5px solid var(--surface-2);
+    border-radius: 20px;
+    background: var(--surface-2);
+    font: inherit;
+    resize: none;
+    field-sizing: content;
+    &:focus { outline: none; border-color: var(--vert); background: var(--surface); }
+  }
+  .bouton {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 50%;
+  }
+}
+
+.ferme {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 14px;
+  border-top: 1px solid var(--surface-2);
+  font-size: 14px;
+  color: var(--texte-2);
+}
+
+.message-erreur { margin: 0 14px 10px; }
+.retour { margin-bottom: 12px; }
+
+@media (max-width: 899px) {
+  .conversation { height: calc(100dvh - 160px); }
+}

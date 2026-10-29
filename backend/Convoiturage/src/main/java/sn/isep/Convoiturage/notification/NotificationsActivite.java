@@ -7,6 +7,9 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import sn.isep.Convoiturage.avis.AvisEvenements.AvisPublie;
 import sn.isep.Convoiturage.avis.Evaluation;
+import sn.isep.Convoiturage.messagerie.Message;
+import sn.isep.Convoiturage.messagerie.MessagerieEvenements.MessageEnvoye;
+import sn.isep.Convoiturage.utilisateur.Utilisateur;
 import sn.isep.Convoiturage.reservation.Reservation;
 import sn.isep.Convoiturage.reservation.ReservationEvenements.*;
 import sn.isep.Convoiturage.reservation.ReservationRepository;
@@ -23,7 +26,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Traduit les événements des modules réservation, trajet et avis en notifications. Les écouteurs s'exécutent juste avant
+ * Traduit les événements des modules réservation, trajet, avis et messagerie en notifications. Les écouteurs s'exécutent juste avant
  * la validation de la transaction métier : la notification est enregistrée avec le changement qu'elle annonce, ou
  * pas du tout. Ces modules ne dépendent pas des notifications.
  */
@@ -146,6 +149,22 @@ class NotificationsActivite {
                 "Nouvel avis : " + e.note() + "/5",
                 auteur + " vous a donné " + e.note() + "/5 pour " + trajet(a.getTrajet()) + commentaire,
                 "/profil");
+    }
+
+    // ------------------------------------------------------------------ Messagerie
+
+    /** Un seul rappel par conversation tant que le destinataire ne l'a pas lu : pas une notification par message. */
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    public void surMessage(MessageEnvoye e) {
+        Message m = em.find(Message.class, e.idMessage());
+        if (m == null) return;
+        Utilisateur destinataire = m.getConversation().interlocuteurDe(m.getExpediteur().getId());
+        String lien = "/messages/" + m.getConversation().getId();
+        if (notifications.nonLueEnAttente(destinataire.getId(), TypeNotification.MESSAGE_RECU, lien)) return;
+        String contenu = m.getContenu().length() > 140 ? m.getContenu().substring(0, 137) + "..." : m.getContenu();
+        notifications.notifier(destinataire, TypeNotification.MESSAGE_RECU, Priorite.NORMALE,
+                "Nouveau message de " + m.getExpediteur().getPrenom(),
+                "À propos du " + trajet(m.getConversation().getTrajet()).substring(3) + " : « " + contenu + " »", lien);
     }
 
     // ------------------------------------------------------------------ Textes
