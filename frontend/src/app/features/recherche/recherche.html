@@ -6,7 +6,7 @@
   <div class="colonne">
     <!-- Formulaire -->
     <form class="carte bloc" [formGroup]="form" (ngSubmit)="rechercher()" novalidate aria-label="Critères de recherche">
-      <app-champ-lieu idChamp="r-depart" libelle="Départ" type="depart" etiquette="A" [lieu]="depart()"
+      <app-champ-lieu idChamp="r-depart" libelle="Départ" type="depart" etiquette="A" [lieu]="depart()" [maPosition]="true"
                       [actif]="champActif() === 'depart'" (activation)="champActif.set('depart')"
                       (lieuChoisi)="definirLieu('depart', $event)" />
       <app-champ-lieu idChamp="r-arrivee" libelle="Arrivée" type="arrivee" etiquette="B" [lieu]="arrivee()"

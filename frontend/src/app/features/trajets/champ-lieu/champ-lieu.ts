@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, output, signal } from '@angular/core';
 import { Geocodage, Lieu } from '../../../core/carte/geocodage';
+import { PRECISION_APPROXIMATIVE_M, PositionActuelle } from '../../../core/carte/position-actuelle';
 import { Icone } from '../../../shared/ui/icone';
 
 /**
  * Saisie d'un lieu : on tape une adresse, on valide (Entrée ou loupe), on choisit une suggestion.
  * Pas d'appel à chaque frappe (règle d'usage du géocodage OpenStreetMap).
+ * 08 — Avec `maPosition`, un bouton remplit le champ avec la position de l'appareil (adresse retrouvée).
  */
 @Component({
   selector: 'app-champ-lieu',
@@ -32,6 +34,16 @@ import { Icone } from '../../../shared/ui/icone';
             <app-icone nom="recherche" />
           </button>
         }
+        @if (maPosition()) {
+          @if (localisation()) {
+            <span class="chargement chargement--sombre" aria-label="Localisation en cours"></span>
+          } @else {
+            <button type="button" class="saisie__action saisie__action--position" (click)="localiser()"
+                    aria-label="Utiliser ma position actuelle" title="Utiliser ma position actuelle">
+              <app-icone nom="cible" />
+            </button>
+          }
+        }
         @if (supprimable()) {
           <button type="button" class="saisie__action" (click)="supprimer.emit()" aria-label="Retirer cette escale">
             <app-icone nom="croix" />
@@ -54,8 +66,10 @@ import { Icone } from '../../../shared/ui/icone';
         </ul>
       } @else if (aucunResultat()) {
         <p class="aide">Aucun lieu trouvé. Précisez (quartier, ville) ou touchez la carte.</p>
-      } @else if (erreur()) {
-        <p class="message-erreur">{{ erreur() }}</p>
+      } @else if (erreur() || erreurPosition(); as e) {
+        <p class="message-erreur">{{ e }}</p>
+      } @else if (precisionApprox(); as m) {
+        <p class="aide">Position approximative (à environ {{ m }} m près) : vérifiez l'adresse ou touchez la carte.</p>
       }
     </div>
   `,
@@ -65,6 +79,9 @@ import { Icone } from '../../../shared/ui/icone';
     }
     .saisie--actif {
       border-color: var(--vert);
+    }
+    .saisie__action--position {
+      color: var(--vert);
     }
     .puce {
       display: grid;
@@ -115,6 +132,7 @@ import { Icone } from '../../../shared/ui/icone';
 })
 export class ChampLieu {
   private readonly geocodage = inject(Geocodage);
+  private readonly position = inject(PositionActuelle);
 
   readonly idChamp = input.required<string>();
   readonly libelle = input.required<string>();
@@ -126,6 +144,8 @@ export class ChampLieu {
   readonly actif = input(false);
   readonly supprimable = input(false);
   readonly erreur = input<string | null>(null);
+  /** Propose « Ma position » (champ de départ). */
+  readonly maPosition = input(false);
 
   readonly lieuChoisi = output<Lieu>();
   readonly activation = output<void>();
@@ -135,6 +155,10 @@ export class ChampLieu {
   protected readonly suggestions = signal<Lieu[]>([]);
   protected readonly recherche = signal(false);
   protected readonly aucunResultat = signal(false);
+  protected readonly localisation = signal(false);
+  protected readonly erreurPosition = signal<string | null>(null);
+  /** Précision en mètres quand la position est trop approximative pour être prise telle quelle. */
+  protected readonly precisionApprox = signal<number | null>(null);
 
   constructor() {
     // Un lieu fixé de l'extérieur (clic sur la carte) remplace le texte saisi.
@@ -149,10 +173,34 @@ export class ChampLieu {
     if (q.length < 2 || this.recherche()) return;
     this.recherche.set(true);
     this.aucunResultat.set(false);
+    this.erreurPosition.set(null);
+    this.precisionApprox.set(null);
     this.geocodage.rechercher(q).subscribe((resultats) => {
       this.recherche.set(false);
       this.suggestions.set(resultats);
       this.aucunResultat.set(resultats.length === 0);
+    });
+  }
+
+  /** Position de l'appareil, puis adresse correspondante (« Ma position » si elle est introuvable). */
+  protected localiser(): void {
+    this.localisation.set(true);
+    this.erreurPosition.set(null);
+    this.precisionApprox.set(null);
+    this.suggestions.set([]);
+    this.aucunResultat.set(false);
+    this.position.localiser().subscribe({
+      next: (p) => {
+        this.geocodage.adresseDe(p.latitude, p.longitude).subscribe((adresse) => {
+          this.localisation.set(false);
+          this.precisionApprox.set(p.precisionM > PRECISION_APPROXIMATIVE_M ? p.precisionM : null);
+          this.choisir({ libelle: adresse ?? 'Ma position', latitude: p.latitude, longitude: p.longitude });
+        });
+      },
+      error: (e: Error) => {
+        this.localisation.set(false);
+        this.erreurPosition.set(e.message);
+      },
     });
   }
 

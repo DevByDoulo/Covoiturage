@@ -126,9 +126,16 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   (une seule non lue par conversation). Écrans `features/messages` : icône Messages avec compteur dans l'en-tête,
   `/messages`, `/messages/:id` (rafraîchi toutes les 5 s), bouton « Écrire à … » (détail d'un trajet, Mes
   réservations, demandes reçues par le conducteur).
+- **08 Géolocalisation** (fonctionnalité facultative, branche `08-geolocalisation`) : la carte, la recherche de lieu,
+  le départ et l'arrivée posés sur la carte, le tracé et la distance existaient déjà (modules 03 et 12). Ajouts :
+  service `core/carte/position-actuelle.ts` (API de géolocalisation du navigateur : HTTPS ou localhost, autorisation de
+  l'utilisateur, messages en cas de refus / délai / indisponibilité) ; bouton « Ma position » sur le champ Départ
+  (`ChampLieu` avec `[maPosition]="true"`, Publier et Rechercher) qui retrouve l'adresse (Nominatim) et prévient si la
+  position est approximative (> 500 m) ; lien « Itinéraire vers le point de départ (Google Maps) » sur le détail d'un
+  trajet, pour le passager. Pas de suivi en temps réel de la position du conducteur.
 - Tests : `./mvnw test` → 42 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 29 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 32 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 
