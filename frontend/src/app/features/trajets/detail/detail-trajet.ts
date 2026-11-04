@@ -62,6 +62,11 @@ export class DetailTrajet implements OnInit {
   protected readonly action = signal(false);
   protected readonly panneau = signal<Panneau>('aucun');
 
+  /** Google Maps calcule l'itinéraire depuis la position actuelle de l'appareil (aucune clé nécessaire). */
+  protected lienItineraire(t: Trajet): string {
+    return `https://www.google.com/maps/dir/?api=1&destination=${t.depart.latitude},${t.depart.longitude}`;
+  }
+
   protected readonly estConducteur = computed(
     () => !!this.trajet() && this.trajet()!.conducteur.id === this.session.utilisateur()?.id,
   );
