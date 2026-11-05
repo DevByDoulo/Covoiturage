@@ -15,7 +15,7 @@ module IA (microservice sans interface). L'équipe parle français : code métie
 | `backend/Convoiturage` | API REST | Spring Boot 4.1, Java 21, PostgreSQL 16 + PostGIS, Flyway, JWT |
 | `frontend` | Web passager / conducteur / back-office | Angular 21 |
 | `ia-tarification` | Service de prix : consommation prédite (ADEME) + facteur météo (Open-Meteo) | FastAPI, XGBoost |
-| *(à créer)* `mobile/` | Application mobile | Flutter |
+| `mobile` | Application mobile Android / iOS (parcours passager) | Flutter 3.41 |
 
 Les maquettes (PNG) et les diagrammes UML (PowerAMC `.moo`) sont dans [`docs/`](docs/README.md) ;
 le diagramme de classes de référence est `docs/conception/CoVoiturage_Diagramme_Classe_nouveau.moo`.
@@ -133,9 +133,16 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   (`ChampLieu` avec `[maPosition]="true"`, Publier et Rechercher) qui retrouve l'adresse (Nominatim) et prévient si la
   position est approximative (> 500 m) ; lien « Itinéraire vers le point de départ (Google Maps) » sur le détail d'un
   trajet, pour le passager. Pas de suivi en temps réel de la position du conducteur.
+- **Application mobile** (branche `mobile-passager`, dossier `mobile/`, voir [`mobile/README.md`](mobile/README.md)) :
+  Flutter, même API que le site. Premier lot = parcours passager : connexion / inscription / code, recherche sur
+  carte (`flutter_map` + OpenStreetMap, Nominatim, « Ma position »), détail et réservation, mes réservations (code
+  d'embarquement PIN + QR, paiement PayDunya, annulation), notifications, profil en lecture. Lancer :
+  `flutter run -d web-server --web-port 5000` (navigateur), `flutter run` (émulateur Android, API sur `10.0.2.2`),
+  ou `--dart-define=API_URL=http://<IP du PC>:8080/api` pour un vrai téléphone. Reste : parcours conducteur,
+  messagerie, avis, push.
 - Tests : `./mvnw test` → 42 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 32 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 32 tests ; `flutter test` dans `mobile` → 7 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 
@@ -152,7 +159,7 @@ de l'autre sans le prévenir.
 | 3 | **07 Administration** — validation des documents, comptes, statistiques | **04 Facturation** |
 | 4 | **06 Notifications** — in-app, push, email/SMS | **05 Évaluations et avis** |
 
-**Non attribué :** application mobile Flutter. L'authentification (déjà faite) est commune : la faire
+**Non attribué :** application mobile Flutter (commencée par Doulo : parcours passager). L'authentification (déjà faite) est commune : la faire
 évoluer en prévenant l'autre.
 
 Pour démarrer un module, regarder d'abord ce qui existait dans `archive/lot1-complet` (par exemple
