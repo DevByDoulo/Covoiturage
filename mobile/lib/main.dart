@@ -8,6 +8,7 @@ import 'core/api.dart';
 import 'core/localisation.dart';
 import 'core/session.dart';
 import 'core/theme.dart';
+import 'features/messages/messages.dart';
 import 'features/notifications/notifications.dart';
 
 Future<void> main() async {
@@ -16,6 +17,7 @@ Future<void> main() async {
   final api = Api();
   final session = Session(api);
   final compteur = CompteurNotifications(api);
+  final messages = CompteurMessages(api);
   session.restaurer();
   runApp(
     MultiProvider(
@@ -23,19 +25,21 @@ Future<void> main() async {
         Provider.value(value: api),
         ChangeNotifierProvider.value(value: session),
         ChangeNotifierProvider.value(value: compteur),
+        ChangeNotifierProvider.value(value: messages),
         Provider(create: (_) => Geocodage()),
         Provider(create: (_) => PositionActuelle()),
       ],
-      child: YobalemaApp(session: session, compteur: compteur),
+      child: YobalemaApp(session: session, compteur: compteur, messages: messages),
     ),
   );
 }
 
 class YobalemaApp extends StatefulWidget {
-  const YobalemaApp({super.key, required this.session, required this.compteur});
+  const YobalemaApp({super.key, required this.session, required this.compteur, required this.messages});
 
   final Session session;
   final CompteurNotifications compteur;
+  final CompteurMessages messages;
 
   @override
   State<YobalemaApp> createState() => _YobalemaAppState();
@@ -47,11 +51,14 @@ class _YobalemaAppState extends State<YobalemaApp> {
   @override
   void initState() {
     super.initState();
-    // Le compteur de la cloche ne tourne que si quelqu'un est connecté.
+    // Les compteurs (cloche, messages) ne tournent que si quelqu'un est connecté.
     widget.session.addListener(_suivreSession);
   }
 
-  void _suivreSession() => widget.compteur.suivre(widget.session.connecte);
+  void _suivreSession() {
+    widget.compteur.suivre(widget.session.connecte);
+    widget.messages.suivre(widget.session.connecte);
+  }
 
   @override
   void dispose() {

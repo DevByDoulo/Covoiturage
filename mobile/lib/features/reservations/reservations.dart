@@ -9,6 +9,7 @@ import '../../core/formats.dart';
 import '../../core/modeles.dart';
 import '../../core/theme.dart';
 import '../../shared/widgets.dart';
+import '../messages/messages.dart';
 
 /// Réservations du passager : suivi, code d'embarquement (PIN + QR), paiement en ligne et annulation.
 class ReservationsPage extends StatefulWidget {
@@ -131,6 +132,7 @@ class _ReservationsPageState extends State<ReservationsPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('Mes réservations'), actions: [
+          const BoutonMessages(),
           IconButton(onPressed: _charger, icon: const Icon(Icons.refresh), tooltip: 'Actualiser'),
         ]),
         body: RefreshIndicator(onRefresh: _charger, child: _corps()),
@@ -209,6 +211,7 @@ class _ReservationsPageState extends State<ReservationsPage> {
                     label: Text('Payer par ${libellesMoyen[r.moyenPaiement]}')),
                 TextButton(onPressed: () => _verifier(r), child: const Text('J\'ai payé : vérifier')),
               ],
+              BoutonEcrire(idTrajet: r.idTrajet, prenom: r.conducteur.prenom),
               TextButton(
                 onPressed: () => _annuler(r),
                 style: TextButton.styleFrom(foregroundColor: Couleurs.erreur),

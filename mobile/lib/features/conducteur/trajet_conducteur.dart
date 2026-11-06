@@ -8,6 +8,7 @@ import '../../core/modeles.dart';
 import '../../core/theme.dart';
 import '../../shared/carte.dart';
 import '../../shared/widgets.dart';
+import '../messages/messages.dart';
 import 'mes_trajets.dart';
 import 'scanner.dart';
 
@@ -160,7 +161,7 @@ class _TrajetConducteurPageState extends State<TrajetConducteurPage> {
   Widget build(BuildContext context) {
     final t = _trajet;
     return Scaffold(
-      appBar: AppBar(title: const Text('Mon trajet'), actions: [
+      appBar: AppBar(leading: retourAccueil(context), title: const Text('Mon trajet'), actions: [
         IconButton(onPressed: _charger, icon: const Icon(Icons.refresh), tooltip: 'Actualiser'),
       ]),
       body: t == null
@@ -277,6 +278,11 @@ class _TrajetConducteurPageState extends State<TrajetConducteurPage> {
               '${libellesMoyen[r.moyenPaiement]} : ${libellesStatutPaiement[r.statutPaiement] ?? '—'}'
               '${r.pointRamassage == null ? '' : ' · prise en charge : ${r.pointRamassage}'}',
               style: const TextStyle(color: Couleurs.texte2, fontSize: 13)),
+        ),
+      if (p != null && r.statut != 'REFUSEE')
+        Padding(
+          padding: const EdgeInsets.only(left: 34),
+          child: BoutonEcrire(idTrajet: widget.id, prenom: p.prenom, idPassager: p.id),
         ),
       if (r.statut == 'EN_ATTENTE')
         Padding(

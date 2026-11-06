@@ -10,6 +10,7 @@ import '../../core/modeles.dart';
 import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../shared/widgets.dart';
+import '../messages/messages.dart';
 
 const _aVenir = {'PUBLIE', 'COMPLET', 'EN_COURS'};
 
@@ -79,6 +80,7 @@ class _MesTrajetsPageState extends State<MesTrajetsPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('Mes trajets'), actions: [
+          const BoutonMessages(),
           IconButton(onPressed: _charger, icon: const Icon(Icons.refresh), tooltip: 'Actualiser'),
         ]),
         floatingActionButton: _etat == _Etat.pret
