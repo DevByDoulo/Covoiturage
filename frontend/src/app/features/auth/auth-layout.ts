@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { Icone } from '../../shared/ui/icone';
 import { Logo } from '../../shared/ui/logo';
 
@@ -9,7 +9,7 @@ import { Logo } from '../../shared/ui/logo';
  */
 @Component({
   selector: 'app-auth-layout',
-  imports: [RouterOutlet, Logo, Icone],
+  imports: [RouterOutlet, RouterLink, Logo, Icone],
   template: `
     <div class="cadre">
       <aside class="presentation" aria-hidden="true">
@@ -26,10 +26,19 @@ import { Logo } from '../../shared/ui/logo';
       </aside>
       <main class="contenu">
         <router-outlet />
+        <p class="liens-legaux">
+          <a routerLink="/conditions">Conditions d'utilisation</a> · <a routerLink="/confidentialite">Confidentialité</a>
+        </p>
       </main>
     </div>
   `,
   styles: `
+    .liens-legaux {
+      margin: 24px 0 8px;
+      font-size: 13px;
+      text-align: center;
+      color: var(--texte-2);
+    }
     .cadre {
       display: grid;
       min-height: 100dvh;

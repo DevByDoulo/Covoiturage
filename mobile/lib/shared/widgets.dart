@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../core/config.dart';
 import '../core/theme.dart';
@@ -98,6 +99,20 @@ Widget? retourAccueil(BuildContext context) => context.canPop()
         icon: const Icon(Icons.arrow_back),
         onPressed: () => context.go('/rechercher'),
       );
+
+/// Liens vers les textes légaux, publiés sur le site (`/conditions`, `/confidentialite`).
+class LiensLegaux extends StatelessWidget {
+  const LiensLegaux({super.key});
+
+  static Future<void> ouvrir(String page) =>
+      launchUrl(Uri.parse('${Config.siteUrl}/$page'), mode: LaunchMode.externalApplication);
+
+  @override
+  Widget build(BuildContext context) => Wrap(alignment: WrapAlignment.center, children: [
+        TextButton(onPressed: () => ouvrir('conditions'), child: const Text('Conditions d\'utilisation')),
+        TextButton(onPressed: () => ouvrir('confidentialite'), child: const Text('Confidentialité')),
+      ]);
+}
 
 void afficherMessage(BuildContext context, String message, {bool erreur = false}) {
   ScaffoldMessenger.of(context)

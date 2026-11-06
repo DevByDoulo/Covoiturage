@@ -83,6 +83,7 @@ class ProfilPage extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         const Center(child: Logo(taille: 18)),
+        const LiensLegaux(),
       ]),
     );
   }
