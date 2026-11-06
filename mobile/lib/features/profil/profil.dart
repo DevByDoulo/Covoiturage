@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/config.dart';
 import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../shared/widgets.dart';
@@ -65,7 +66,7 @@ class ProfilPage extends StatelessWidget {
           const Text('Photo, préférences, contacts d\'urgence, véhicules et documents se gèrent sur le site web.',
               style: TextStyle(color: Couleurs.texte2)),
           TextButton.icon(
-            onPressed: () => launchUrl(Uri.parse('http://localhost:4200/profil'), mode: LaunchMode.externalApplication),
+            onPressed: () => launchUrl(Uri.parse('${Config.siteUrl}/profil'), mode: LaunchMode.externalApplication),
             icon: const Icon(Icons.open_in_new),
             label: const Text('Ouvrir le site'),
           ),

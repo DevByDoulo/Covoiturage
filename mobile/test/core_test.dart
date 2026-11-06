@@ -95,6 +95,79 @@ void main() {
     });
   });
 
+  group('conducteur', () {
+    test('date et heure de départ au format LocalDateTime', () {
+      expect(dateHeureApi(DateTime(2026, 11, 7, 8, 5)), '2026-11-07T08:05:00');
+    });
+
+    test("lit l'estimation du prix", () {
+      final e = Estimation.depuisJson({
+        'distanceKm': 70.2,
+        'dureeEstimeeMin': 65,
+        'typeRoute': 'NATIONALE',
+        'montantPeages': 0,
+        'sourceItineraire': 'ESTIMATION',
+        'itinerairePolyline': '_p~iF~ps|U',
+        'tarif': {
+          'prixRecommande': 2100,
+          'prixMin': 1900,
+          'prixMax': 2300,
+          'coutCarburant': 5600.5,
+          'coutUsure': 700,
+          'coutPeages': 0,
+          'facteurMeteo': 1.06,
+          'sourceConsommation': 'IA',
+          'heureDePointe': true,
+        },
+      });
+      expect(e.prixRecommande, 2100);
+      expect(e.prixMin, 1900);
+      expect(e.prixMax, 2300);
+      expect(e.facteurMeteo, closeTo(1.06, 1e-9));
+      expect(e.heureDePointe, isTrue);
+    });
+
+    test('réservation vue par le conducteur et embarquement confirmé', () {
+      final r = Reservation.depuisJson({
+        'id': 9,
+        'trajet': {
+          'id': 3,
+          'lieuDepart': 'Dakar',
+          'lieuArrivee': 'Louga',
+          'dateHeureDepart': '2026-11-06T08:00:00',
+          'statut': 'PUBLIE',
+          'conducteur': {'id': 2, 'prenom': 'Awa', 'nomInitiale': 'D.'},
+        },
+        'passager': {'id': 5, 'prenom': 'Moussa', 'nomInitiale': 'N.'},
+        'pointRamassage': 'Gare de Dakar',
+        'nombrePlaces': 1,
+        'montantTotal': 4700,
+        'statut': 'EN_ATTENTE',
+        'embarque': false,
+      });
+      expect(r.passager!.prenom, 'Moussa');
+      expect(r.pointRamassage, 'Gare de Dakar');
+
+      final e = EmbarquementConfirme.depuisJson({
+        'idReservation': 9,
+        'passager': {'id': 5, 'prenom': 'Moussa', 'nomInitiale': 'N.'},
+        'nombrePlaces': 1,
+        'montantAEncaisser': 4700,
+        'moyenPaiement': 'ESPECES',
+      });
+      expect(e.montantAEncaisser, 4700);
+      expect(Vehicule.depuisJson({
+        'id': 1,
+        'immatriculation': 'DK-1234-AB',
+        'marque': 'Toyota',
+        'modele': 'Corolla',
+        'annee': 2019,
+        'nombrePlaces': 5,
+        'statutValidation': 'VALIDE',
+      }).valide, isTrue);
+    });
+  });
+
   group('Api', () {
     test("lit le message d'erreur du ProblemDetail", () async {
       final api = Api(

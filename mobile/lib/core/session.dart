@@ -39,6 +39,12 @@ class Session extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Jeton et profil frais : le rôle CONDUCTEUR ou la validation des documents ont pu changer depuis la connexion.
+  Future<void> rafraichir() async {
+    await _renouveler();
+    await chargerProfil();
+  }
+
   Future<AuthReponse> connexion(String identifiant, String motDePasse) =>
       _authentifier('/auth/connexion', {'identifiant': identifiant.trim(), 'motDePasse': motDePasse});
 
