@@ -154,6 +154,12 @@ export const routes: Routes = [
         title: 'Trajet · YOBALEMAsn',
         loadComponent: () => import('./features/trajets/detail/detail-trajet').then((m) => m.DetailTrajet),
       },
+      // 08 — Guidage vocal jusqu'au point de rendez-vous
+      {
+        path: 'trajets/:id/guidage',
+        title: 'Guidage · YOBALEMAsn',
+        loadComponent: () => import('./features/trajets/guidage/guidage').then((m) => m.Guidage),
+      },
       // 04 — Facturation (réservations, paiements, reçus)
       {
         path: 'reservations',

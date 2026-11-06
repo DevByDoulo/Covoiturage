@@ -138,7 +138,13 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   l'utilisateur, messages en cas de refus / délai / indisponibilité) ; bouton « Ma position » sur le champ Départ
   (`ChampLieu` avec `[maPosition]="true"`, Publier et Rechercher) qui retrouve l'adresse (Nominatim) et prévient si la
   position est approximative (> 500 m) ; lien « Itinéraire vers le point de départ (Google Maps) » sur le détail d'un
-  trajet, pour le passager. Pas de suivi en temps réel de la position du conducteur.
+  trajet, pour le passager. **Guidage vocal** (branche `web-guidage-vocal`) : écran `/trajets/:id/guidage`
+  (`features/trajets/guidage`) — passager vers son point de prise en charge, conducteur vers le départ ; à pied ou
+  en voiture ; position suivie (`PositionActuelle.suivre`, `watchPosition`), itinéraire et manœuvres OSRM des
+  serveurs FOSSGIS `routing.openstreetmap.de` (sans clé, CORS ; à remplacer en production), consignes en français
+  (`core/carte/itineraire.ts`), logique d'annonce et de recalcul hors tracé dans `core/carte/guide.ts` (testée),
+  synthèse vocale du navigateur (`core/voix.ts`, coupable, choix mémorisé), écran gardé allumé (Wake Lock).
+  La carte (`shared/carte/carte.ts`) a des marqueurs `moi` / `voiture` et un mode `[suivre]`.
 - **Application mobile** (branche `mobile-passager`, dossier `mobile/`, voir [`mobile/README.md`](mobile/README.md)) :
   Flutter, même API que le site. Premier lot = parcours passager : connexion / inscription / code, recherche sur
   carte (`flutter_map` + OpenStreetMap, Nominatim, « Ma position »), détail et réservation, mes réservations (code
@@ -153,7 +159,7 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   d'un trajet, Profil). Reste : push, alertes, mot de passe oublié, Google, édition du profil, paiements.
 - Tests : `./mvnw test` → 42 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 38 tests ; `flutter test` dans `mobile` → 12 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 44 tests ; `flutter test` dans `mobile` → 12 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 

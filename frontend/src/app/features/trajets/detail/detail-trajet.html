@@ -42,6 +42,11 @@
           <div><dt>Route</dt><dd>{{ libellesRoute[t.typeRoute] }}</dd></div>
         </dl>
         <!-- 08 — Géolocalisation : itinéraire jusqu'au point de départ, depuis la position du passager -->
+        @if (t.statut === 'PUBLIE' || t.statut === 'COMPLET' || (t.statut === 'EN_COURS' && !estConducteur())) {
+          <a class="bouton bouton--secondaire" [routerLink]="['/trajets', t.id, 'guidage']">
+            <app-icone nom="position" [taille]="16" /> Guidage vocal jusqu'au point de départ
+          </a>
+        }
         @if (!estConducteur() && (t.statut === 'PUBLIE' || t.statut === 'COMPLET' || t.statut === 'EN_COURS')) {
           <a class="bouton-lien" [href]="lienItineraire(t)" target="_blank" rel="noopener">
             <app-icone nom="position" [taille]="16" /> Itinéraire vers le point de départ (Google Maps)
