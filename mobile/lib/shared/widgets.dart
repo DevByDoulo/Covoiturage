@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../core/config.dart';
 import '../core/theme.dart';
@@ -87,6 +88,16 @@ class Pastille extends StatelessWidget {
         child: Text(texte, style: TextStyle(color: couleur, fontWeight: FontWeight.w700, fontSize: 12)),
       );
 }
+
+/// Bouton retour d'un écran plein écran ouvert directement (lien, notification) : sans écran en dessous,
+/// il ramène à l'accueil. Null quand le retour habituel existe.
+Widget? retourAccueil(BuildContext context) => context.canPop()
+    ? null
+    : IconButton(
+        tooltip: 'Accueil',
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => context.go('/rechercher'),
+      );
 
 void afficherMessage(BuildContext context, String message, {bool erreur = false}) {
   ScaffoldMessenger.of(context)

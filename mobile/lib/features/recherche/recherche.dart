@@ -10,6 +10,7 @@ import '../../core/modeles.dart';
 import '../../core/theme.dart';
 import '../../shared/carte.dart';
 import '../../shared/widgets.dart';
+import '../messages/messages.dart';
 import 'champ_lieu.dart';
 
 /// Recherche de trajets (même API que le site : le tracé passe près du départ et de l'arrivée, dans le bon sens).
@@ -107,7 +108,7 @@ class _RecherchePageState extends State<RecherchePage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Rechercher un trajet')),
+        appBar: AppBar(title: const Text('Rechercher un trajet'), actions: const [BoutonMessages()]),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           children: [

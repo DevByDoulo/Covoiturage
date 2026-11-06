@@ -9,6 +9,7 @@ import '../../core/api.dart';
 import '../../core/modeles.dart';
 import '../../core/theme.dart';
 import '../../shared/widgets.dart';
+import '../messages/messages.dart';
 
 /// Nombre de notifications non lues (pastille de l'onglet), rafraîchi toutes les 30 s pendant la session.
 class CompteurNotifications extends ChangeNotifier {
@@ -99,6 +100,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
     final lien = n.lien ?? '';
     if (RegExp(r'^/trajets/\d+$').hasMatch(lien)) {
       context.push(lien);
+    } else if (RegExp(r'^/messages(/\d+)?$').hasMatch(lien)) {
+      context.push(lien);
     } else if (lien.startsWith('/reservations')) {
       context.go('/reservations');
     }
@@ -118,6 +121,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('Notifications'), actions: [
+          const BoutonMessages(),
           if (_liste?.any((n) => !n.lu) ?? false)
             TextButton(onPressed: _toutLire, child: const Text('Tout marquer comme lu')),
           IconButton(onPressed: _charger, icon: const Icon(Icons.refresh), tooltip: 'Actualiser'),

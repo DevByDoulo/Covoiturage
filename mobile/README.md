@@ -28,7 +28,19 @@ Application Android / iOS du covoiturage, branchée sur la même API que le site
   avant le départ au plus tôt), terminer, annuler avec motif. Depuis le détail public d'un de ses trajets, le
   bouton « Gérer ce trajet » y mène.
 
-Pas encore fait : messagerie, avis, notifications push (Firebase), escales à la publication.
+## Messagerie
+
+- Icône **Messages** (avec le nombre de non lus, rafraîchi toutes les 30 s) dans la barre de titre des onglets :
+  liste des conversations, la plus récente en haut.
+- **Conversation** : bulles, rafraîchie toutes les 5 s, envoi ; lecture seule une fois la conversation fermée
+  (le backend donne la raison).
+- Boutons **« Écrire à … »** : détail d'un trajet (au conducteur), Mes réservations (au conducteur), Mon trajet
+  (à chaque passager). La notification « Nouveau message » ouvre la conversation.
+
+Un lien direct ou une notification ouverts pendant la restauration de la session mènent bien à l'écran demandé ;
+s'il n'y a pas d'écran en dessous, le bouton retour ramène à l'accueil.
+
+Pas encore fait : avis, notifications push (Firebase), escales à la publication.
 
 ## Lancer
 
@@ -67,7 +79,7 @@ puis accepter les licences avec `flutter doctor --android-licenses`.
 |---|---|
 | `lib/core` | configuration, client HTTP (`api.dart`), modèles, session, thème, formats, géolocalisation |
 | `lib/shared` | widgets communs, carte (`flutter_map`, tuiles OpenStreetMap) |
-| `lib/features` | un dossier par écran : `auth`, `recherche`, `trajet`, `reservations`, `conducteur`, `notifications`, `profil` |
+| `lib/features` | un dossier par écran : `auth`, `recherche`, `trajet`, `reservations`, `conducteur`, `messages`, `notifications`, `profil` |
 | `lib/app.dart` | routes (`go_router`) et barre d'onglets |
 
 Les erreurs de l'API (ProblemDetail) sont lues par `ErreurApi`. Sur le web, éviter l'opérateur `~` sur des

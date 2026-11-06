@@ -168,6 +168,45 @@ void main() {
     });
   });
 
+  group('messagerie', () {
+    test('lit une conversation ouverte et une conversation fermée', () {
+      Map<String, dynamic> conversation(String? fermeture) => {
+            'id': 4,
+            'trajet': {
+              'id': 3,
+              'lieuDepart': 'Dakar',
+              'lieuArrivee': 'Louga',
+              'dateHeureDepart': '2026-11-06T08:00:00',
+              'statut': 'PUBLIE',
+            },
+            'interlocuteur': {'id': 2, 'prenom': 'Awa', 'nomInitiale': 'D.'},
+            'jeSuisConducteur': false,
+            'fermeture': fermeture,
+            'messages': [
+              {'id': 1, 'contenu': 'Bonjour', 'dateEnvoi': '2026-11-05T10:00:00', 'deMoi': true, 'lu': true},
+              {'id': 2, 'contenu': 'Bonjour Moussa', 'dateEnvoi': '2026-11-05T10:02:00', 'deMoi': false, 'lu': false},
+            ],
+          };
+      final ouverte = ConversationDetail.depuisJson(conversation(null));
+      expect(ouverte.fermeture, isNull);
+      expect(ouverte.messages.map((m) => m.deMoi), [true, false]);
+      expect(ouverte.interlocuteur.prenom, 'Awa');
+      expect(ConversationDetail.depuisJson(conversation('Conversation fermée')).fermeture, 'Conversation fermée');
+
+      final resume = ConversationResume.depuisJson({
+        'id': 4,
+        'trajet': conversation(null)['trajet'],
+        'interlocuteur': {'id': 2, 'prenom': 'Awa', 'nomInitiale': 'D.'},
+        'jeSuisConducteur': false,
+        'dernierMessage': null,
+        'dernierDeMoi': false,
+        'dateDernierMessage': null,
+        'nonLus': 0,
+      });
+      expect(resume.dateDernierMessage, isNull);
+    });
+  });
+
   group('Api', () {
     test("lit le message d'erreur du ProblemDetail", () async {
       final api = Api(

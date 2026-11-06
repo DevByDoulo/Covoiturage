@@ -387,6 +387,81 @@ class EmbarquementConfirme {
       j['moyenPaiement'] as String?);
 }
 
+/// Trajet rappelé en tête d'une conversation.
+class TrajetConversation {
+  TrajetConversation(this.id, this.lieuDepart, this.lieuArrivee, this.dateHeureDepart, this.statut);
+
+  final int id;
+  final String lieuDepart;
+  final String lieuArrivee;
+  final DateTime dateHeureDepart;
+  final String statut;
+
+  factory TrajetConversation.depuisJson(Map<String, dynamic> j) => TrajetConversation(_i(j['id']),
+      j['lieuDepart'] as String, j['lieuArrivee'] as String, _date(j['dateHeureDepart']), j['statut'] as String);
+}
+
+/// Ligne de la liste des conversations (GET /api/moi/conversations).
+class ConversationResume {
+  ConversationResume(this.id, this.trajet, this.interlocuteur, this.jeSuisConducteur, this.dernierMessage,
+      this.dernierDeMoi, this.dateDernierMessage, this.nonLus);
+
+  final int id;
+  final TrajetConversation trajet;
+  final Personne interlocuteur;
+  final bool jeSuisConducteur;
+  final String? dernierMessage;
+  final bool dernierDeMoi;
+  final DateTime? dateDernierMessage;
+  final int nonLus;
+
+  factory ConversationResume.depuisJson(Map<String, dynamic> j) => ConversationResume(
+        _i(j['id']),
+        TrajetConversation.depuisJson(j['trajet'] as Map<String, dynamic>),
+        Personne.depuisJson(j['interlocuteur'] as Map<String, dynamic>),
+        j['jeSuisConducteur'] == true,
+        j['dernierMessage'] as String?,
+        j['dernierDeMoi'] == true,
+        j['dateDernierMessage'] == null ? null : _date(j['dateDernierMessage']),
+        _i(j['nonLus']),
+      );
+}
+
+class MessageApp {
+  MessageApp(this.id, this.contenu, this.dateEnvoi, this.deMoi, this.lu);
+
+  final int id;
+  final String contenu;
+  final DateTime dateEnvoi;
+  final bool deMoi;
+  final bool lu;
+
+  factory MessageApp.depuisJson(Map<String, dynamic> j) =>
+      MessageApp(_i(j['id']), j['contenu'] as String, _date(j['dateEnvoi']), j['deMoi'] == true, j['lu'] == true);
+}
+
+/// Conversation ouverte (GET /api/moi/conversations/{id}, qui marque les messages reçus comme lus).
+/// [fermeture] : raison pour laquelle on ne peut plus écrire (null si la conversation est ouverte).
+class ConversationDetail {
+  ConversationDetail(this.id, this.trajet, this.interlocuteur, this.jeSuisConducteur, this.fermeture, this.messages);
+
+  final int id;
+  final TrajetConversation trajet;
+  final Personne interlocuteur;
+  final bool jeSuisConducteur;
+  final String? fermeture;
+  final List<MessageApp> messages;
+
+  factory ConversationDetail.depuisJson(Map<String, dynamic> j) => ConversationDetail(
+        _i(j['id']),
+        TrajetConversation.depuisJson(j['trajet'] as Map<String, dynamic>),
+        Personne.depuisJson(j['interlocuteur'] as Map<String, dynamic>),
+        j['jeSuisConducteur'] == true,
+        j['fermeture'] as String?,
+        ((j['messages'] as List?) ?? const []).map((e) => MessageApp.depuisJson(e as Map<String, dynamic>)).toList(),
+      );
+}
+
 /// Lieu choisi par l'utilisateur (recherche d'adresse, position actuelle).
 class Lieu {
   Lieu(this.libelle, this.latitude, this.longitude, {this.detail});

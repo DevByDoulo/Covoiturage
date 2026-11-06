@@ -10,6 +10,7 @@ import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../shared/carte.dart';
 import '../../shared/widgets.dart';
+import '../messages/messages.dart';
 
 /// Détail d'un trajet et réservation (nombre de places, moyen de paiement).
 class DetailTrajetPage extends StatefulWidget {
@@ -86,7 +87,7 @@ class _DetailTrajetPageState extends State<DetailTrajetPage> {
   Widget build(BuildContext context) {
     final t = _trajet;
     return Scaffold(
-      appBar: AppBar(title: const Text('Trajet')),
+      appBar: AppBar(leading: retourAccueil(context), title: const Text('Trajet')),
       body: t == null
           ? Center(
               child: _erreur == null
@@ -157,6 +158,8 @@ class _DetailTrajetPageState extends State<DetailTrajetPage> {
           const SizedBox(height: 6),
           const Pastille('Trajet réservé aux femmes', couleur: Color(0xFFB4236B)),
         ],
+        if (!estConducteur && (t.statut == 'PUBLIE' || t.statut == 'COMPLET'))
+          BoutonEcrire(idTrajet: t.id, prenom: t.conducteur.prenom),
       ]),
       const SizedBox(height: 12),
       if (estConducteur)

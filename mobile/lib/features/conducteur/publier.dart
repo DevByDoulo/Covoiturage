@@ -222,7 +222,7 @@ class _PublierPageState extends State<PublierPage> {
   Widget build(BuildContext context) {
     final vehicules = _vehicules;
     return Scaffold(
-      appBar: AppBar(title: const Text('Publier un trajet')),
+      appBar: AppBar(leading: retourAccueil(context), title: const Text('Publier un trajet')),
       body: vehicules == null
           ? const Center(child: CircularProgressIndicator())
           : vehicules.isEmpty

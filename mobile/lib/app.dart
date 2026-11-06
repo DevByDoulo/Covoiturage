@@ -10,6 +10,7 @@ import 'features/auth/verification.dart';
 import 'features/conducteur/mes_trajets.dart';
 import 'features/conducteur/publier.dart';
 import 'features/conducteur/trajet_conducteur.dart';
+import 'features/messages/messages.dart';
 import 'features/notifications/notifications.dart';
 import 'features/profil/profil.dart';
 import 'features/recherche/recherche.dart';
@@ -24,10 +25,24 @@ GoRouter creerRouteur(Session session) => GoRouter(
   refreshListenable: session,
   redirect: (context, etat) {
     final chemin = etat.matchedLocation;
-    if (!session.pret) return chemin == '/demarrage' ? null : '/demarrage';
+    // Pendant la restauration de la session, l'adresse demandée (lien direct, notification) est gardée
+    // dans « suite » pour y revenir ensuite.
+    if (!session.pret) {
+      if (chemin == '/demarrage') return null;
+      return Uri(path: '/demarrage', queryParameters: {'suite': etat.uri.toString()}).toString();
+    }
     final public = _publics.contains(chemin);
     if (!session.connecte && !public) return '/connexion';
-    if (session.connecte && (public || chemin == '/demarrage')) return '/rechercher';
+    if (session.connecte && chemin == '/demarrage') {
+      final suite = etat.uri.queryParameters['suite'];
+      final valable =
+          suite != null &&
+          suite.startsWith('/') &&
+          !suite.startsWith('/demarrage') &&
+          !_publics.contains(Uri.parse(suite).path);
+      return valable ? suite : '/rechercher';
+    }
+    if (session.connecte && public) return '/rechercher';
     return null;
   },
   routes: [
@@ -41,6 +56,11 @@ GoRouter creerRouteur(Session session) => GoRouter(
     GoRoute(
       path: '/trajets/:id',
       builder: (_, etat) => DetailTrajetPage(id: int.parse(etat.pathParameters['id']!)),
+    ),
+    GoRoute(path: '/messages', builder: (_, _) => const MessagesPage()),
+    GoRoute(
+      path: '/messages/:id',
+      builder: (_, etat) => ConversationPage(id: int.parse(etat.pathParameters['id']!)),
     ),
     // Avant l'onglet « /conduite » : écrans plein écran du conducteur.
     GoRoute(path: '/conduite/publier', builder: (_, _) => const PublierPage()),
