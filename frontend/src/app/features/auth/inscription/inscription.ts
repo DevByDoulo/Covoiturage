@@ -90,7 +90,7 @@ export class Inscription {
   }
 
   protected google(idToken: string): void {
-    this.session.connexionGoogle(idToken).subscribe({
+    this.session.connexionGoogle(idToken, undefined, undefined, false).subscribe({
       next: (r) =>
         this.router.navigateByUrl(
           r.etape === 'TELEPHONE_REQUIS'

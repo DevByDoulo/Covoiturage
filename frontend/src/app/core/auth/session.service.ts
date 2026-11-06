@@ -17,8 +17,11 @@ const CLE_REFRESH = 'covoitia.refresh';
 const CLE_VERIFICATION = 'covoitia.verification';
 
 /**
- * Session de l'utilisateur : jeton d'accès en mémoire uniquement, jeton de rafraîchissement
- * en localStorage pour rester connecté après rechargement. Toutes les routes /api/auth passent ici.
+ * Session de l'utilisateur : jeton d'accès en mémoire uniquement. Le jeton de rafraîchissement est gardé :
+ * - en sessionStorage par défaut : la session survit au rechargement mais se termine à la fermeture de l'onglet
+ *   (un autre onglet, une fenêtre privée ou un nouveau lancement du navigateur demandent de se reconnecter) ;
+ * - en localStorage si l'utilisateur coche « Rester connecté » (30 jours, durée du jeton côté serveur).
+ * Toutes les routes /api/auth passent ici.
  */
 @Injectable({ providedIn: 'root' })
 export class SessionService {
@@ -29,6 +32,8 @@ export class SessionService {
   private readonly jetonAcces = signal<string | null>(null);
   private readonly profil = signal<Profil | null>(null);
   private rafraichissementEnCours: Observable<string | null> | null = null;
+  /** « Rester connecté » : jeton de rafraîchissement en localStorage plutôt qu'en sessionStorage. */
+  private persistant = stockage.lire(CLE_REFRESH) !== null;
 
   readonly utilisateur = this.profil.asReadonly();
   readonly estConnecte = computed(() => this.profil() !== null);
@@ -48,19 +53,22 @@ export class SessionService {
 
   /** Au chargement de l'application : tente de rouvrir la session avec le refresh token. */
   restaurer(): Promise<unknown> {
-    if (!stockage.lire(CLE_REFRESH)) return Promise.resolve();
+    if (!lireRefresh()) return Promise.resolve();
     return firstValueFrom(this.rafraichir().pipe(catchError(() => of(null))));
   }
 
   // ------------------------------------------------------------------ Parcours d'authentification
 
-  connexion(identifiant: string, motDePasse: string): Observable<AuthReponse> {
+  /** [resterConnecte] : garder la session 30 jours, même après fermeture du navigateur. */
+  connexion(identifiant: string, motDePasse: string, resterConnecte = false): Observable<AuthReponse> {
+    this.persistant = resterConnecte;
     return this.http
       .post<AuthReponse>(`${this.api}/connexion`, { identifiant, motDePasse })
       .pipe(tap((r) => this.traiter(r, identifiant)));
   }
 
   inscription(requete: InscriptionRequete): Observable<AuthReponse> {
+    this.persistant = false;
     return this.http
       .post<AuthReponse>(`${this.api}/inscription`, requete)
       .pipe(tap((r) => this.traiter(r, requete.telephone)));
@@ -80,7 +88,9 @@ export class SessionService {
       .pipe(tap((r) => this.traiter(r, identifiant)));
   }
 
-  connexionGoogle(idToken: string, telephone?: string, sexe?: Sexe | null): Observable<AuthReponse> {
+  /** [resterConnecte] absent : on garde le choix fait sur l'écran de connexion (étape « téléphone » après Google). */
+  connexionGoogle(idToken: string, telephone?: string, sexe?: Sexe | null, resterConnecte?: boolean): Observable<AuthReponse> {
+    if (resterConnecte !== undefined) this.persistant = resterConnecte;
     this.idTokenGoogle = idToken;
     return this.http
       .post<AuthReponse>(`${this.api}/google`, { idToken, telephone, sexe })
@@ -107,7 +117,7 @@ export class SessionService {
    * (le refresh token est à usage unique côté serveur).
    */
   rafraichir(): Observable<string | null> {
-    const refresh = stockage.lire(CLE_REFRESH);
+    const refresh = lireRefresh();
     if (!refresh) return of(null);
     this.rafraichissementEnCours ??= this.http
       .post<AuthReponse>(`${this.api}/refresh`, { refreshToken: refresh })
@@ -133,7 +143,7 @@ export class SessionService {
   }
 
   deconnexion(): void {
-    const refresh = stockage.lire(CLE_REFRESH);
+    const refresh = lireRefresh();
     if (refresh) {
       this.http.post(`${this.api}/deconnexion`, { refreshToken: refresh }).subscribe({ error: () => {} });
     }
@@ -191,13 +201,16 @@ export class SessionService {
     if (!r.accessToken || !r.refreshToken || !r.utilisateur) return;
     this.jetonAcces.set(r.accessToken);
     this.profil.set(r.utilisateur);
-    stockage.ecrire(CLE_REFRESH, r.refreshToken);
+    // Un seul emplacement à la fois : le nouveau jeton (rotation) remplace l'ancien au même endroit.
+    stockage.supprimer(CLE_REFRESH, this.persistant);
+    stockage.ecrire(CLE_REFRESH, r.refreshToken, !this.persistant);
   }
 
   private effacerSession(): void {
     this.jetonAcces.set(null);
     this.profil.set(null);
     stockage.supprimer(CLE_REFRESH);
+    stockage.supprimer(CLE_REFRESH, true);
   }
 
   private definirVerification(v: VerificationEnCours | null): void {
@@ -205,6 +218,11 @@ export class SessionService {
     if (v) stockage.ecrire(CLE_VERIFICATION, JSON.stringify(v), true);
     else stockage.supprimer(CLE_VERIFICATION, true);
   }
+}
+
+/** Jeton de rafraîchissement de l'onglet (session) ou, à défaut, celui gardé avec « Rester connecté ». */
+function lireRefresh(): string | null {
+  return stockage.lire(CLE_REFRESH, true) ?? stockage.lire(CLE_REFRESH);
 }
 
 function lireVerification(): VerificationEnCours | null {

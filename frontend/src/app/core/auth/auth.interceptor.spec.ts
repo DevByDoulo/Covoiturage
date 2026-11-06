@@ -15,6 +15,7 @@ describe('authInterceptor', () => {
 
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     TestBed.configureTestingModule({
       providers: [provideRouter([{ path: '**', children: [] }]), provideHttpClient(withInterceptors([authInterceptor])), provideHttpClientTesting()],
     });
@@ -58,7 +59,7 @@ describe('authInterceptor', () => {
     expect(rejeu.request.headers.get('Authorization')).toBe('Bearer jeton-2');
     rejeu.flush({ ok: true });
     expect(reponse).toEqual({ ok: true });
-    expect(localStorage.getItem('covoitia.refresh')).toBe('refresh-2');
+    expect(sessionStorage.getItem('covoitia.refresh')).toBe('refresh-2');
   });
 
   it('ferme la session si le renouvellement échoue', () => {
@@ -67,7 +68,7 @@ describe('authInterceptor', () => {
     backend.expectOne(`${api}/moi`).flush(null, { status: 401, statusText: 'Unauthorized' });
     backend.expectOne(`${api}/auth/refresh`).flush(null, { status: 401, statusText: 'Unauthorized' });
     expect(session.estConnecte()).toBe(false);
-    expect(localStorage.getItem('covoitia.refresh')).toBeNull();
+    expect(sessionStorage.getItem('covoitia.refresh')).toBeNull();
   });
 
   it('mémorise la vérification OTP en cours', () => {

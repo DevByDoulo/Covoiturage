@@ -46,7 +46,9 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   (migration V2026_10_27_1100) ; écran *Véhicules et documents* (`features/vehicules`) : liste, ajout et
   modification, envoi et renvoi des pièces, motif de refus. La validation des pièces par l'admin relève du
   module 07 : appeler `VehiculeService.recalculerStatutConducteur` après chaque décision.
-- Frontend : connexion, inscription, vérification du code, mot de passe oublié (3 écrans successifs),
+- Frontend : connexion (case **« Rester connecté »**, décochée par défaut : jeton de rafraîchissement en
+  `sessionStorage`, session terminée à la fermeture de l'onglet ; cochée : `localStorage`, 30 jours — branche
+  `web-rester-connecte`), inscription, vérification du code, mot de passe oublié (3 écrans successifs),
   téléphone après Google ; espace connecté (`features/espace`, barre de navigation + déconnexion) et page
   d'accueil simple (`/accueil`) ; l'administrateur arrive sur le back-office (`/admin`).
 - La base garde **toutes les tables** du diagramme de classes (migration V1, à ne jamais modifier) : chaque
@@ -151,7 +153,7 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   d'un trajet, Profil). Reste : push, alertes, mot de passe oublié, Google, édition du profil, paiements.
 - Tests : `./mvnw test` → 42 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 32 tests ; `flutter test` dans `mobile` → 12 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 38 tests ; `flutter test` dans `mobile` → 12 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 
