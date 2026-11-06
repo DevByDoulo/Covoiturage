@@ -31,6 +31,8 @@ export class Connexion {
   protected readonly form = inject(FormBuilder).nonNullable.group({
     identifiant: ['', Validators.required],
     motDePasse: ['', Validators.required],
+    /** Décochée : la session se termine à la fermeture de l'onglet. */
+    resterConnecte: [false],
   });
   protected readonly envoi = signal(false);
   protected readonly erreur = signal<ErreurApi | null>(null);
@@ -43,10 +45,10 @@ export class Connexion {
       this.form.markAllAsTouched();
       return;
     }
-    const { identifiant, motDePasse } = this.form.getRawValue();
+    const { identifiant, motDePasse, resterConnecte } = this.form.getRawValue();
     this.envoi.set(true);
     this.erreur.set(null);
-    this.session.connexion(identifiant.trim(), motDePasse).subscribe({
+    this.session.connexion(identifiant.trim(), motDePasse, resterConnecte).subscribe({
       next: (r) => this.suite(r),
       error: (e) => {
         this.erreur.set(lireErreur(e));
@@ -58,7 +60,7 @@ export class Connexion {
   protected google(idToken: string): void {
     this.envoi.set(true);
     this.erreur.set(null);
-    this.session.connexionGoogle(idToken).subscribe({
+    this.session.connexionGoogle(idToken, undefined, undefined, this.form.controls.resterConnecte.value).subscribe({
       next: (r) => this.suite(r),
       error: (e) => {
         this.erreur.set(lireErreur(e));

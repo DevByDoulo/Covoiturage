@@ -54,6 +54,11 @@
       </div>
     </div>
 
+    <label class="case">
+      <input type="checkbox" formControlName="resterConnecte" />
+      <span>Rester connecté <small>(à ne pas cocher sur un appareil partagé)</small></span>
+    </label>
+
     @if (erreur(); as e) {
       @if (bloque()) {
         <app-alerte type="avertissement" titre="Trop de tentatives">{{ e.message.replace('Trop de tentatives. ', '') }}</app-alerte>
