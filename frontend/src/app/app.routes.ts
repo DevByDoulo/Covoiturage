@@ -160,6 +160,12 @@ export const routes: Routes = [
         title: 'Guidage · YOBALEMAsn',
         loadComponent: () => import('./features/trajets/guidage/guidage').then((m) => m.Guidage),
       },
+      // 08 — Suivi du conducteur en temps réel (passager)
+      {
+        path: 'trajets/:id/suivi',
+        title: 'Suivre mon conducteur · YOBALEMAsn',
+        loadComponent: () => import('./features/suivi/suivi-conducteur').then((m) => m.SuiviConducteur),
+      },
       // 04 — Facturation (réservations, paiements, reçus)
       {
         path: 'reservations',

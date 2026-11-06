@@ -75,6 +75,12 @@ import { ReservationsService } from './reservations.service';
             <p class="aide">{{ r.motifAnnulation }}</p>
           }
           <div><app-bouton-message variante="lien" [idTrajet]="r.trajet.id" [libelle]="'Écrire à ' + r.trajet.conducteur.prenom" /></div>
+          <!-- 08 — suivre le conducteur en direct (s'il partage sa position) -->
+          @if (r.statut === 'ACCEPTEE' && ['PUBLIE', 'COMPLET', 'EN_COURS'].includes(r.trajet.statut)) {
+            <div><a class="bouton-lien" [routerLink]="['/trajets', r.trajet.id, 'suivi']">
+              <app-icone nom="position" [taille]="16" /> Suivre {{ r.trajet.conducteur.prenom }} en direct
+            </a></div>
+          }
 
           @if (r.statut === 'ACCEPTEE' && !r.embarque) {
             <div class="actions">

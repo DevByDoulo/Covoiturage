@@ -20,5 +20,7 @@ public enum TypeNotification {
     /** Un passager ou un conducteur vient de noter l'utilisateur après un voyage. */
     AVIS_RECU,
     /** Nouveau message dans une conversation (une seule notification non lue par conversation). */
-    MESSAGE_RECU
+    MESSAGE_RECU,
+    /** Le conducteur commence à partager sa position : les passagers peuvent suivre son arrivée. */
+    POSITION_PARTAGEE
 }

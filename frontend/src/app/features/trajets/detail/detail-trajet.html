@@ -81,6 +81,10 @@
       @if (!estConducteur() && t.statut === 'PUBLIE' && modifiable()) {
         <app-reserver-trajet [trajet]="t" />
       }
+      <!-- 08 — position du conducteur en direct -->
+      @if (estConducteur() && (t.statut === 'PUBLIE' || t.statut === 'COMPLET' || t.statut === 'EN_COURS')) {
+        <app-partage-position [trajet]="t" />
+      }
       @if (estConducteur() && t.statut !== 'ANNULE') {
         <app-demandes-trajet [idTrajet]="t.id" />
       }
