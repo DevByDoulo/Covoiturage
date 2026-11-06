@@ -6,6 +6,7 @@ import { ErreurApi, lireErreur } from '../../core/api/erreur-api';
 import { FcfaPipe } from '../../shared/format/formats';
 import { Alerte } from '../../shared/ui/alerte';
 import { Icone } from '../../shared/ui/icone';
+import { QrCode } from '../../shared/ui/qr-code';
 import { AvisADonnerBloc } from '../avis/avis-a-donner';
 import {
   CodeEmbarquement,
@@ -25,7 +26,7 @@ import { ReservationsService } from './reservations.service';
  */
 @Component({
   selector: 'app-mes-reservations',
-  imports: [RouterLink, DatePipe, FcfaPipe, Icone, Alerte, AvisADonnerBloc, BoutonMessage],
+  imports: [RouterLink, DatePipe, FcfaPipe, Icone, Alerte, AvisADonnerBloc, BoutonMessage, QrCode],
   template: `
     <header class="entete">
       <h1>Mes réservations</h1>
@@ -93,6 +94,8 @@ import { ReservationsService } from './reservations.service';
               <div class="code" aria-live="polite">
                 <span>Donnez ce code au conducteur au moment de monter</span>
                 <strong>{{ c.codePin }}</strong>
+                <span>ou faites-lui scanner ce QR code</span>
+                <app-qr-code [contenu]="c.qrContenu" [taille]="190" libelle="QR code d'embarquement" />
                 @if (c.montantAPayer > 0) {
                   <span>À régler en espèces : {{ c.montantAPayer | fcfa }}</span>
                 } @else {

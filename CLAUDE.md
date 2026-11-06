@@ -99,6 +99,10 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   à confirmer avec l'encadrant** : aucune commission, remboursement intégral de toute annulation avant le départ.
   Wave exige HTTPS (clés `WAVE_API_KEY`, `WAVE_SECRET_WEBHOOK`, `PAIEMENT_URL_RETOUR`) : en local, tunnel ngrok.
   Écrans : réserver (détail d'un trajet), demandes et embarquement (conducteur), `/reservations`, `/paiements`, reçu.
+  **QR code d'embarquement sur le site** (branche `web-qr-embarquement`) : le passager voit le QR sous son code
+  (`shared/ui/qr-code.ts`, bibliothèque `qrcode` chargée à la demande) ; le conducteur peut le scanner
+  (`shared/ui/scanner-qr.ts` : caméra arrière, `BarcodeDetector` du navigateur sinon `jsqr` chargé à la demande ;
+  bouton affiché seulement si une caméra est accessible, c'est-à-dire en HTTPS ou sur localhost).
   **PayDunya** (branche `04-paydunya`) : agrégateur qui relaie **Wave et Orange Money Sénégal** (`PayDunyaClient`,
   `PayDunyaFournisseur`, un bean par moyen dans `PayDunyaConfig`). Clés `PAYDUNYA_MASTER_KEY`, `PAYDUNYA_PRIVATE_KEY`,
   `PAYDUNYA_TOKEN`, `PAYDUNYA_MODE` (`test` = sandbox, sans argent réel). Facture « paiement avec redirection »

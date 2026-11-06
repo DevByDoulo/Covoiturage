@@ -5,6 +5,7 @@ import { ErreurApi, lireErreur } from '../../core/api/erreur-api';
 import { FcfaPipe } from '../../shared/format/formats';
 import { Alerte } from '../../shared/ui/alerte';
 import { Icone } from '../../shared/ui/icone';
+import { ScannerQr, cameraDisponible } from '../../shared/ui/scanner-qr';
 import {
   EmbarquementConfirme,
   LIBELLES_MOYEN,
@@ -17,7 +18,7 @@ import { ReservationsService } from './reservations.service';
 /** 04 — Côté conducteur : demandes reçues sur un trajet (accepter / refuser) et embarquement par PIN. */
 @Component({
   selector: 'app-demandes-trajet',
-  imports: [FormsModule, FcfaPipe, Icone, Alerte, BoutonMessage],
+  imports: [FormsModule, FcfaPipe, Icone, Alerte, BoutonMessage, ScannerQr],
   template: `
     <section class="carte bloc" aria-labelledby="titre-passagers">
       <h2 id="titre-passagers"><app-icone nom="utilisateurs" /> Passagers</h2>
@@ -60,7 +61,15 @@ import { ReservationsService } from './reservations.service';
                    placeholder="6 chiffres" [(ngModel)]="code" />
             <button type="submit" class="bouton bouton--primaire" [disabled]="action() || !code.trim()">Valider</button>
           </div>
+          @if (camera && !scanner()) {
+            <button type="button" class="bouton bouton--secondaire" [disabled]="action()" (click)="scanner.set(true)">
+              <app-icone nom="scanner" [taille]="18" /> Scanner le QR code du passager
+            </button>
+          }
         </form>
+        @if (scanner()) {
+          <app-scanner-qr (lu)="codeScanne($event)" (fermer)="scanner.set(false)" />
+        }
       }
       <!-- Hors du formulaire : il disparaît quand le dernier passager est à bord, le montant à encaisser doit rester. -->
       @if (embarque(); as e) {
@@ -113,7 +122,7 @@ import { ReservationsService } from './reservations.service';
       letter-spacing: 0.2em;
     }
     /* Le style commun .bouton prend toute la largeur : ici il écrasait le champ du code. */
-    .embarquement .bouton {
+    .embarquement .saisie .bouton {
       flex: none;
       width: auto;
       min-height: 40px;
@@ -136,9 +145,19 @@ export class DemandesTrajet implements OnInit {
   protected readonly erreur = signal<ErreurApi | null>(null);
   protected readonly embarque = signal<EmbarquementConfirme | null>(null);
   protected code = '';
+  /** Le bouton « Scanner » n'apparaît que si le navigateur peut ouvrir une caméra. */
+  protected readonly camera = cameraDisponible();
+  protected readonly scanner = signal(false);
 
   ngOnInit(): void {
     this.charger();
+  }
+
+  /** QR code lu par la caméra : même validation que le code saisi (le backend accepte les deux). */
+  protected codeScanne(valeur: string): void {
+    this.scanner.set(false);
+    this.code = valeur;
+    this.embarquer();
   }
 
   protected accepter(r: Reservation): void {
