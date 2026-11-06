@@ -10,6 +10,7 @@ import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../shared/carte.dart';
 import '../../shared/widgets.dart';
+import '../avis/avis.dart';
 import '../messages/messages.dart';
 
 /// Détail d'un trajet et réservation (nombre de places, moyen de paiement).
@@ -161,6 +162,8 @@ class _DetailTrajetPageState extends State<DetailTrajetPage> {
         if (!estConducteur && (t.statut == 'PUBLIE' || t.statut == 'COMPLET'))
           BoutonEcrire(idTrajet: t.id, prenom: t.conducteur.prenom),
       ]),
+      const SizedBox(height: 12),
+      BlocReputation(idUtilisateur: t.conducteur.id, titre: 'Avis sur ${t.conducteur.prenom}'),
       const SizedBox(height: 12),
       if (estConducteur)
         FilledButton.icon(

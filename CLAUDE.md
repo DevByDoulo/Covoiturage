@@ -142,10 +142,12 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   `mobile-conducteur`, onglet « Conduire », `lib/features/conducteur`) : mes trajets, publier (estimation IA, curseur
   dans la fourchette ; sans escales), mon trajet (accepter / refuser, embarquement par QR code `mobile_scanner` ou
   PIN, démarrer / terminer / annuler). **Messagerie** (branche `mobile-messagerie`, `lib/features/messages`) : icône
-  Messages avec compteur, conversations rafraîchies toutes les 5 s, boutons « Écrire à … ». Reste : avis, push.
+  Messages avec compteur, conversations rafraîchies toutes les 5 s, boutons « Écrire à … ». **Avis** (branche
+  `mobile-avis`, `lib/features/avis`) : « Donnez votre avis » (Mes réservations, Mes trajets), réputation (détail
+  d'un trajet, Profil). Reste : push, alertes, mot de passe oublié, Google, édition du profil, paiements.
 - Tests : `./mvnw test` → 42 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 32 tests ; `flutter test` dans `mobile` → 11 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 32 tests ; `flutter test` dans `mobile` → 12 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 
