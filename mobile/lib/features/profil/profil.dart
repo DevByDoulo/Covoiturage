@@ -6,6 +6,7 @@ import '../../core/config.dart';
 import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../shared/widgets.dart';
+import '../avis/avis.dart';
 
 /// Profil (lecture) et déconnexion. La modification du profil, des véhicules et des documents se fait sur le site.
 class ProfilPage extends StatelessWidget {
@@ -61,6 +62,8 @@ class ProfilPage extends StatelessWidget {
           if (u.email != null) _ligne(Icons.mail_outline, u.email!),
           if (u.telephone != null) _ligne(Icons.phone_outlined, u.telephone!),
         ]),
+        const SizedBox(height: 12),
+        BlocReputation(idUtilisateur: u.id, titre: 'Avis reçus'),
         const SizedBox(height: 12),
         Bloc(children: [
           const Text('Photo, préférences, contacts d\'urgence, véhicules et documents se gèrent sur le site web.',

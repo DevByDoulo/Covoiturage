@@ -7,6 +7,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:yobalema/core/api.dart';
 import 'package:yobalema/core/formats.dart';
 import 'package:yobalema/core/modeles.dart';
+import 'package:yobalema/features/avis/avis.dart';
 
 http.Response _json(Object corps, [int status = 200]) =>
     http.Response.bytes(utf8.encode(jsonEncode(corps)), status, headers: {'content-type': 'application/json'});
@@ -204,6 +205,45 @@ void main() {
         'nonLus': 0,
       });
       expect(resume.dateDernierMessage, isNull);
+    });
+  });
+
+  group('avis', () {
+    test('lit un avis à donner et une réputation', () {
+      final a = AvisADonner.depuisJson({
+        'idReservation': 11,
+        'idTrajet': 10,
+        'trajet': 'Gare de Dakar → Rufisque',
+        'dateHeureDepart': '2026-11-06T14:00:00',
+        'aNoter': {'id': 2, 'prenom': 'Awa', 'nomInitiale': 'D.'},
+        'role': 'CONDUCTEUR',
+        'dateLimite': '2026-11-20T14:00:00',
+      });
+      expect(a.idReservation, 11);
+      expect(a.aNoter.prenom, 'Awa');
+
+      final r = Reputation.depuisJson({
+        'idUtilisateur': 2,
+        'noteMoyenne': 4.5,
+        'nombreAvis': 2,
+        'repartition': [0, 0, 0, 1, 1],
+        'avis': [
+          {
+            'id': 1,
+            'note': 5,
+            'commentaire': 'Très ponctuelle',
+            'dateEvaluation': '2026-11-06T15:00:00',
+            'auteur': {'id': 5, 'prenom': 'Moussa', 'nomInitiale': 'N.'},
+            'roleEvalue': 'CONDUCTEUR',
+            'trajet': 'Gare de Dakar → Rufisque',
+          },
+        ],
+      });
+      expect(r.noteMoyenne, 4.5);
+      expect(r.repartition, [0, 0, 0, 1, 1]);
+      expect(r.avis.single.commentaire, 'Très ponctuelle');
+      expect(noteTexte(4.5), '4,5');
+      expect(Reputation.depuisJson({'nombreAvis': 0, 'repartition': [0, 0, 0, 0, 0], 'avis': []}).noteMoyenne, isNull);
     });
   });
 

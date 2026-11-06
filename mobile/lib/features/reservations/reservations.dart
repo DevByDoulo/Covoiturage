@@ -9,6 +9,7 @@ import '../../core/formats.dart';
 import '../../core/modeles.dart';
 import '../../core/theme.dart';
 import '../../shared/widgets.dart';
+import '../avis/avis.dart';
 import '../messages/messages.dart';
 
 /// Réservations du passager : suivi, code d'embarquement (PIN + QR), paiement en ligne et annulation.
@@ -23,6 +24,7 @@ class _ReservationsPageState extends State<ReservationsPage> {
   List<Reservation>? _liste;
   String? _erreur;
   int? _action;
+  int _version = 0;
 
   @override
   void initState() {
@@ -36,6 +38,7 @@ class _ReservationsPageState extends State<ReservationsPage> {
       setState(() {
         _liste = brut.map((e) => Reservation.depuisJson(e as Map<String, dynamic>)).toList();
         _erreur = null;
+        _version++;
       });
     } catch (e) {
       setState(() => _erreur = ErreurApi.messageDe(e));
@@ -146,6 +149,7 @@ class _ReservationsPageState extends State<ReservationsPage> {
     }
     if (_liste!.isEmpty) {
       return ListView(padding: const EdgeInsets.all(24), children: [
+        BlocAvisADonner(key: ValueKey(_version)),
         const Icon(Icons.confirmation_number_outlined, size: 48, color: Couleurs.texte2),
         const SizedBox(height: 8),
         const Text('Aucune réservation pour l\'instant.', textAlign: TextAlign.center),
@@ -153,12 +157,11 @@ class _ReservationsPageState extends State<ReservationsPage> {
         FilledButton(onPressed: () => context.go('/rechercher'), child: const Text('Rechercher un trajet')),
       ]);
     }
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      itemCount: _liste!.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
-      itemBuilder: (_, i) => _carte(_liste![i]),
-    );
+    return ListView(padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
+      // Voyages terminés à noter ; la clé le recharge à chaque actualisation.
+      BlocAvisADonner(key: ValueKey(_version)),
+      for (final r in _liste!) ...[_carte(r), const SizedBox(height: 12)],
+    ]);
   }
 
   Widget _carte(Reservation r) {

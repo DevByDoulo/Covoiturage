@@ -10,6 +10,7 @@ import '../../core/modeles.dart';
 import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../shared/widgets.dart';
+import '../avis/avis.dart';
 import '../messages/messages.dart';
 
 const _aVenir = {'PUBLIE', 'COMPLET', 'EN_COURS'};
@@ -135,6 +136,8 @@ class _MesTrajetsPageState extends State<MesTrajetsPage> {
     final liste = _passes ? passes : aVenir;
     return ListView(padding: const EdgeInsets.fromLTRB(16, 0, 16, 96), children: [
       if (_erreur != null) ...[Bandeau(_erreur!), const SizedBox(height: 12)],
+      // Passagers à noter après les trajets terminés ; la clé le recharge à chaque actualisation.
+      BlocAvisADonner(key: ValueKey(_trajets)),
       SegmentedButton<bool>(
         segments: [
           ButtonSegment(value: false, label: Text('À venir (${aVenir.length})')),

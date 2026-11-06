@@ -40,7 +40,16 @@ Application Android / iOS du covoiturage, branchée sur la même API que le site
 Un lien direct ou une notification ouverts pendant la restauration de la session mènent bien à l'écran demandé ;
 s'il n'y a pas d'écran en dessous, le bouton retour ramène à l'accueil.
 
-Pas encore fait : avis, notifications push (Firebase), escales à la publication.
+## Avis
+
+- **« Donnez votre avis »** en haut de Mes réservations (le passager note son conducteur) et de Mes trajets (le
+  conducteur note ses passagers), pour chaque voyage terminé pas encore noté : 1 à 5 étoiles et un commentaire
+  facultatif, avant la date limite (14 jours après le départ).
+- **Réputation** (moyenne, nombre d'avis, répartition, derniers avis) : « Avis sur … » dans le détail d'un trajet,
+  « Avis reçus » dans le Profil.
+
+Pas encore fait : notifications push (Firebase), escales à la publication, alertes de recherche, mot de passe
+oublié, connexion Google, modification du profil, historique des paiements.
 
 ## Lancer
 
@@ -79,7 +88,7 @@ puis accepter les licences avec `flutter doctor --android-licenses`.
 |---|---|
 | `lib/core` | configuration, client HTTP (`api.dart`), modèles, session, thème, formats, géolocalisation |
 | `lib/shared` | widgets communs, carte (`flutter_map`, tuiles OpenStreetMap) |
-| `lib/features` | un dossier par écran : `auth`, `recherche`, `trajet`, `reservations`, `conducteur`, `messages`, `notifications`, `profil` |
+| `lib/features` | un dossier par écran : `auth`, `recherche`, `trajet`, `reservations`, `conducteur`, `messages`, `avis`, `notifications`, `profil` |
 | `lib/app.dart` | routes (`go_router`) et barre d'onglets |
 
 Les erreurs de l'API (ProblemDetail) sont lues par `ErreurApi`. Sur le web, éviter l'opérateur `~` sur des
