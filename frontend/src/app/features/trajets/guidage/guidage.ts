@@ -22,6 +22,7 @@ import { Coordonnee } from '../../../shared/carte/polyline';
 import { Alerte } from '../../../shared/ui/alerte';
 import { Icone } from '../../../shared/ui/icone';
 import { ReservationsService } from '../../reservations/reservations.service';
+import { pointDeRendezVous } from '../rendez-vous';
 import { Trajet } from '../trajets.models';
 import { TrajetsService } from '../trajets.service';
 
@@ -202,9 +203,7 @@ export class Guidage implements OnInit {
   protected readonly destination = computed(() => {
     const t = this.trajet();
     if (!t) return null;
-    const ramassage = this.pointRamassage();
-    const escale = this.estConducteur() ? undefined : t.escales.find((e) => e.lieu === ramassage);
-    return escale ? { lieu: escale.lieu, latitude: escale.latitude, longitude: escale.longitude } : t.depart;
+    return pointDeRendezVous(t, this.estConducteur() ? null : this.pointRamassage());
   });
 
   protected readonly heureDepart = computed(() => {

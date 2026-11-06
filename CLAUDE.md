@@ -145,6 +145,16 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   (`core/carte/itineraire.ts`), logique d'annonce et de recalcul hors tracé dans `core/carte/guide.ts` (testée),
   synthèse vocale du navigateur (`core/voix.ts`, coupable, choix mémorisé), écran gardé allumé (Wake Lock).
   La carte (`shared/carte/carte.ts`) a des marqueurs `moi` / `voiture` et un mode `[suivre]`.
+  **Suivi du conducteur en temps réel** (branche `suivi-temps-reel`) : package backend `suivi`, table
+  `position_conducteur` (migration V2026_11_06_2130, une ligne par trajet : la dernière position). Le conducteur
+  partage à partir d'une heure avant le départ jusqu'à la fin (`POST /api/trajets/{id}/position`, `DELETE` pour
+  arrêter) ; seuls lui et les passagers `ACCEPTEE` lisent (`GET`, 204 si rien depuis 30 min). Position effacée à
+  l'arrêt, à `TrajetTermine` / `TrajetAnnule`, et purgée après 30 min ; au premier envoi, notification
+  `POSITION_PARTAGEE` aux passagers (lien `/trajets/{id}/suivi`). Écrans `features/suivi` : bloc « Position en
+  direct » du conducteur (détail de son trajet ; service global `PartagePosition`, au plus un envoi toutes les
+  5 s, position différée envoyée à la fin du délai) et page passager `/trajets/:id/suivi` (interrogée toutes les
+  5 s, voiture sur la carte, distance à vol d'oiseau et heure estimée, annonces vocales à 2 km, 1 km, 500 m,
+  200 m puis « … est au point de rendez-vous ») ; lien « Suivre … en direct » dans Mes réservations.
 - **Application mobile** (branche `mobile-passager`, dossier `mobile/`, voir [`mobile/README.md`](mobile/README.md)) :
   Flutter, même API que le site. Premier lot = parcours passager : connexion / inscription / code, recherche sur
   carte (`flutter_map` + OpenStreetMap, Nominatim, « Ma position »), détail et réservation, mes réservations (code
@@ -157,9 +167,9 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   Messages avec compteur, conversations rafraîchies toutes les 5 s, boutons « Écrire à … ». **Avis** (branche
   `mobile-avis`, `lib/features/avis`) : « Donnez votre avis » (Mes réservations, Mes trajets), réputation (détail
   d'un trajet, Profil). Reste : push, alertes, mot de passe oublié, Google, édition du profil, paiements.
-- Tests : `./mvnw test` → 42 tests (dont `ParcoursCompletTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
+- Tests : `./mvnw test` → 43 tests (dont `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 44 tests ; `flutter test` dans `mobile` → 12 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 47 tests ; `flutter test` dans `mobile` → 12 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 
@@ -210,7 +220,7 @@ En profil `dev` : les codes partent **par email** si `spring.mail` est configur�
 ## Conventions
 
 **Backend** (`sn.isep.Convoiturage`, monolithe modulaire : `common`, `auth`, `utilisateur`, `vehicule`,
-`trajet`, `tarification`, `reservation`, `notification`, `admin`) :
+`trajet`, `tarification`, `reservation`, `notification`, `admin`, `suivi`…) :
 - Le schéma est géré **uniquement par Flyway** (`db/migration`, `ddl-auto: validate`). Toute modification
   = nouveau fichier **nommé par date et heure** pour éviter les collisions entre les deux développeurs :
   `V2026_10_25_1430__messagerie.sql` (année_mois_jour_heureminute). Ne jamais modifier une migration déjà
@@ -259,6 +269,9 @@ En profil `dev` : les codes partent **par email** si `spring.mail` est configur�
   forcé avec `-Dspring-boot.run.profiles=dev`. Si le backend cherche un pilote MySQL, c'est ce problème.
 - **Docker** a été abandonné en local (plantages répétés de Docker Desktop sur des sockets orphelins).
   `compose.yaml` reste disponible en option ; les tests n'en dépendent plus.
+- **Les tests lisent aussi `application-local.yml`** (importé par `application.yaml`) : toute clé de service ajoutée
+  sur le poste (PayDunya, Wave…) peut changer leur résultat. `application-test.yml` neutralise les clés PayDunya ;
+  faire de même pour tout nouveau service payant ou externe.
 - **Port PostgreSQL** : chez Doulo, PostgreSQL 16 est sur **5433** (PostgreSQL 18 occupe le 5432).
 - La console PowerShell affiche mal les accents de `psql` (« prÃªtes ») : c'est seulement l'affichage.
 - Les avertissements git « LF will be replaced by CRLF » sont normaux sous Windows.

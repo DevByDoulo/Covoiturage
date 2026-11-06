@@ -16,6 +16,13 @@ app:
   ia:
     # Prix reproductibles : formule seule (MoteurIATest couvre l'appel au service IA).
     url: ""
+  paiement:
+    paydunya:
+      # Les clés PayDunya d'application-local.yml (poste du développeur) ne doivent pas changer les tests :
+      # PayDunyaParcoursTest fournit les siennes.
+      master-key: ""
+      private-key: ""
+      token: ""
   admin:
     email: admin@test.local
     mot-de-passe: Admin-Test-2026!

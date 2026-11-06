@@ -14,6 +14,7 @@ import { Icone } from '../../../shared/ui/icone';
 import { ReputationBloc } from '../../avis/reputation';
 import { DemandesTrajet } from '../../reservations/demandes-trajet';
 import { ReserverTrajet } from '../../reservations/reserver-trajet';
+import { PartagePositionBloc } from '../../suivi/partage-position';
 import {
   LIBELLES_BAGAGE,
   LIBELLES_ROUTE,
@@ -34,7 +35,7 @@ type Panneau = 'aucun' | 'modifier' | 'annuler';
   selector: 'app-detail-trajet',
   imports: [
     ReactiveFormsModule, RouterLink, DatePipe, FcfaPipe, DureePipe, Carte, Icone, Alerte, ReserverTrajet, DemandesTrajet,
-    ReputationBloc, BoutonMessage,
+    ReputationBloc, BoutonMessage, PartagePositionBloc,
   ],
   templateUrl: './detail-trajet.html',
   styleUrl: './detail-trajet.scss',
