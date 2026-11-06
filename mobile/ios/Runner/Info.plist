@@ -8,6 +8,8 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>YOBALEMAsn</string>
+	<key>NSCameraUsageDescription</key>
+	<string>La caméra sert à scanner le code d'embarquement des passagers.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Votre position sert à remplir le lieu de départ de votre recherche de trajet.</string>
 	<key>NSAppTransportSecurity</key>

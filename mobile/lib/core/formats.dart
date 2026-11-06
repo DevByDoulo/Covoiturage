@@ -26,6 +26,9 @@ String distance(int metres) =>
 /// Date au format de l'API : « 2026-11-06 ».
 String dateApi(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
 
+/// Date et heure au format de l'API (LocalDateTime) : « 2026-11-07T08:00:00 ».
+String dateHeureApi(DateTime d) => DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(d);
+
 /// Décode un tracé « encoded polyline » (Google, précision 5) en couples latitude/longitude.
 List<(double, double)> decoderPolyline(String? encode) {
   if (encode == null || encode.isEmpty) return const [];

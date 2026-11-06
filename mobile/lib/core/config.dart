@@ -12,6 +12,9 @@ class Config {
     return 'http://localhost:8080/api';
   }
 
+  /// Site web, pour ce qui ne se gère pas dans l'application (véhicules, documents, préférences).
+  static const String siteUrl = String.fromEnvironment('SITE_URL', defaultValue: 'http://localhost:4200');
+
   /// Racine du serveur, pour les fichiers (photos de profil : « /api/fichiers/photos/… »).
   static String get serveurUrl => apiUrl.replaceFirst(RegExp(r'/api/?$'), '');
 

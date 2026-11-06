@@ -213,6 +213,8 @@ class Reservation {
     this.statutPaiement,
     required this.embarque,
     this.motifAnnulation,
+    this.passager,
+    this.pointRamassage,
   });
 
   final int id;
@@ -228,6 +230,10 @@ class Reservation {
   final String? statutPaiement;
   final bool embarque;
   final String? motifAnnulation;
+
+  /// Côté conducteur (réservations d'un trajet).
+  final Personne? passager;
+  final String? pointRamassage;
 
   bool get active => statut == 'EN_ATTENTE' || statut == 'ACCEPTEE';
 
@@ -256,6 +262,8 @@ class Reservation {
       statutPaiement: j['statutPaiement'] as String?,
       embarque: j['embarque'] == true,
       motifAnnulation: j['motifAnnulation'] as String?,
+      passager: j['passager'] == null ? null : Personne.depuisJson(j['passager'] as Map<String, dynamic>),
+      pointRamassage: j['pointRamassage'] as String?,
     );
   }
 }
@@ -287,6 +295,98 @@ class NotificationApp {
       j['titre'] as String, j['contenu'] as String, j['lien'] as String?, j['lu'] == true, _date(j['dateEnvoi']));
 }
 
+/// Véhicule du conducteur (GET /api/moi/vehicules) ; seuls les véhicules validés servent à publier.
+class Vehicule {
+  Vehicule(this.id, this.libelle, this.immatriculation, this.nombrePlaces, this.statutValidation);
+
+  final int id;
+  final String libelle;
+  final String immatriculation;
+  final int nombrePlaces;
+  final String statutValidation;
+
+  bool get valide => statutValidation == 'VALIDE';
+
+  factory Vehicule.depuisJson(Map<String, dynamic> j) => Vehicule(
+        _i(j['id']),
+        '${j['marque']} ${j['modele']}${j['annee'] == null ? '' : ' (${j['annee']})'}',
+        (j['immatriculation'] as String?) ?? '',
+        _i(j['nombrePlaces']),
+        j['statutValidation'] as String,
+      );
+}
+
+/// Réponse de POST /api/trajets/estimation : itinéraire et prix proposé (IA + formule).
+class Estimation {
+  Estimation({
+    required this.distanceKm,
+    required this.dureeEstimeeMin,
+    required this.montantPeages,
+    required this.sourceItineraire,
+    this.itinerairePolyline,
+    required this.prixRecommande,
+    required this.prixMin,
+    required this.prixMax,
+    required this.coutCarburant,
+    required this.coutUsure,
+    required this.coutPeages,
+    required this.facteurMeteo,
+    required this.sourceConsommation,
+    required this.heureDePointe,
+  });
+
+  final double distanceKm;
+  final int dureeEstimeeMin;
+  final double montantPeages;
+  final String sourceItineraire;
+  final String? itinerairePolyline;
+  final double prixRecommande;
+  final double prixMin;
+  final double prixMax;
+  final double coutCarburant;
+  final double coutUsure;
+  final double coutPeages;
+  final double facteurMeteo;
+  final String sourceConsommation;
+  final bool heureDePointe;
+
+  factory Estimation.depuisJson(Map<String, dynamic> j) {
+    final t = j['tarif'] as Map<String, dynamic>;
+    return Estimation(
+      distanceKm: _d(j['distanceKm']),
+      dureeEstimeeMin: _i(j['dureeEstimeeMin']),
+      montantPeages: _d(j['montantPeages']),
+      sourceItineraire: (j['sourceItineraire'] as String?) ?? '',
+      itinerairePolyline: j['itinerairePolyline'] as String?,
+      prixRecommande: _d(t['prixRecommande']),
+      prixMin: _d(t['prixMin']),
+      prixMax: _d(t['prixMax']),
+      coutCarburant: _d(t['coutCarburant']),
+      coutUsure: _d(t['coutUsure']),
+      coutPeages: _d(t['coutPeages']),
+      facteurMeteo: (t['facteurMeteo'] as num?)?.toDouble() ?? 1,
+      sourceConsommation: (t['sourceConsommation'] as String?) ?? '',
+      heureDePointe: t['heureDePointe'] == true,
+    );
+  }
+}
+
+/// Réponse au conducteur après validation d'un code : qui monte et combien encaisser.
+class EmbarquementConfirme {
+  EmbarquementConfirme(this.passager, this.nombrePlaces, this.montantAEncaisser, this.moyenPaiement);
+
+  final Personne passager;
+  final int nombrePlaces;
+  final double montantAEncaisser;
+  final String? moyenPaiement;
+
+  factory EmbarquementConfirme.depuisJson(Map<String, dynamic> j) => EmbarquementConfirme(
+      Personne.depuisJson(j['passager'] as Map<String, dynamic>),
+      _i(j['nombrePlaces']),
+      _d(j['montantAEncaisser']),
+      j['moyenPaiement'] as String?);
+}
+
 /// Lieu choisi par l'utilisateur (recherche d'adresse, position actuelle).
 class Lieu {
   Lieu(this.libelle, this.latitude, this.longitude, {this.detail});
@@ -314,3 +414,13 @@ const libellesStatutPaiement = {
   'REMBOURSEMENT_DEMANDE': 'Remboursement en cours',
   'REMBOURSE': 'Remboursé',
 };
+
+const libellesStatutTrajet = {
+  'PUBLIE': 'Publié',
+  'COMPLET': 'Complet',
+  'EN_COURS': 'En cours',
+  'TERMINE': 'Terminé',
+  'ANNULE': 'Annulé',
+};
+
+const libellesBagage = {'PETIT': 'Petit', 'MOYEN': 'Moyen', 'GRAND': 'Grand'};

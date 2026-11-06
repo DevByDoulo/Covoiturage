@@ -160,7 +160,11 @@ class _DetailTrajetPageState extends State<DetailTrajetPage> {
       ]),
       const SizedBox(height: 12),
       if (estConducteur)
-        const Bandeau('C\'est votre trajet : gérez les demandes depuis le site.', succes: true)
+        FilledButton.icon(
+          onPressed: () => context.pushReplacement('/conduite/${t.id}'),
+          icon: const Icon(Icons.manage_accounts_outlined),
+          label: const Text('Gérer ce trajet'),
+        )
       else if (t.reservable)
         _blocReservation(t)
       else if (t.statut == 'PUBLIE' || t.statut == 'COMPLET')
