@@ -160,8 +160,9 @@ class _InscriptionPageState extends State<InscriptionPage> {
                   onChanged: (v) => setState(() => _cgu = v ?? false),
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
-                  title: const Text("J'accepte les conditions d'utilisation"),
+                  title: const Text("J'accepte les conditions d'utilisation et la politique de confidentialité"),
                 ),
+                const LiensLegaux(),
                 const SizedBox(height: 8),
                 FilledButton(
                   onPressed: _envoi ? null : _inscrire,

@@ -187,5 +187,16 @@ export const routes: Routes = [
       },
     ],
   },
+  // Textes légaux : publics (lien depuis l'inscription, sans compte).
+  {
+    path: 'conditions',
+    title: "Conditions d'utilisation · YOBALEMAsn",
+    loadComponent: () => import('./features/legal/conditions').then((m) => m.Conditions),
+  },
+  {
+    path: 'confidentialite',
+    title: 'Politique de confidentialité · YOBALEMAsn',
+    loadComponent: () => import('./features/legal/confidentialite').then((m) => m.Confidentialite),
+  },
   { path: '**', redirectTo: 'accueil' },
 ];

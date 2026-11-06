@@ -51,7 +51,8 @@ import { PreferencesTrajet } from './preferences-trajet';
         <button class="bouton deconnexion" type="button" (click)="session.demanderDeconnexion()">
           <app-icone nom="deconnexion" [taille]="18" /> Se déconnecter
         </button>
-        <p class="version">YOBALEMAsn • Teranga &amp; mobilité au Sénégal</p>
+        <p class="version">YOBALEMAsn • Teranga &amp; mobilité au Sénégal<br />
+          <a routerLink="/conditions">Conditions d'utilisation</a> · <a routerLink="/confidentialite">Confidentialité</a></p>
       </div>
     }
   `,

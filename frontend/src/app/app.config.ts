@@ -8,7 +8,7 @@ import {
 import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
@@ -21,7 +21,8 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
-    provideRouter(routes, withComponentInputBinding()),
+    // anchorScrolling : liens de sommaire (#section) des pages légales.
+    provideRouter(routes, withComponentInputBinding(), withInMemoryScrolling({ anchorScrolling: 'enabled' })),
     // Dates et nombres au format français (« lundi 28 octobre », « 1 650 »).
     { provide: LOCALE_ID, useValue: 'fr' },
     // Géocodage OpenStreetMap (écrans Rechercher et Publier) ; remplacer par une implémentation Google le jour où une clé

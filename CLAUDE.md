@@ -51,6 +51,13 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   `web-rester-connecte`), inscription, vérification du code, mot de passe oublié (3 écrans successifs),
   téléphone après Google ; espace connecté (`features/espace`, barre de navigation + déconnexion) et page
   d'accueil simple (`/accueil`) ; l'administrateur arrive sur le back-office (`/admin`).
+- **Textes légaux** (branche `pages-legales`) : pages publiques `/conditions` et `/confidentialite`
+  (`features/legal`, cadre commun `page-legale.ts` : contact `CONTACT_LEGAL`, date `VERSION_LEGALE`), liens depuis
+  l'inscription, le pied des écrans de connexion, le profil, et dans l'appli mobile (`LiensLegaux`, qui ouvre le
+  site). Éditeur présenté comme projet de fin d'études (ISEP Diamniadio), loi sénégalaise n° 2008-12, CDP.
+  **À mettre à jour** (texte et date de version) à chaque fonctionnalité qui collecte ou transmet des données, ou
+  qui change les règles (commission, annulation). Pas encore de suppression automatique des comptes : elle se fait
+  sur demande, comme l'indique la politique.
 - La base garde **toutes les tables** du diagramme de classes (migration V1, à ne jamais modifier) : chaque
   module les reprend ou les fait évoluer par de nouvelles migrations datées.
 - **12 Calcul automatique du prix** (branche `12-prix`) : module backend `tarification` (repris de l'archive :
