@@ -13,7 +13,10 @@ import {
 import * as L from 'leaflet';
 import { Coordonnee } from './polyline';
 
-export type TypeMarqueur = 'depart' | 'arrivee' | 'escale' | 'ramassage' | 'depose';
+/** « moi » : position de l'utilisateur (guidage) ; « voiture » : position partagée du conducteur. */
+export type TypeMarqueur = 'depart' | 'arrivee' | 'escale' | 'ramassage' | 'depose' | 'moi' | 'voiture';
+
+const RONDS: TypeMarqueur[] = ['ramassage', 'depose', 'moi', 'voiture'];
 
 export interface MarqueurCarte extends Coordonnee {
   type: TypeMarqueur;
@@ -71,6 +74,26 @@ const CENTRE_SENEGAL: L.LatLngTuple = [14.5, -14.45];
       transform: none;
       background: #3f5d9a;
     }
+    .pin--moi {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      transform: none;
+      background: #1a73e8;
+      box-shadow: 0 0 0 8px rgba(26, 115, 232, 0.2);
+    }
+    .pin--voiture {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      transform: none;
+      background: #f29a1f;
+      font-size: 17px;
+    }
+    .pin--moi > span,
+    .pin--voiture > span {
+      transform: none;
+    }
   `,
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -79,6 +102,12 @@ export class Carte implements OnDestroy {
   readonly marqueurs = input<MarqueurCarte[]>([]);
   readonly trace = input<Coordonnee[]>([]);
   readonly libelle = input('Carte');
+  /**
+   * Mode suivi (guidage, voiture en direct) : la carte reste centrée sur ce point au lieu de recadrer sur tous
+   * les marqueurs à chaque mise à jour. Le premier affichage cadre l'ensemble, puis la carte suit le point.
+   */
+  readonly suivre = input<Coordonnee | null>(null);
+  private suiviDemarre = false;
   /** Clic sur la carte (pour placer un point). */
   readonly clic = output<Coordonnee>();
 
@@ -113,6 +142,7 @@ export class Carte implements OnDestroy {
     effect(() => {
       this.marqueurs();
       this.trace();
+      this.suivre();
       this.dessiner();
     });
   }
@@ -122,8 +152,24 @@ export class Carte implements OnDestroy {
     this.carte?.remove();
   }
 
+  /** Recentre sur le point suivi (bouton « Recentrer » de l'écran de guidage). */
+  recentrer(): void {
+    const p = this.suivre();
+    if (this.carte && p) this.carte.setView([p.latitude, p.longitude], Math.max(this.carte.getZoom(), 16));
+  }
+
   private cadrer(): void {
     if (!this.carte) return;
+    const suivi = this.suivre();
+    if (suivi && this.suiviDemarre) {
+      this.carte.panTo([suivi.latitude, suivi.longitude], { animate: true });
+      return;
+    }
+    if (suivi) {
+      this.suiviDemarre = true;
+      this.carte.setView([suivi.latitude, suivi.longitude], 17);
+      return;
+    }
     if (this.limites.length === 1) this.carte.setView(this.limites[0], 13);
     else if (this.limites.length > 1)
       this.carte.fitBounds(L.latLngBounds(this.limites), { padding: [32, 32], maxZoom: 14 });
@@ -144,11 +190,16 @@ export class Carte implements OnDestroy {
       const position: L.LatLngTuple = [m.latitude, m.longitude];
       const icone = L.divIcon({
         className: '',
-        html: `<div class="pin pin--${m.type}"><span>${m.etiquette ?? ''}</span></div>`,
+        html: `<div class="pin pin--${m.type}"><span>${m.type === 'voiture' ? '🚗' : (m.etiquette ?? '')}</span></div>`,
         iconSize: [28, 28],
-        iconAnchor: m.type === 'ramassage' || m.type === 'depose' ? [9, 9] : [14, 28],
+        iconAnchor: m.type === 'voiture' ? [16, 16] : m.type === 'moi' ? [10, 10] : RONDS.includes(m.type) ? [9, 9] : [14, 28],
       });
-      const marqueur = L.marker(position, { icon: icone, keyboard: false });
+      // Les positions en direct passent au-dessus des autres marqueurs.
+      const marqueur = L.marker(position, {
+        icon: icone,
+        keyboard: false,
+        zIndexOffset: m.type === 'moi' || m.type === 'voiture' ? 1000 : 0,
+      });
       if (m.libelle) marqueur.bindTooltip(m.libelle);
       marqueur.addTo(this.calque);
       limites.push(position);

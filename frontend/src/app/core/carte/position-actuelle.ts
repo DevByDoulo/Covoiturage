@@ -6,6 +6,10 @@ export interface Position {
   latitude: number;
   longitude: number;
   precisionM: number;
+  /** Direction de déplacement en degrés (0 = nord), si l'appareil la connaît. */
+  cap?: number;
+  /** Vitesse en m/s, si l'appareil la connaît. */
+  vitesse?: number;
 }
 
 /** Au-delà, la position vient du réseau (Wi-Fi, antenne) plutôt que du GPS : à vérifier par l'utilisateur. */
@@ -20,6 +24,33 @@ export class PositionActuelle {
   localiser(): Observable<Position> {
     return localiserAvec(typeof navigator === 'undefined' ? undefined : navigator.geolocation);
   }
+
+  /** Suivi continu (guidage, partage de position) : une valeur à chaque déplacement ; s'arrête au désabonnement. */
+  suivre(): Observable<Position> {
+    return suivreAvec(typeof navigator === 'undefined' ? undefined : navigator.geolocation);
+  }
+}
+
+export function suivreAvec(geo: Geolocation | undefined): Observable<Position> {
+  return new Observable<Position>((abonne) => {
+    if (!geo) {
+      abonne.error(new Error('Votre navigateur ne permet pas de suivre votre position.'));
+      return;
+    }
+    const id = geo.watchPosition(
+      (p) =>
+        abonne.next({
+          latitude: p.coords.latitude,
+          longitude: p.coords.longitude,
+          precisionM: Math.round(p.coords.accuracy),
+          cap: p.coords.heading ?? undefined,
+          vitesse: p.coords.speed ?? undefined,
+        }),
+      (e) => abonne.error(new Error(messageErreur(e.code))),
+      { enableHighAccuracy: true, timeout: 30_000, maximumAge: 2_000 },
+    );
+    return () => geo.clearWatch(id);
+  });
 }
 
 /** Séparée du service pour être testée avec une fausse géolocalisation. */
