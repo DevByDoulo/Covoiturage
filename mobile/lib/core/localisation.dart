@@ -74,12 +74,18 @@ class Geocodage {
   }
 }
 
+/// Position suivie en continu ; cap en degrés (0 = nord) et vitesse en m/s si l'appareil les connaît.
+typedef PositionSuivie = ({double latitude, double longitude, int precisionM, double? cap, double? vitesse});
+
 /// Position du téléphone (GPS). Le système demande l'autorisation à l'utilisateur la première fois.
 class PositionActuelle {
   /// Au-delà, la position vient du réseau plutôt que du GPS : à vérifier par l'utilisateur.
   static const precisionApproximativeM = 500;
 
-  Future<({double latitude, double longitude, int precisionM})> localiser() async {
+  Future<void> _autoriser() async {
+    // Navigateur : il demande lui-même l'autorisation au premier accès à la position (l'API Permissions n'est pas
+    // fiable partout) ; un refus arrive alors comme erreur du suivi.
+    if (kIsWeb) return;
     if (!await Geolocator.isLocationServiceEnabled()) {
       throw const LocalisationImpossible('La localisation est désactivée sur le téléphone. Activez-la, ou saisissez l\'adresse.');
     }
@@ -89,6 +95,54 @@ class PositionActuelle {
       throw const LocalisationImpossible(
           'Accès à votre position refusé. Autorisez-le dans les réglages, ou saisissez l\'adresse.');
     }
+  }
+
+  /// Suivi continu (guidage, partage de position). [arrierePlan] : le suivi continue écran éteint ou appli en
+  /// arrière-plan (Android : service avec une notification permanente ; iOS : localisation en arrière-plan).
+  Stream<PositionSuivie> suivre({bool arrierePlan = false}) async* {
+    await _autoriser();
+    final LocationSettings reglages;
+    if (kIsWeb) {
+      reglages = const LocationSettings(accuracy: LocationAccuracy.high);
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
+      reglages = AndroidSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 5,
+        foregroundNotificationConfig: arrierePlan
+            ? const ForegroundNotificationConfig(
+                notificationTitle: 'YOBALEMAsn partage votre position',
+                notificationText: 'Vos passagers suivent votre arrivée. Arrêtez le partage depuis votre trajet.',
+                enableWakeLock: true,
+              )
+            : null,
+      );
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      reglages = AppleSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 5,
+        activityType: ActivityType.automotiveNavigation,
+        allowBackgroundLocationUpdates: arrierePlan,
+        showBackgroundLocationIndicator: arrierePlan,
+        pauseLocationUpdatesAutomatically: false,
+      );
+    } else {
+      reglages = const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 5);
+    }
+    yield* Geolocator.getPositionStream(locationSettings: reglages)
+        .map((p) => (
+              latitude: p.latitude,
+              longitude: p.longitude,
+              precisionM: p.accuracy.round(),
+              cap: p.heading >= 0 ? p.heading : null,
+              vitesse: p.speed >= 0 ? p.speed : null,
+            ))
+        .handleError((Object e) => throw e is PermissionDeniedException
+            ? const LocalisationImpossible('Accès à votre position refusé. Autorisez-le dans les réglages du navigateur ou du téléphone.')
+            : const LocalisationImpossible('Votre position est introuvable pour le moment (GPS ou réseau). Réessayez.'));
+  }
+
+  Future<({double latitude, double longitude, int precisionM})> localiser() async {
+    await _autoriser();
     try {
       final p = await Geolocator.getCurrentPosition(
           locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 15)));

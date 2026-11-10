@@ -10,11 +10,13 @@ import 'features/auth/verification.dart';
 import 'features/conducteur/mes_trajets.dart';
 import 'features/conducteur/publier.dart';
 import 'features/conducteur/trajet_conducteur.dart';
+import 'features/guidage/guidage.dart';
 import 'features/messages/messages.dart';
 import 'features/notifications/notifications.dart';
 import 'features/profil/profil.dart';
 import 'features/recherche/recherche.dart';
 import 'features/reservations/reservations.dart';
+import 'features/suivi/suivi_conducteur.dart';
 import 'features/trajet/detail_trajet.dart';
 
 /// Écrans accessibles sans être connecté.
@@ -56,6 +58,15 @@ GoRouter creerRouteur(Session session) => GoRouter(
     GoRoute(
       path: '/trajets/:id',
       builder: (_, etat) => DetailTrajetPage(id: int.parse(etat.pathParameters['id']!)),
+    ),
+    // 08 — guidage vocal et suivi du conducteur en direct
+    GoRoute(
+      path: '/trajets/:id/guidage',
+      builder: (_, etat) => GuidagePage(id: int.parse(etat.pathParameters['id']!)),
+    ),
+    GoRoute(
+      path: '/trajets/:id/suivi',
+      builder: (_, etat) => SuiviConducteurPage(id: int.parse(etat.pathParameters['id']!)),
     ),
     GoRoute(path: '/messages', builder: (_, _) => const MessagesPage()),
     GoRoute(

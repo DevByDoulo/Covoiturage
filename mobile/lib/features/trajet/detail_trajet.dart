@@ -133,6 +133,12 @@ class _DetailTrajetPageState extends State<DetailTrajetPage> {
         ]),
         if (!estConducteur && t.statut != 'ANNULE' && t.statut != 'TERMINE')
           TextButton.icon(
+            onPressed: () => context.push('/trajets/${t.id}/guidage'),
+            icon: const Icon(Icons.record_voice_over_outlined),
+            label: const Text('Guidage vocal jusqu\'au point de départ'),
+          ),
+        if (!estConducteur && t.statut != 'ANNULE' && t.statut != 'TERMINE')
+          TextButton.icon(
             onPressed: () => _itineraire(t),
             icon: const Icon(Icons.directions_outlined),
             label: const Text('Itinéraire vers le point de départ'),

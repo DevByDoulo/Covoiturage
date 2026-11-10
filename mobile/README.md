@@ -48,6 +48,22 @@ s'il n'y a pas d'écran en dessous, le bouton retour ramène à l'accueil.
 - **Réputation** (moyenne, nombre d'avis, répartition, derniers avis) : « Avis sur … » dans le détail d'un trajet,
   « Avis reçus » dans le Profil.
 
+## Guidage vocal et suivi du conducteur en direct
+
+Mêmes règles que sur le site (`/trajets/:id/guidage` et `/trajets/:id/suivi`).
+
+- **Guidage vocal** (`lib/features/guidage`) : passager vers son point de prise en charge (détail d'un trajet),
+  conducteur vers le départ (Mon trajet) ; à pied ou en voiture. Position suivie (`PositionActuelle.suivre`),
+  itinéraire OSRM (`lib/core/itineraire.dart`), annonces et recalcul (`lib/core/guide.dart`, testé), voix
+  `flutter_tts` (`lib/core/voix.dart`, coupable), écran gardé allumé (`wakelock_plus`).
+- **Partage de position du conducteur** (`lib/features/suivi/partage.dart`, service global) : bloc « Position en
+  direct » dans Mon trajet, à partir d'une heure avant le départ. **Continue appli en arrière-plan** : service au
+  premier plan avec notification sur Android (`FOREGROUND_SERVICE_LOCATION`), localisation en arrière-plan sur iOS
+  (`UIBackgroundModes` `location`). Un envoi toutes les 5 s au plus ; la position reçue trop tôt part à la fin du délai.
+- **Suivi par le passager** (`lib/features/suivi/suivi_conducteur.dart`) : « Suivre … en direct » dans Mes
+  réservations ou depuis la notification ; voiture sur la carte (`lib/shared/carte_direct.dart`, qui suit un point
+  sans se reconstruire), distance, heure estimée, annonces vocales à 2 km, 1 km, 500 m, 200 m puis à l'arrivée.
+
 Pas encore fait : notifications push (Firebase), escales à la publication, alertes de recherche, mot de passe
 oublié, connexion Google, modification du profil, historique des paiements.
 
@@ -88,7 +104,7 @@ puis accepter les licences avec `flutter doctor --android-licenses`.
 |---|---|
 | `lib/core` | configuration, client HTTP (`api.dart`), modèles, session, thème, formats, géolocalisation |
 | `lib/shared` | widgets communs, carte (`flutter_map`, tuiles OpenStreetMap) |
-| `lib/features` | un dossier par écran : `auth`, `recherche`, `trajet`, `reservations`, `conducteur`, `messages`, `avis`, `notifications`, `profil` |
+| `lib/features` | un dossier par écran : `auth`, `recherche`, `trajet`, `reservations`, `conducteur`, `messages`, `avis`, `guidage`, `suivi`, `notifications`, `profil` |
 | `lib/app.dart` | routes (`go_router`) et barre d'onglets |
 
 Les erreurs de l'API (ProblemDetail) sont lues par `ErreurApi`. Sur le web, éviter l'opérateur `~` sur des
