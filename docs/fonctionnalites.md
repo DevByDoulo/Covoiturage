@@ -162,10 +162,11 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   site et testée), voix `flutter_tts`, écran allumé `wakelock_plus` ; le partage du conducteur continue appli en
   arrière-plan (Android : service au premier plan avec notification ; iOS : `UIBackgroundModes` `location`).
   **Mot de passe oublié** (branche `mobile-mot-de-passe-oublie`, `lib/features/auth/mot_de_passe_oublie.dart`) : lien « Mot de passe oublié ? » sous la connexion, puis les 3 étapes du site (email ou téléphone → code à 6 chiffres, 5 essais, renvoi après le délai → nouveau mot de passe, même règle que l’inscription) via `Session` (`/api/auth/mot-de-passe/oublie`, `/verifier-code`, `/reinitialiser`) ; retour à la connexion avec un message de confirmation.
-  Reste : push, Google, édition du profil, paiements.
+  **Paiements et reçus** (branche `mobile-paiements`, `lib/features/paiements/paiements.dart`) : entrée « Mes paiements » dans le Profil → `/paiements` (historique `/api/moi/paiements` : paiements comme passager en −, encaissements comme conducteur en + avec total encaissé, moyen, statut, référence ; tirer pour rafraîchir) et `/paiements/:reference/recu` (reçu `/api/paiements/{ref}/recu`, mêmes rubriques que le site, bandeau « Remboursé intégralement le … »), seulement pour les paiements réussis ou remboursés. À la place de « Imprimer / PDF » du site : bouton « Copier le reçu » (texte à coller dans un message ; pas de dépendance PDF).
+  Reste : push, Google, édition du profil.
 - Tests : `./mvnw test` → 43 tests (dont `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 47 tests ; `flutter test` dans `mobile` → 24 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 47 tests ; `flutter test` dans `mobile` → 27 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 

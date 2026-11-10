@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -64,6 +65,16 @@ class ProfilPage extends StatelessWidget {
         ]),
         const SizedBox(height: 12),
         BlocReputation(idUtilisateur: u.id, titre: 'Avis reçus'),
+        const SizedBox(height: 12),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.receipt_long_outlined, color: Couleurs.vert),
+            title: const Text('Mes paiements', style: TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: const Text('Historique et reçus'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/paiements'),
+          ),
+        ),
         const SizedBox(height: 12),
         Bloc(children: [
           const Text('Photo, préférences, contacts d\'urgence, véhicules et documents se gèrent sur le site web.',
