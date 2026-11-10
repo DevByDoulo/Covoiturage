@@ -6,7 +6,7 @@ import { Logo } from '../../shared/ui/logo';
 /** Adresse de contact affichée dans les textes légaux (questions, demandes sur les données personnelles). */
 export const CONTACT_LEGAL = 'doulo.thioune.dev@gmail.com';
 /** Date de la version en vigueur des deux textes. */
-export const VERSION_LEGALE = '6 novembre 2026';
+export const VERSION_LEGALE = '10 novembre 2026';
 
 /**
  * Cadre commun des pages publiques « Conditions d'utilisation » et « Politique de confidentialité » :

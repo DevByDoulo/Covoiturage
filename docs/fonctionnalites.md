@@ -36,6 +36,9 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   (`features/legal`, cadre commun `page-legale.ts` : contact `CONTACT_LEGAL`, date `VERSION_LEGALE`), liens depuis
   l'inscription, le pied des écrans de connexion, le profil, et dans l'appli mobile (`LiensLegaux`, qui ouvre le
   site). Éditeur présenté comme projet de fin d'études (ISEP Diamniadio), loi sénégalaise n° 2008-12, CDP.
+  Mise à jour du 10/11/2026 (branche `legal-position-mobile`) : partage de position **en arrière-plan** depuis l'appli
+  mobile (suivi du conducteur pendant le trajet, arrêt à la fin du trajet, position supprimée ensuite) ajouté aux
+  conditions (§10) et à la confidentialité (§3 et §6) ; `VERSION_LEGALE` = « 10 novembre 2026 ».
   **À mettre à jour** (texte et date de version) à chaque fonctionnalité qui collecte ou transmet des données, ou
   qui change les règles (commission, annulation). Pas encore de suppression automatique des comptes : elle se fait
   sur demande, comme l'indique la politique.

@@ -40,7 +40,8 @@ chaque fonctionnalité ; ici, ne garder qu'une ligne par module.
 - **Tests** : `./mvnw test` (43), `npm test` (47) + `npx ng build`, `flutter test` dans `mobile` (32),
   `python -m pytest` dans `ia-tarification` (20). Tests d'intégration : numéros de téléphone uniques (base partagée).
 - **Textes légaux** (`frontend/src/app/features/legal`) : à mettre à jour (texte + `VERSION_LEGALE`) à chaque
-  fonctionnalité qui touche aux données ou aux règles.
+  fonctionnalité qui touche aux données ou aux règles. Version du 10/11/2026 : position en arrière-plan (mobile)
+  mentionnée (branche `legal-position-mobile`).
 
 ## Répartition du travail (2 développeurs, depuis le 27/10/2026)
 
