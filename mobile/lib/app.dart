@@ -15,6 +15,7 @@ import 'features/guidage/guidage.dart';
 import 'features/messages/messages.dart';
 import 'features/notifications/notifications.dart';
 import 'features/paiements/paiements.dart';
+import 'features/profil/modifier_profil.dart';
 import 'features/profil/profil.dart';
 import 'features/recherche/recherche.dart';
 import 'features/reservations/reservations.dart';
@@ -79,6 +80,8 @@ GoRouter creerRouteur(Session session) => GoRouter(
       path: '/messages/:id',
       builder: (_, etat) => ConversationPage(id: int.parse(etat.pathParameters['id']!)),
     ),
+    // 01 — modification du profil (photo, prénom, nom, présentation)
+    GoRoute(path: '/profil/modifier', builder: (_, _) => const ModifierProfilPage()),
     // 04 — historique des paiements et reçus
     GoRoute(path: '/paiements', builder: (_, _) => const MesPaiementsPage()),
     GoRoute(

@@ -9,7 +9,8 @@ import '../../core/theme.dart';
 import '../../shared/widgets.dart';
 import '../avis/avis.dart';
 
-/// Profil (lecture) et déconnexion. La modification du profil, des véhicules et des documents se fait sur le site.
+/// Profil, accès à « Modifier mon profil » (photo, prénom, nom, présentation) et déconnexion.
+/// Préférences, contacts d'urgence, véhicules et documents se gèrent sur le site.
 class ProfilPage extends StatelessWidget {
   const ProfilPage({super.key});
 
@@ -59,6 +60,19 @@ class ProfilPage extends StatelessWidget {
               ]),
             ),
           ]),
+          if (u.bio != null) ...[
+            const SizedBox(height: 12),
+            Text('« ${u.bio} »', style: const TextStyle(color: Couleurs.texte2, fontStyle: FontStyle.italic)),
+          ],
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: () => context.push('/profil/modifier'),
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: const Text('Modifier mon profil'),
+            ),
+          ),
           const Divider(height: 28),
           if (u.email != null) _ligne(Icons.mail_outline, u.email!),
           if (u.telephone != null) _ligne(Icons.phone_outlined, u.telephone!),
@@ -77,7 +91,7 @@ class ProfilPage extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Bloc(children: [
-          const Text('Photo, préférences, contacts d\'urgence, véhicules et documents se gèrent sur le site web.',
+          const Text('Préférences, contacts d\'urgence, véhicules et documents se gèrent sur le site web.',
               style: TextStyle(color: Couleurs.texte2)),
           TextButton.icon(
             onPressed: () => launchUrl(Uri.parse('${Config.siteUrl}/profil'), mode: LaunchMode.externalApplication),

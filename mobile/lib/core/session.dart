@@ -45,6 +45,25 @@ class Session extends ChangeNotifier {
     await chargerProfil();
   }
 
+  /// Modifie prénom, nom et présentation (PUT /moi, comme le bloc « À propos » du site ; le sexe est renvoyé tel quel).
+  Future<void> modifierProfil({required String prenom, required String nom, String? bio}) async {
+    final b = bio?.trim();
+    utilisateur = Profil.depuisJson(await api.put('/moi', {
+      'prenom': prenom.trim(),
+      'nom': nom.trim(),
+      'bio': (b == null || b.isEmpty) ? null : b,
+      'sexe': utilisateur?.sexe,
+    }) as Map<String, dynamic>);
+    notifyListeners();
+  }
+
+  /// Remplace la photo de profil (JPEG, PNG ou WebP, 5 Mo au plus côté serveur).
+  Future<void> changerPhoto(List<int> octets, String nomFichier) async {
+    utilisateur = Profil.depuisJson(
+        await api.envoyerFichier('/moi/photo', 'fichier', octets, nomFichier) as Map<String, dynamic>);
+    notifyListeners();
+  }
+
   Future<AuthReponse> connexion(String identifiant, String motDePasse) =>
       _authentifier('/auth/connexion', {'identifiant': identifiant.trim(), 'motDePasse': motDePasse});
 

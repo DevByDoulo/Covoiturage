@@ -9,7 +9,9 @@
 	<key>CFBundleDisplayName</key>
 	<string>YOBALEMAsn</string>
 	<key>NSCameraUsageDescription</key>
-	<string>La caméra sert à scanner le code d'embarquement des passagers.</string>
+	<string>La caméra sert à scanner le code d'embarquement des passagers et à prendre votre photo de profil.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Vos photos servent à choisir votre photo de profil.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Votre position sert à remplir le lieu de départ, à vous guider jusqu'au point de rendez-vous et, si vous conduisez, à la partager avec vos passagers.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
