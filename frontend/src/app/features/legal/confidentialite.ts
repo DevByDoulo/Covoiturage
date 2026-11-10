@@ -105,6 +105,12 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
           heure avant le départ. Seule sa <strong>dernière position</strong> est gardée (pas d'historique), visible
           uniquement par ses passagers confirmés, et <strong>effacée</strong> dès qu'il arrête le partage, à la fin ou à
           l'annulation du trajet, et au plus tard 30 minutes après le dernier envoi.</li>
+        <li><strong>Position en arrière-plan (application mobile)</strong> : pendant un trajet en cours, si le conducteur a
+          activé le partage et accordé à l'application l'autorisation de localisation « en permanence » ou « en
+          arrière-plan », sa position continue d'être envoyée même quand l'écran est verrouillé ou que l'application
+          n'est pas au premier plan. Une notification visible indique que le partage est actif. L'envoi s'arrête à la fin
+          du trajet (ou dès que le conducteur arrête le partage) et la dernière position est ensuite supprimée. Hors
+          trajet en cours, l'application ne suit pas votre position en arrière-plan.</li>
       </ul>
 
       <h2 id="visibilite">4. Ce que voient les autres utilisateurs</h2>
@@ -157,8 +163,8 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
         <li><strong>Codes de vérification</strong> : quelques minutes (durée de validité du code).</li>
         <li><strong>Session</strong> : jusqu'à la fermeture de l'onglet, ou 30 jours au plus si vous cochez « Rester
           connecté ».</li>
-        <li><strong>Position partagée en direct</strong> : jusqu'à l'arrêt du partage ou la fin du trajet, 30 minutes au
-          plus après le dernier envoi.</li>
+        <li><strong>Position partagée en direct</strong> (y compris en arrière-plan depuis l'application mobile) : jusqu'à
+          l'arrêt du partage ou la fin du trajet, 30 minutes au plus après le dernier envoi ; supprimée ensuite.</li>
       </ul>
 
       <h2 id="securite">7. Sécurité</h2>

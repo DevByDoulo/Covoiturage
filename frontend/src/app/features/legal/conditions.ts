@@ -132,6 +132,11 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
         <li>Le conducteur peut, s'il le souhaite, <strong>partager sa position en direct</strong> avec ses passagers
           confirmés, à partir d'une heure avant le départ et jusqu'à la fin du trajet. Il peut arrêter le partage à tout
           moment. Les passagers ne doivent pas utiliser cette information à d'autres fins.</li>
+        <li>Dans l'<strong>application mobile</strong>, ce partage continue <strong>en arrière-plan</strong> (écran
+          verrouillé ou autre application ouverte) tant que le trajet est en cours, afin que les passagers puissent
+          suivre le conducteur. Un indicateur signale que la position est partagée. Le partage s'arrête à la fin du
+          trajet, ou plus tôt si le conducteur l'arrête ; la position est ensuite supprimée. Le conducteur peut aussi
+          retirer l'autorisation de localisation dans les réglages de son téléphone.</li>
       </ul>
 
       <h2 id="sanctions">11. Suspension et fermeture du compte</h2>
