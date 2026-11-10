@@ -10,6 +10,7 @@ import '../../core/theme.dart';
 import '../../shared/carte.dart';
 import '../../shared/widgets.dart';
 import '../messages/messages.dart';
+import '../signalements/signalements.dart';
 import '../suivi/partage.dart';
 import 'mes_trajets.dart';
 import 'scanner.dart';
@@ -333,7 +334,11 @@ class _TrajetConducteurPageState extends State<TrajetConducteurPage> {
       if (p != null && r.statut != 'REFUSEE')
         Padding(
           padding: const EdgeInsets.only(left: 34),
-          child: BoutonEcrire(idTrajet: widget.id, prenom: p.prenom, idPassager: p.id),
+          child: Wrap(children: [
+            BoutonEcrire(idTrajet: widget.id, prenom: p.prenom, idPassager: p.id),
+            if (r.statut == 'ACCEPTEE' || r.statut == 'TERMINEE')
+              BoutonSignaler(idUtilisateur: p.id, prenom: p.prenom, idTrajet: widget.id),
+          ]),
         ),
       if (r.statut == 'EN_ATTENTE')
         Padding(

@@ -62,6 +62,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/utilisateurs').then((m) => m.AdminUtilisateurs),
       },
       {
+        path: 'signalements',
+        title: 'Signalements · YOBALEMAsn',
+        loadComponent: () => import('./features/admin/signalements-admin').then((m) => m.SignalementsAdmin),
+      },
+      {
         path: 'utilisateurs/:id',
         title: 'Fiche utilisateur · YOBALEMAsn',
         loadComponent: () => import('./features/admin/fiche-utilisateur').then((m) => m.FicheUtilisateurPage),
@@ -165,6 +170,19 @@ export const routes: Routes = [
         path: 'trajets/:id/suivi',
         title: 'Suivre mon conducteur · YOBALEMAsn',
         loadComponent: () => import('./features/suivi/suivi-conducteur').then((m) => m.SuiviConducteur),
+      },
+      // 10 — Signalements
+      {
+        path: 'signaler/:idUtilisateur',
+        title: 'Signaler · YOBALEMAsn',
+        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
+        loadComponent: () => import('./features/signalements/signaler').then((m) => m.Signaler),
+      },
+      {
+        path: 'signalements',
+        title: 'Mes signalements · YOBALEMAsn',
+        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
+        loadComponent: () => import('./features/signalements/mes-signalements').then((m) => m.MesSignalements),
       },
       // 04 — Facturation (réservations, paiements, reçus)
       {

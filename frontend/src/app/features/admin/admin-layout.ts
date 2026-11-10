@@ -31,6 +31,9 @@ import { AdminService } from './admin.service';
             <span class="badge" [attr.aria-label]="n + ' en attente'">{{ n }}</span>
           }
         </a>
+        <a routerLink="/admin/signalements" routerLinkActive="actif">
+          <app-icone nom="drapeau" [taille]="19" /> <span>Signalements</span>
+        </a>
       </nav>
       <button class="menu__sortie" type="button" (click)="session.demanderDeconnexion()">
         <app-icone nom="deconnexion" [taille]="19" /> <span>Se déconnecter</span>

@@ -20,7 +20,8 @@ export type TypeNotification =
   | 'ALERTE_TRAJET'
   | 'AVIS_RECU'
   | 'MESSAGE_RECU'
-  | 'POSITION_PARTAGEE';
+  | 'POSITION_PARTAGEE'
+  | 'SIGNALEMENT_TRAITE';
 
 export interface Notification {
   id: number;

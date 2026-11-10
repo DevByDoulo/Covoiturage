@@ -90,6 +90,16 @@ class ProfilPage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.flag_outlined, color: Couleurs.vert),
+            title: const Text('Mes signalements', style: TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: const Text('Suivi de mes signalements'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/signalements'),
+          ),
+        ),
+        const SizedBox(height: 12),
         Bloc(children: [
           const Text('Préférences, contacts d\'urgence, véhicules et documents se gèrent sur le site web.',
               style: TextStyle(color: Couleurs.texte2)),

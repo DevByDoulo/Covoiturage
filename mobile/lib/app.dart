@@ -18,6 +18,7 @@ import 'features/paiements/paiements.dart';
 import 'features/profil/modifier_profil.dart';
 import 'features/profil/profil.dart';
 import 'features/recherche/recherche.dart';
+import 'features/signalements/signalements.dart';
 import 'features/reservations/reservations.dart';
 import 'features/suivi/suivi_conducteur.dart';
 import 'features/trajet/detail_trajet.dart';
@@ -88,6 +89,16 @@ GoRouter creerRouteur(Session session) => GoRouter(
       path: '/paiements/:reference/recu',
       builder: (_, etat) => RecuPage(reference: etat.pathParameters['reference']!),
     ),
+    // 10 — signalements
+    GoRoute(
+      path: '/signaler/:id',
+      builder: (_, etat) => SignalerPage(
+        idUtilisateur: int.parse(etat.pathParameters['id']!),
+        idTrajet: int.tryParse(etat.uri.queryParameters['trajet'] ?? ''),
+        prenom: etat.uri.queryParameters['nom'],
+      ),
+    ),
+    GoRoute(path: '/signalements', builder: (_, _) => const MesSignalementsPage()),
     // Avant l'onglet « /conduite » : écrans plein écran du conducteur.
     GoRoute(path: '/conduite/publier', builder: (_, _) => const PublierPage()),
     GoRoute(
