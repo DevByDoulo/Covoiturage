@@ -1,0 +1,167 @@
+# YOBALEMAsn — détail des fonctionnalités réalisées
+
+Historique détaillé de chaque module (branches, tables, API, écrans, règles). Déplacé hors de `CLAUDE.md` le
+10/11/2026 pour que ce fichier, lu à chaque session, reste court. **Le compléter à chaque fonctionnalité.**
+
+## Modules
+
+Le 27/10/2026, la répartition a changé et le dépôt **repart de l'authentification**. Tout le reste a été retiré
+du code ; l'ancienne version complète (backend du lot 1, écrans Trajets et Recherche avec carte Leaflet,
+alertes de recherche, prix par formule, réservations, notifications, back-office) reste consultable et
+récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archive/lot1-complet:<chemin>`, ou
+`git checkout archive/lot1-complet -- <dossier>` pour reprendre un module).
+
+**Fait :**
+- Backend (`auth`, `utilisateur`, `common`, `admin`) : inscription avec code par email (ou SMS), connexion
+  email/téléphone/Google, jetons JWT + refresh (rotation), blocage après 5 échecs, mot de passe oublié en
+  3 étapes (code vérifié, puis jeton de 10 min ; comptes inconnus non révélés ; quotas de codes par compte et
+  par IP ; alerte au titulaire après changement) ; profil, préférences, photo (`/api/moi`) ; compte admin
+  créé au démarrage.
+- **01 Gestion des utilisateurs** (branche `01-utilisateurs`) : écran *Mon profil* (`features/profil`) — photo,
+  À propos, préférences de trajet (enregistrées à chaque bascule), contacts d'urgence (table `contact_urgence`,
+  3 au plus), changer / définir le mot de passe (`/profil/mot-de-passe`), désactiver le compte
+  (`/profil/desactivation`, réactivé à la connexion suivante). Les compteurs de la maquette (trajets, avis)
+  viendront avec les modules 03 et 05.
+- **02 Gestion des véhicules** (branche `02-vehicules`, partie de `01-utilisateurs`) : module backend `vehicule`
+  (repris de l'archive et adapté) — véhicules avec photo, documents permis / **pièce d'identité** / carte grise
+  (migration V2026_10_27_1100) ; écran *Véhicules et documents* (`features/vehicules`) : liste, ajout et
+  modification, envoi et renvoi des pièces, motif de refus. La validation des pièces par l'admin relève du
+  module 07 : appeler `VehiculeService.recalculerStatutConducteur` après chaque décision.
+- Frontend : connexion (case **« Rester connecté »**, décochée par défaut : jeton de rafraîchissement en
+  `sessionStorage`, session terminée à la fermeture de l'onglet ; cochée : `localStorage`, 30 jours — branche
+  `web-rester-connecte`), inscription, vérification du code, mot de passe oublié (3 écrans successifs),
+  téléphone après Google ; espace connecté (`features/espace`, barre de navigation + déconnexion) et page
+  d'accueil simple (`/accueil`) ; l'administrateur arrive sur le back-office (`/admin`).
+- **Textes légaux** (branche `pages-legales`) : pages publiques `/conditions` et `/confidentialite`
+  (`features/legal`, cadre commun `page-legale.ts` : contact `CONTACT_LEGAL`, date `VERSION_LEGALE`), liens depuis
+  l'inscription, le pied des écrans de connexion, le profil, et dans l'appli mobile (`LiensLegaux`, qui ouvre le
+  site). Éditeur présenté comme projet de fin d'études (ISEP Diamniadio), loi sénégalaise n° 2008-12, CDP.
+  **À mettre à jour** (texte et date de version) à chaque fonctionnalité qui collecte ou transmet des données, ou
+  qui change les règles (commission, annulation). Pas encore de suppression automatique des comptes : elle se fait
+  sur demande, comme l'indique la politique.
+- La base garde **toutes les tables** du diagramme de classes (migration V1, à ne jamais modifier) : chaque
+  module les reprend ou les fait évoluer par de nouvelles migrations datées.
+- **12 Calcul automatique du prix** (branche `12-prix`) : module backend `tarification` (repris de l'archive :
+  `MoteurFormule`, coefficients `parametre_tarification` ; sans l'entité `Tarification`, liée à `Trajet`, qui
+  reviendra avec le module 03) + `MoteurIA` : appelle `ia-tarification` (`POST /v1/estimations`) puis la
+  formule ; repli sur la formule seule si erreur, réponse incohérente ou plus de 2 s (`app.ia.delai`), et pause
+  de 30 s après un échec. Consommation : déclarée > prédite par l'IA > estimée ; la météo s'applique toujours.
+  Service `ia-tarification` : XGBoost sur ADEME Car Labelling (MAE 0,35 L/100 km), Open-Meteo attendu 1,5 s au
+  plus. En dev, `IA_TARIFICATION_URL` vaut `http://localhost:8000` ; en test, formule seule. À brancher dans
+  `TrajetService` (module 03) : `moteur.estimer(new DemandeEstimation(...))`.
+- **03 Gestion des trajets** (branche `03-trajets`, partie de `12-prix`) : module backend `trajet` repris de
+  l'archive (publication avec escales, estimation du prix via `MoteurTarification`, modification, annulation,
+  démarrer/terminer, « mes trajets », recherche PostGIS publique, détail public ; itinéraire Google Routes si
+  `GOOGLE_MAPS_API_KEY`, sinon vol d'oiseau ×1,25). `pom.xml` : `hibernate-spatial` remis. Écrans Angular
+  `features/trajets` (publier avec carte Leaflet et détail du prix IA, détail, mes trajets) et
+  `features/recherche` ; Leaflet ajouté (`package.json`, `angular.json`). Les **alertes de recherche** sont décrites
+  plus bas (branche `alertes-recherche`).
+- **06 Notifications** (branche `06-notifications`, partie de `07-administration`) : module backend `notification`
+  (repris de l'archive) — `NotificationService.notifier(destinataire, type, priorite, titre, contenu, lien)` :
+  enregistrée dans `notification` (lien vers l'écran, migration V2026_10_28_0900), push FCM si l'appareil a
+  envoyé son jeton (`FIREBASE_CREDENTIALS_PATH`, sinon journalisé), et **email (sinon SMS) si `Priorite.IMPORTANTE`**.
+  `NotificationsActivite` écoute `ReservationEvenements`, `TrajetModifie` et `AvisPublie` (« Nouvel avis : 4/5 », lien
+  vers `/profil`, qui affiche les avis reçus) avant validation de la transaction ;
+  `RappelsTrajet` prévient conducteur et passagers 1 h avant le départ (toutes les 5 min, sans doublon) ; les
+  décisions de l'admin passent aussi par là. Écrans : cloche avec compteur dans l'en-tête (rafraîchi toutes les
+  30 s) et `/notifications`. Reste : push dans le navigateur (projet Firebase à créer).
+- **Alertes de recherche** (branche `alertes-recherche`, complète le module 03) : package backend `recherche` repris
+  de l'archive (table `alerte_recherche`, migration V2026_10_25_1600) — `/api/moi/alertes` (créer, lister, supprimer ;
+  10 alertes à venir au plus). À la publication d'un trajet (`TrajetPublie`, après validation de la transaction,
+  sans jamais faire échouer la publication), chaque alerte du même jour dont le départ et l'arrivée sont proches
+  du tracé, dans le bon sens, reçoit une notification `ALERTE_TRAJET` (lien vers le trajet ; prix max et
+  « femmes uniquement » respectés). Écran : bouton « Créer une alerte » sous les résultats de Rechercher et bloc
+  « Mes alertes » (`features/alertes`).
+- **07 Administration** (branche `07-administration`) : back-office `/admin` avec son propre cadre (menu latéral,
+  `features/admin`) — tableau de bord (statistiques), **validation des documents** (file filtrable, aperçu du
+  fichier, informations à vérifier, valider / refuser avec motif obligatoire ; `recalculerStatutConducteur`
+  appelé à chaque décision), liste et **fiche utilisateur** (véhicules, documents, historique), **bloquer /
+  bannir** avec motif obligatoire et **débloquer** (sessions fermées). Chaque décision est enregistrée dans
+  `action_admin` et envoyée à l'utilisateur par email (ou SMS) via `AvisUtilisateurs` ; `utilisateur.derniere_connexion`
+  est mis à jour à chaque émission de jetons (migration V2026_10_27_1500). Le raccourci de développement
+  `POST /api/dev/moi/valider-conducteur` (module 03) a été retiré : l'admin valide désormais les documents.
+- **04 Facturation** (branche `04-facturation`) : comprend aussi les **réservations** (non attribuées dans la
+  répartition ; reprises de l'archive). Package `reservation` (demande avec moyen de paiement, acceptation/refus,
+  annulation, embarquement PIN/QR, événements `ReservationEvenements` à écouter par le module 06) et package
+  `facturation` (`FournisseurPaiement` : **Wave réel** via l'API Checkout + webhook signé
+  `/api/paiements/webhooks/wave` ; `OrangeMoneyFournisseur` **non branché** : l'API Sonatel n'est documentée qu'aux
+  comptes du portail developer.orange-sonatel.com ; historique `/api/moi/paiements`, reçus). Règles **provisoires,
+  à confirmer avec l'encadrant** : aucune commission, remboursement intégral de toute annulation avant le départ.
+  Wave exige HTTPS (clés `WAVE_API_KEY`, `WAVE_SECRET_WEBHOOK`, `PAIEMENT_URL_RETOUR`) : en local, tunnel ngrok.
+  Écrans : réserver (détail d'un trajet), demandes et embarquement (conducteur), `/reservations`, `/paiements`, reçu.
+  **QR code d'embarquement sur le site** (branche `web-qr-embarquement`) : le passager voit le QR sous son code
+  (`shared/ui/qr-code.ts`, bibliothèque `qrcode` chargée à la demande) ; le conducteur peut le scanner
+  (`shared/ui/scanner-qr.ts` : caméra arrière, `BarcodeDetector` du navigateur sinon `jsqr` chargé à la demande ;
+  bouton affiché seulement si une caméra est accessible, c'est-à-dire en HTTPS ou sur localhost).
+  **PayDunya** (branche `04-paydunya`) : agrégateur qui relaie **Wave et Orange Money Sénégal** (`PayDunyaClient`,
+  `PayDunyaFournisseur`, un bean par moyen dans `PayDunyaConfig`). Clés `PAYDUNYA_MASTER_KEY`, `PAYDUNYA_PRIVATE_KEY`,
+  `PAYDUNYA_TOKEN`, `PAYDUNYA_MODE` (`test` = sandbox, sans argent réel). Facture « paiement avec redirection »
+  limitée au canal choisi ; IPN `/api/paiements/webhooks/paydunya` (formulaire, `data[hash]` = SHA-512 de la clé
+  principale), envoyé seulement si `PAIEMENT_URL_API` (adresse publique de l'API) est renseignée ; dans tous les cas,
+  l'état est redemandé à PayDunya (`checkout-invoice/confirm`) et vérifié au retour du passager
+  (`POST /api/paiements/{ref}/verifier`). Remboursement par déboursement vers le portefeuille du passager : production
+  seulement (en test, le paiement reste « remboursement demandé »). Si Wave direct est aussi configuré, il passe avant
+  PayDunya pour Wave (pas de frais d'intermédiaire). `paiement.fournisseur` vaut `PAYDUNYA`, `WAVE`… 
+- **05 Évaluations et avis** (branche `05-avis`) : package `avis`, table `evaluation` (migration
+  V2026_10_28_1400, classe EVALUATION). Après un voyage effectué (réservation `TERMINEE`), le passager note son
+  conducteur et le conducteur note ce passager : 1 à 5 étoiles + commentaire, une fois par sens, dans les 14 jours
+  suivant le départ ; chaque avis recalcule `utilisateur.note_moyenne` (filtre « note minimale » de la recherche).
+  API `POST /api/reservations/{id}/evaluation`, `GET /api/moi/avis-a-donner`, `GET /api/utilisateurs/{id}/avis`
+  (public). Événement `AvisEvenements.AvisPublie`, notifié à la personne notée (module 06). Écrans `features/avis` : bloc
+  « Donnez votre avis » (Mes réservations, Mes trajets), réputation du conducteur (détail d'un trajet).
+  **Signalements** (classe SIGNALEMENT) : pas encore faits. Le profil (module 01) peut afficher
+  `GET /api/utilisateurs/{id}/avis` pour son compteur d'avis.
+- **09 Messagerie** (fonctionnalité facultative, branche `09-messagerie`) : package `messagerie`, tables `conversation`
+  (une par trajet et par passager ; le conducteur est celui du trajet) et `message` (migration V2026_10_29_1000).
+  Un passager écrit au conducteur d'un trajet à venir (même sans réserver) ou d'un trajet réservé ; le conducteur
+  écrit aux passagers qui ont réservé ; on peut écrire jusqu'à 7 jours après le départ (ensuite lecture seule) ;
+  30 messages au plus par 10 minutes. API `POST /api/trajets/{id}/conversation`, `/api/moi/conversations` (liste,
+  `/non-lus`, `/{id}` qui marque lus, `/{id}/messages`). Événement `MessageEnvoye` → notification `MESSAGE_RECU`
+  (une seule non lue par conversation). Écrans `features/messages` : icône Messages avec compteur dans l'en-tête,
+  `/messages`, `/messages/:id` (rafraîchi toutes les 5 s), bouton « Écrire à … » (détail d'un trajet, Mes
+  réservations, demandes reçues par le conducteur).
+- **08 Géolocalisation** (fonctionnalité facultative, branche `08-geolocalisation`) : la carte, la recherche de lieu,
+  le départ et l'arrivée posés sur la carte, le tracé et la distance existaient déjà (modules 03 et 12). Ajouts :
+  service `core/carte/position-actuelle.ts` (API de géolocalisation du navigateur : HTTPS ou localhost, autorisation de
+  l'utilisateur, messages en cas de refus / délai / indisponibilité) ; bouton « Ma position » sur le champ Départ
+  (`ChampLieu` avec `[maPosition]="true"`, Publier et Rechercher) qui retrouve l'adresse (Nominatim) et prévient si la
+  position est approximative (> 500 m) ; lien « Itinéraire vers le point de départ (Google Maps) » sur le détail d'un
+  trajet, pour le passager. **Guidage vocal** (branche `web-guidage-vocal`) : écran `/trajets/:id/guidage`
+  (`features/trajets/guidage`) — passager vers son point de prise en charge, conducteur vers le départ ; à pied ou
+  en voiture ; position suivie (`PositionActuelle.suivre`, `watchPosition`), itinéraire et manœuvres OSRM des
+  serveurs FOSSGIS `routing.openstreetmap.de` (sans clé, CORS ; à remplacer en production), consignes en français
+  (`core/carte/itineraire.ts`), logique d'annonce et de recalcul hors tracé dans `core/carte/guide.ts` (testée),
+  synthèse vocale du navigateur (`core/voix.ts`, coupable, choix mémorisé), écran gardé allumé (Wake Lock).
+  La carte (`shared/carte/carte.ts`) a des marqueurs `moi` / `voiture` et un mode `[suivre]`.
+  **Suivi du conducteur en temps réel** (branche `suivi-temps-reel`) : package backend `suivi`, table
+  `position_conducteur` (migration V2026_11_06_2130, une ligne par trajet : la dernière position). Le conducteur
+  partage à partir d'une heure avant le départ jusqu'à la fin (`POST /api/trajets/{id}/position`, `DELETE` pour
+  arrêter) ; seuls lui et les passagers `ACCEPTEE` lisent (`GET`, 204 si rien depuis 30 min). Position effacée à
+  l'arrêt, à `TrajetTermine` / `TrajetAnnule`, et purgée après 30 min ; au premier envoi, notification
+  `POSITION_PARTAGEE` aux passagers (lien `/trajets/{id}/suivi`). Écrans `features/suivi` : bloc « Position en
+  direct » du conducteur (détail de son trajet ; service global `PartagePosition`, au plus un envoi toutes les
+  5 s, position différée envoyée à la fin du délai) et page passager `/trajets/:id/suivi` (interrogée toutes les
+  5 s, voiture sur la carte, distance à vol d'oiseau et heure estimée, annonces vocales à 2 km, 1 km, 500 m,
+  200 m puis « … est au point de rendez-vous ») ; lien « Suivre … en direct » dans Mes réservations.
+- **Application mobile** (branche `mobile-passager`, dossier `mobile/`, voir [`mobile/README.md`](mobile/README.md)) :
+  Flutter, même API que le site. Premier lot = parcours passager : connexion / inscription / code, recherche sur
+  carte (`flutter_map` + OpenStreetMap, Nominatim, « Ma position »), détail et réservation, mes réservations (code
+  d'embarquement PIN + QR, paiement PayDunya, annulation), notifications, profil en lecture. Lancer :
+  `flutter run -d web-server --web-port 5000` (navigateur), `flutter run` (émulateur Android, API sur `10.0.2.2`),
+  ou `--dart-define=API_URL=http://<IP du PC>:8080/api` pour un vrai téléphone. **Parcours conducteur** (branche
+  `mobile-conducteur`, onglet « Conduire », `lib/features/conducteur`) : mes trajets, publier (estimation IA, curseur
+  dans la fourchette ; sans escales), mon trajet (accepter / refuser, embarquement par QR code `mobile_scanner` ou
+  PIN, démarrer / terminer / annuler). **Messagerie** (branche `mobile-messagerie`, `lib/features/messages`) : icône
+  Messages avec compteur, conversations rafraîchies toutes les 5 s, boutons « Écrire à … ». **Avis** (branche
+  `mobile-avis`, `lib/features/avis`) : « Donnez votre avis » (Mes réservations, Mes trajets), réputation (détail
+  d'un trajet, Profil). **Guidage vocal et suivi en direct** (branche `mobile-guidage-suivi`) : mêmes écrans que le
+  site (`lib/features/guidage`, `lib/features/suivi`, logique `lib/core/guide.dart` et `itineraire.dart` portée du
+  site et testée), voix `flutter_tts`, écran allumé `wakelock_plus` ; le partage du conducteur continue appli en
+  arrière-plan (Android : service au premier plan avec notification ; iOS : `UIBackgroundModes` `location`).
+  Reste : push, alertes, mot de passe oublié, Google, édition du profil, paiements.
+- Tests : `./mvnw test` → 43 tests (dont `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
+  `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 47 tests ; `flutter test` dans `mobile` → 21 tests ;
+  `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
+  téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
+
