@@ -64,7 +64,7 @@ Mêmes règles que sur le site (`/trajets/:id/guidage` et `/trajets/:id/suivi`).
   réservations ou depuis la notification ; voiture sur la carte (`lib/shared/carte_direct.dart`, qui suit un point
   sans se reconstruire), distance, heure estimée, annonces vocales à 2 km, 1 km, 500 m, 200 m puis à l'arrivée.
 
-Pas encore fait : notifications push (Firebase), escales à la publication, alertes de recherche, mot de passe
+Pas encore fait : notifications push (Firebase), escales à la publication, mot de passe
 oublié, connexion Google, modification du profil, historique des paiements.
 
 ## Lancer

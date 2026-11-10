@@ -10,6 +10,7 @@ import '../../core/modeles.dart';
 import '../../core/theme.dart';
 import '../../shared/carte.dart';
 import '../../shared/widgets.dart';
+import '../alertes/alertes.dart';
 import '../messages/messages.dart';
 import 'champ_lieu.dart';
 
@@ -186,22 +187,32 @@ class _RecherchePageState extends State<RecherchePage> {
             ),
             const SizedBox(height: 16),
             if (_resultats != null) ..._listeResultats(),
+            const BlocMesAlertes(),
           ],
         ),
       );
 
   List<Widget> _listeResultats() {
     final liste = _resultats!;
+    final alerte = <Widget>[
+      const SizedBox(height: 4),
+      BoutonCreerAlerte(
+        depart: Point(_depart!.libelle, _depart!.latitude, _depart!.longitude),
+        arrivee: Point(_arrivee!.libelle, _arrivee!.latitude, _arrivee!.longitude),
+        date: _date,
+      ),
+    ];
     if (liste.isEmpty) {
-      return const [
-        Bloc(children: [
+      return [
+        const Bloc(children: [
           Center(child: Icon(Icons.route_outlined, size: 40, color: Couleurs.texte2)),
           SizedBox(height: 8),
           Text('Aucun trajet ne correspond ce jour-là.',
               textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w700)),
-          Text('Essayez une autre date, ou créez une alerte depuis le site.',
+          Text('Essayez une autre date, ou créez une alerte ci-dessous.',
               textAlign: TextAlign.center, style: TextStyle(color: Couleurs.texte2)),
         ]),
+        ...alerte,
       ];
     }
     return [
@@ -217,6 +228,7 @@ class _RecherchePageState extends State<RecherchePage> {
         ),
         const SizedBox(height: 10),
       ],
+      ...alerte,
     ];
   }
 }
