@@ -56,6 +56,24 @@ class Session extends ChangeNotifier {
   Future<AuthReponse> renvoyerCode(String identifiant) =>
       _authentifier('/auth/otp/renvoyer', {'identifiant': identifiant});
 
+  /// Mot de passe oublié, étape 1 : envoie un code par email ou SMS (même réponse que l'envoi d'un code de vérification).
+  Future<AuthReponse> demanderCodeReinitialisation(String identifiant) async => AuthReponse.depuisJson(
+    await api.postPublic('/auth/mot-de-passe/oublie', {'identifiant': identifiant.trim()}) as Map<String, dynamic>,
+  );
+
+  /// Étape 2 : le serveur vérifie le code (5 essais) et remet le jeton qui autorise le nouveau mot de passe.
+  Future<String> verifierCodeReinitialisation(String identifiant, String code) async {
+    final r =
+        await api.postPublic('/auth/mot-de-passe/verifier-code', {'identifiant': identifiant.trim(), 'code': code})
+            as Map<String, dynamic>;
+    return r['jeton'] as String;
+  }
+
+  /// Étape 3 : enregistre le nouveau mot de passe (l'utilisateur devra ensuite se connecter).
+  Future<void> reinitialiserMotDePasse(String jeton, String nouveauMotDePasse) async {
+    await api.postPublic('/auth/mot-de-passe/reinitialiser', {'jeton': jeton, 'nouveauMotDePasse': nouveauMotDePasse});
+  }
+
   Future<void> deconnexion() async {
     final refresh = await _stockage.read(key: _cleRefresh);
     if (refresh != null) {

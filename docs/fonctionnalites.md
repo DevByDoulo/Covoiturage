@@ -161,10 +161,11 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   site (`lib/features/guidage`, `lib/features/suivi`, logique `lib/core/guide.dart` et `itineraire.dart` portée du
   site et testée), voix `flutter_tts`, écran allumé `wakelock_plus` ; le partage du conducteur continue appli en
   arrière-plan (Android : service au premier plan avec notification ; iOS : `UIBackgroundModes` `location`).
-  Reste : push, mot de passe oublié, Google, édition du profil, paiements.
+  **Mot de passe oublié** (branche `mobile-mot-de-passe-oublie`, `lib/features/auth/mot_de_passe_oublie.dart`) : lien « Mot de passe oublié ? » sous la connexion, puis les 3 étapes du site (email ou téléphone → code à 6 chiffres, 5 essais, renvoi après le délai → nouveau mot de passe, même règle que l’inscription) via `Session` (`/api/auth/mot-de-passe/oublie`, `/verifier-code`, `/reinitialiser`) ; retour à la connexion avec un message de confirmation.
+  Reste : push, Google, édition du profil, paiements.
 - Tests : `./mvnw test` → 43 tests (dont `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 47 tests ; `flutter test` dans `mobile` → 22 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 47 tests ; `flutter test` dans `mobile` → 24 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 
