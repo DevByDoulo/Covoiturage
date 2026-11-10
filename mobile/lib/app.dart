@@ -6,6 +6,7 @@ import 'core/session.dart';
 import 'core/theme.dart';
 import 'features/auth/connexion.dart';
 import 'features/auth/inscription.dart';
+import 'features/auth/mot_de_passe_oublie.dart';
 import 'features/auth/verification.dart';
 import 'features/conducteur/mes_trajets.dart';
 import 'features/conducteur/publier.dart';
@@ -20,7 +21,7 @@ import 'features/suivi/suivi_conducteur.dart';
 import 'features/trajet/detail_trajet.dart';
 
 /// Écrans accessibles sans être connecté.
-const _publics = {'/connexion', '/inscription', '/verification'};
+const _publics = {'/connexion', '/inscription', '/verification', '/mot-de-passe-oublie'};
 
 GoRouter creerRouteur(Session session) => GoRouter(
   initialLocation: '/rechercher',
@@ -49,7 +50,11 @@ GoRouter creerRouteur(Session session) => GoRouter(
   },
   routes: [
     GoRoute(path: '/demarrage', builder: (_, _) => const _Demarrage()),
-    GoRoute(path: '/connexion', builder: (_, _) => const ConnexionPage()),
+    GoRoute(
+      path: '/connexion',
+      builder: (_, etat) => ConnexionPage(reinitialise: etat.uri.queryParameters['reinitialise'] == '1'),
+    ),
+    GoRoute(path: '/mot-de-passe-oublie', builder: (_, _) => const MotDePasseOubliePage()),
     GoRoute(path: '/inscription', builder: (_, _) => const InscriptionPage()),
     GoRoute(
       path: '/verification',

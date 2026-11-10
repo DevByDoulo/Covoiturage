@@ -10,7 +10,10 @@ import 'verification.dart';
 
 /// Connexion par email ou numéro de téléphone (le compte doit être vérifié ; sinon un code est renvoyé).
 class ConnexionPage extends StatefulWidget {
-  const ConnexionPage({super.key});
+  const ConnexionPage({super.key, this.reinitialise = false});
+
+  /// Vrai juste après un changement de mot de passe : affiche un message de confirmation.
+  final bool reinitialise;
 
   @override
   State<ConnexionPage> createState() => _ConnexionPageState();
@@ -70,6 +73,10 @@ class _ConnexionPageState extends State<ConnexionPage> {
                     const SizedBox(height: 32),
                     const Text('Connexion', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
                     const SizedBox(height: 16),
+                    if (widget.reinitialise) ...[
+                      const Bandeau('Mot de passe modifié. Connectez-vous avec le nouveau.', succes: true),
+                      const SizedBox(height: 12),
+                    ],
                     if (_erreur != null) ...[Bandeau(_erreur!), const SizedBox(height: 12)],
                     TextFormField(
                       controller: _identifiant,
@@ -96,7 +103,14 @@ class _ConnexionPageState extends State<ConnexionPage> {
                       validator: (v) => (v ?? '').isEmpty ? 'Saisissez votre mot de passe' : null,
                       onFieldSubmitted: (_) => _connecter(),
                     ),
-                    const SizedBox(height: 20),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => context.push('/mot-de-passe-oublie'),
+                        child: const Text('Mot de passe oublié ?'),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     FilledButton(
                       onPressed: _envoi ? null : _connecter,
                       child: _envoi

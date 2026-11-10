@@ -34,10 +34,10 @@ chaque fonctionnalité ; ici, ne garder qu'une ligne par module.
   05 avis, 06 notifications, 07 administration, 08 géolocalisation (Ma position, guidage vocal, suivi du conducteur
   en direct), 09 messagerie, textes légaux (`/conditions`, `/confidentialite`).
 - **Appli mobile Flutter** (`mobile/`, voir `mobile/README.md`) : parcours passager et conducteur, messagerie, avis,
-  guidage vocal et suivi en direct. Reste : mot de passe oublié, Google, édition du profil, paiements, push.
+  guidage vocal et suivi en direct. Mot de passe oublié fait (branche `mobile-mot-de-passe-oublie`). Reste : Google, édition du profil, paiements, push.
 - **Pas fait** : signalements (classe SIGNALEMENT), push navigateur (Firebase), suppression automatique des comptes.
 - Version complète d'avant le 27/10/2026 : étiquette Git `archive/lot1-complet`.
-- **Tests** : `./mvnw test` (43), `npm test` (47) + `npx ng build`, `flutter test` dans `mobile` (22),
+- **Tests** : `./mvnw test` (43), `npm test` (47) + `npx ng build`, `flutter test` dans `mobile` (24),
   `python -m pytest` dans `ia-tarification` (20). Tests d'intégration : numéros de téléphone uniques (base partagée).
 - **Textes légaux** (`frontend/src/app/features/legal`) : à mettre à jour (texte + `VERSION_LEGALE`) à chaque
   fonctionnalité qui touche aux données ou aux règles.
