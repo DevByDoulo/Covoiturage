@@ -14,6 +14,7 @@ import 'features/conducteur/trajet_conducteur.dart';
 import 'features/guidage/guidage.dart';
 import 'features/messages/messages.dart';
 import 'features/notifications/notifications.dart';
+import 'features/paiements/paiements.dart';
 import 'features/profil/profil.dart';
 import 'features/recherche/recherche.dart';
 import 'features/reservations/reservations.dart';
@@ -77,6 +78,12 @@ GoRouter creerRouteur(Session session) => GoRouter(
     GoRoute(
       path: '/messages/:id',
       builder: (_, etat) => ConversationPage(id: int.parse(etat.pathParameters['id']!)),
+    ),
+    // 04 — historique des paiements et reçus
+    GoRoute(path: '/paiements', builder: (_, _) => const MesPaiementsPage()),
+    GoRoute(
+      path: '/paiements/:reference/recu',
+      builder: (_, etat) => RecuPage(reference: etat.pathParameters['reference']!),
     ),
     // Avant l'onglet « /conduite » : écrans plein écran du conducteur.
     GoRoute(path: '/conduite/publier', builder: (_, _) => const PublierPage()),

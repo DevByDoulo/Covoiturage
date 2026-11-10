@@ -14,6 +14,8 @@ Application Android / iOS du covoiturage, branchée sur la même API que le site
   « J'ai payé : vérifier », annulation.
 - **Notifications** : liste, pastille du nombre de non lues (rafraîchie toutes les 30 s), ouverture du lien.
 - **Profil** : lecture seule et déconnexion ; le reste se gère sur le site.
+- **Mes paiements** (depuis le Profil) : historique des paiements et encaissements, reçu de chaque paiement
+  réussi ou remboursé, avec « Copier le reçu ».
 
 ## Deuxième lot : parcours conducteur (onglet « Conduire »)
 
@@ -65,7 +67,7 @@ Mêmes règles que sur le site (`/trajets/:id/guidage` et `/trajets/:id/suivi`).
   sans se reconstruire), distance, heure estimée, annonces vocales à 2 km, 1 km, 500 m, 200 m puis à l'arrivée.
 
 Pas encore fait : notifications push (Firebase), escales à la publication,
-connexion Google, modification du profil, historique des paiements.
+connexion Google, modification du profil.
 
 ## Lancer
 
