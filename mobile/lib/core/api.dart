@@ -81,6 +81,27 @@ class Api {
 
   Future<dynamic> delete(String chemin) => _envoyer('DELETE', chemin);
 
+  /// Envoi d'un fichier en multipart/form-data (ex. photo de profil), avec le même renouvellement du jeton.
+  /// Le serveur reconnaît le format aux premiers octets du fichier : pas besoin de type MIME.
+  Future<dynamic> envoyerFichier(String chemin, String champ, List<int> octets, String nomFichier,
+      {bool deuxiemeEssai = false}) async {
+    final requete = http.MultipartRequest('POST', Uri.parse('$_base$chemin'))
+      ..headers['Accept'] = 'application/json'
+      ..headers['Accept-Language'] = 'fr'
+      ..files.add(http.MultipartFile.fromBytes(champ, octets, filename: nomFichier));
+    if (accessToken != null) requete.headers['Authorization'] = 'Bearer $accessToken';
+    final reponse = await http.Response.fromStream(await _client.send(requete).timeout(_delai));
+    if (reponse.statusCode == 401 && !deuxiemeEssai && renouveler != null) {
+      _renouvellementEnCours ??= renouveler!().whenComplete(() => _renouvellementEnCours = null);
+      if (await _renouvellementEnCours != null) {
+        return envoyerFichier(chemin, champ, octets, nomFichier, deuxiemeEssai: true);
+      }
+    }
+    if (reponse.statusCode >= 400) throw ErreurApi.depuisReponse(reponse);
+    if (reponse.bodyBytes.isEmpty) return null;
+    return jsonDecode(utf8.decode(reponse.bodyBytes));
+  }
+
   /// Appel sans jeton et sans renouvellement (connexion, inscription, refresh).
   Future<dynamic> postPublic(String chemin, Object? corps) => _envoyer('POST', chemin, corps: corps, authentifie: false);
 

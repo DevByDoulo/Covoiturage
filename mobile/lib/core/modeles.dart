@@ -13,6 +13,7 @@ class Profil {
     this.email,
     this.telephone,
     this.sexe,
+    this.bio,
     this.photoProfil,
     required this.role,
     required this.conducteurValide,
@@ -25,6 +26,9 @@ class Profil {
   final String? email;
   final String? telephone;
   final String? sexe;
+
+  /// Présentation libre (500 caractères au plus), modifiable dans « Modifier mon profil ».
+  final String? bio;
   final String? photoProfil;
   final String role;
   final bool conducteurValide;
@@ -40,6 +44,7 @@ class Profil {
         email: j['email'] as String?,
         telephone: j['telephone'] as String?,
         sexe: j['sexe'] as String?,
+        bio: j['bio'] as String?,
         photoProfil: j['photoProfil'] as String?,
         role: j['role'] as String,
         conducteurValide: j['conducteurValide'] == true,

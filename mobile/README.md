@@ -13,7 +13,8 @@ Application Android / iOS du covoiturage, branchée sur la même API que le site
 - **Mes réservations** : statut, code d'embarquement (PIN + QR), paiement en ligne via PayDunya puis
   « J'ai payé : vérifier », annulation.
 - **Notifications** : liste, pastille du nombre de non lues (rafraîchie toutes les 30 s), ouverture du lien.
-- **Profil** : lecture seule et déconnexion ; le reste se gère sur le site.
+- **Profil** : « Modifier mon profil » (photo depuis la galerie ou l'appareil photo, prénom, nom, présentation) et
+  déconnexion ; préférences, contacts d'urgence, véhicules et documents se gèrent sur le site.
 - **Mes paiements** (depuis le Profil) : historique des paiements et encaissements, reçu de chaque paiement
   réussi ou remboursé, avec « Copier le reçu ».
 
@@ -67,7 +68,7 @@ Mêmes règles que sur le site (`/trajets/:id/guidage` et `/trajets/:id/suivi`).
   sans se reconstruire), distance, heure estimée, annonces vocales à 2 km, 1 km, 500 m, 200 m puis à l'arrivée.
 
 Pas encore fait : notifications push (Firebase), escales à la publication,
-connexion Google, modification du profil.
+connexion Google.
 
 ## Lancer
 
