@@ -7,9 +7,11 @@ import 'app.dart';
 import 'core/api.dart';
 import 'core/localisation.dart';
 import 'core/session.dart';
+import 'core/voix.dart';
 import 'core/theme.dart';
 import 'features/messages/messages.dart';
 import 'features/notifications/notifications.dart';
+import 'features/suivi/partage.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +20,7 @@ Future<void> main() async {
   final session = Session(api);
   final compteur = CompteurNotifications(api);
   final messages = CompteurMessages(api);
+  final positions = PositionActuelle();
   session.restaurer();
   runApp(
     MultiProvider(
@@ -27,7 +30,10 @@ Future<void> main() async {
         ChangeNotifierProvider.value(value: compteur),
         ChangeNotifierProvider.value(value: messages),
         Provider(create: (_) => Geocodage()),
-        Provider(create: (_) => PositionActuelle()),
+        Provider.value(value: positions),
+        ChangeNotifierProvider(create: (_) => Voix()),
+        // Partage de position du conducteur : global, il continue d'un écran à l'autre.
+        ChangeNotifierProvider(create: (_) => PartagePosition(api, positions)),
       ],
       child: YobalemaApp(session: session, compteur: compteur, messages: messages),
     ),

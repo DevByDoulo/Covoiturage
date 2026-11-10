@@ -215,6 +215,7 @@ class Reservation {
     this.motifAnnulation,
     this.passager,
     this.pointRamassage,
+    this.statutTrajet,
   });
 
   final int id;
@@ -234,6 +235,9 @@ class Reservation {
   /// Côté conducteur (réservations d'un trajet).
   final Personne? passager;
   final String? pointRamassage;
+
+  /// Statut du trajet (PUBLIE, COMPLET, EN_COURS…).
+  final String? statutTrajet;
 
   bool get active => statut == 'EN_ATTENTE' || statut == 'ACCEPTEE';
 
@@ -264,6 +268,7 @@ class Reservation {
       motifAnnulation: j['motifAnnulation'] as String?,
       passager: j['passager'] == null ? null : Personne.depuisJson(j['passager'] as Map<String, dynamic>),
       pointRamassage: j['pointRamassage'] as String?,
+      statutTrajet: t['statut'] as String?,
     );
   }
 }

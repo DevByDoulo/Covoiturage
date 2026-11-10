@@ -98,7 +98,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
     // Liens du site : seuls ceux qui existent dans l'application mobile sont suivis.
     final lien = n.lien ?? '';
-    if (RegExp(r'^/trajets/\d+$').hasMatch(lien)) {
+    if (RegExp(r'^/trajets/\d+(/(suivi|guidage))?$').hasMatch(lien)) {
       context.push(lien);
     } else if (RegExp(r'^/messages(/\d+)?$').hasMatch(lien)) {
       context.push(lien);

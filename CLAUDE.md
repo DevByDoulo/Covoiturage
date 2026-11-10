@@ -173,10 +173,14 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   PIN, démarrer / terminer / annuler). **Messagerie** (branche `mobile-messagerie`, `lib/features/messages`) : icône
   Messages avec compteur, conversations rafraîchies toutes les 5 s, boutons « Écrire à … ». **Avis** (branche
   `mobile-avis`, `lib/features/avis`) : « Donnez votre avis » (Mes réservations, Mes trajets), réputation (détail
-  d'un trajet, Profil). Reste : push, alertes, mot de passe oublié, Google, édition du profil, paiements.
+  d'un trajet, Profil). **Guidage vocal et suivi en direct** (branche `mobile-guidage-suivi`) : mêmes écrans que le
+  site (`lib/features/guidage`, `lib/features/suivi`, logique `lib/core/guide.dart` et `itineraire.dart` portée du
+  site et testée), voix `flutter_tts`, écran allumé `wakelock_plus` ; le partage du conducteur continue appli en
+  arrière-plan (Android : service au premier plan avec notification ; iOS : `UIBackgroundModes` `location`).
+  Reste : push, alertes, mot de passe oublié, Google, édition du profil, paiements.
 - Tests : `./mvnw test` → 43 tests (dont `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 47 tests ; `flutter test` dans `mobile` → 12 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 47 tests ; `flutter test` dans `mobile` → 21 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 

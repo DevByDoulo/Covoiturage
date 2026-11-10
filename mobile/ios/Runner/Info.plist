@@ -11,7 +11,13 @@
 	<key>NSCameraUsageDescription</key>
 	<string>La caméra sert à scanner le code d'embarquement des passagers.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Votre position sert à remplir le lieu de départ de votre recherche de trajet.</string>
+	<string>Votre position sert à remplir le lieu de départ, à vous guider jusqu'au point de rendez-vous et, si vous conduisez, à la partager avec vos passagers.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Quand vous partagez votre position de conducteur, elle continue d'être envoyée à vos passagers si l'application passe en arrière-plan, jusqu'à l'arrêt du partage.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

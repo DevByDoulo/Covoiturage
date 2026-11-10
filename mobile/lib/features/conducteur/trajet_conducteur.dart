@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api.dart';
@@ -9,6 +10,7 @@ import '../../core/theme.dart';
 import '../../shared/carte.dart';
 import '../../shared/widgets.dart';
 import '../messages/messages.dart';
+import '../suivi/partage.dart';
 import 'mes_trajets.dart';
 import 'scanner.dart';
 
@@ -208,6 +210,7 @@ class _TrajetConducteurPageState extends State<TrajetConducteurPage> {
         ]),
       ]),
       const SizedBox(height: 12),
+      if (ouvert) ...[_blocPosition(t), const SizedBox(height: 12)],
       _blocPassagers(),
       if (ouvert && aEmbarquer.isNotEmpty) ...[const SizedBox(height: 12), _blocEmbarquement(aEmbarquer.length)],
       const SizedBox(height: 16),
@@ -240,6 +243,54 @@ class _TrajetConducteurPageState extends State<TrajetConducteurPage> {
           label: const Text('Terminer le trajet'),
         ),
     ];
+  }
+
+  /// 08 — Partager sa position en direct avec les passagers (à partir d'une heure avant le départ).
+  Widget _blocPosition(Trajet t) {
+    final partage = context.watch<PartagePosition>();
+    final actif = partage.partage(t.id);
+    final possible = t.statut == 'EN_COURS' ||
+        !DateTime.now().isBefore(t.dateHeureDepart.subtract(const Duration(hours: 1)));
+    final envoi = partage.dernierEnvoi;
+    final depuis = envoi == null
+        ? null
+        : '${envoi.hour.toString().padLeft(2, '0')}h${envoi.minute.toString().padLeft(2, '0')}:${envoi.second.toString().padLeft(2, '0')}';
+    return Bloc(titre: 'Position en direct', icone: Icons.share_location, children: [
+      if (actif) ...[
+        Row(children: [
+          const Icon(Icons.circle, color: Couleurs.vert, size: 12),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text('Vos passagers voient votre position${depuis == null ? '.' : ' (dernier envoi à $depuis).'}',
+                style: const TextStyle(fontWeight: FontWeight.w700)),
+          ),
+        ]),
+        const SizedBox(height: 4),
+        const Text('Le partage continue si vous changez d\'écran ou si le téléphone se met en veille.',
+            style: TextStyle(color: Couleurs.texte2, fontSize: 13)),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(onPressed: partage.arreter, icon: const Icon(Icons.stop), label: const Text('Arrêter le partage')),
+      ] else if (possible) ...[
+        const Text('Vos passagers acceptés suivront votre arrivée au point de rendez-vous, avec des annonces vocales. '
+            'Votre position est effacée à l\'arrêt du partage et à la fin du trajet.',
+            style: TextStyle(color: Couleurs.texte2)),
+        const SizedBox(height: 8),
+        FilledButton.icon(
+          onPressed: () => partage.demarrer(t.id),
+          icon: const Icon(Icons.share_location),
+          label: const Text('Partager ma position'),
+        ),
+      ] else
+        const Text('Vous pourrez partager votre position à partir d\'une heure avant le départ.',
+            style: TextStyle(color: Couleurs.texte2)),
+      if (partage.erreur != null) ...[const SizedBox(height: 8), Bandeau(partage.erreur!)],
+      if (t.statut != 'EN_COURS')
+        TextButton.icon(
+          onPressed: () => context.push('/trajets/${t.id}/guidage'),
+          icon: const Icon(Icons.record_voice_over_outlined),
+          label: const Text('Guidage vocal jusqu\'au départ'),
+        ),
+    ]);
   }
 
   Widget _blocPassagers() => Bloc(titre: 'Passagers', icone: Icons.group_outlined, children: [

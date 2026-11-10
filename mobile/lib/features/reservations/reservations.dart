@@ -215,6 +215,12 @@ class _ReservationsPageState extends State<ReservationsPage> {
                 TextButton(onPressed: () => _verifier(r), child: const Text('J\'ai payé : vérifier')),
               ],
               BoutonEcrire(idTrajet: r.idTrajet, prenom: r.conducteur.prenom),
+              if (r.statut == 'ACCEPTEE' && const ['PUBLIE', 'COMPLET', 'EN_COURS'].contains(r.statutTrajet))
+                TextButton.icon(
+                  onPressed: () => context.push('/trajets/${r.idTrajet}/suivi'),
+                  icon: const Icon(Icons.share_location),
+                  label: Text('Suivre ${r.conducteur.prenom} en direct'),
+                ),
               TextButton(
                 onPressed: () => _annuler(r),
                 style: TextButton.styleFrom(foregroundColor: Couleurs.erreur),
