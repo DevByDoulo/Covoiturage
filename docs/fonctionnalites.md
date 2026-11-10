@@ -72,6 +72,9 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   du tracé, dans le bon sens, reçoit une notification `ALERTE_TRAJET` (lien vers le trajet ; prix max et
   « femmes uniquement » respectés). Écran : bouton « Créer une alerte » sous les résultats de Rechercher et bloc
   « Mes alertes » (`features/alertes`).
+  **Appli mobile** (branche `mobile-alertes`) : mêmes écrans dans `mobile/lib/features/alertes` (`AlertesService`,
+  `BoutonCreerAlerte` sous les résultats de Rechercher, `BlocMesAlertes`) ; pas de rayon ni de prix max côté mobile
+  (valeurs par défaut du serveur).
 - **07 Administration** (branche `07-administration`) : back-office `/admin` avec son propre cadre (menu latéral,
   `features/admin`) — tableau de bord (statistiques), **validation des documents** (file filtrable, aperçu du
   fichier, informations à vérifier, valider / refuser avec motif obligatoire ; `recalculerStatutConducteur`
@@ -158,10 +161,10 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   site (`lib/features/guidage`, `lib/features/suivi`, logique `lib/core/guide.dart` et `itineraire.dart` portée du
   site et testée), voix `flutter_tts`, écran allumé `wakelock_plus` ; le partage du conducteur continue appli en
   arrière-plan (Android : service au premier plan avec notification ; iOS : `UIBackgroundModes` `location`).
-  Reste : push, alertes, mot de passe oublié, Google, édition du profil, paiements.
+  Reste : push, mot de passe oublié, Google, édition du profil, paiements.
 - Tests : `./mvnw test` → 43 tests (dont `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 47 tests ; `flutter test` dans `mobile` → 21 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 47 tests ; `flutter test` dans `mobile` → 22 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 

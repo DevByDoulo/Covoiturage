@@ -9,6 +9,7 @@ import 'core/localisation.dart';
 import 'core/session.dart';
 import 'core/voix.dart';
 import 'core/theme.dart';
+import 'features/alertes/alertes.dart';
 import 'features/messages/messages.dart';
 import 'features/notifications/notifications.dart';
 import 'features/suivi/partage.dart';
@@ -29,6 +30,7 @@ Future<void> main() async {
         ChangeNotifierProvider.value(value: session),
         ChangeNotifierProvider.value(value: compteur),
         ChangeNotifierProvider.value(value: messages),
+        ChangeNotifierProvider(create: (_) => AlertesService(api)),
         Provider(create: (_) => Geocodage()),
         Provider.value(value: positions),
         ChangeNotifierProvider(create: (_) => Voix()),
