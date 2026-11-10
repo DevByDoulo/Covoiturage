@@ -115,8 +115,33 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   API `POST /api/reservations/{id}/evaluation`, `GET /api/moi/avis-a-donner`, `GET /api/utilisateurs/{id}/avis`
   (public). Événement `AvisEvenements.AvisPublie`, notifié à la personne notée (module 06). Écrans `features/avis` : bloc
   « Donnez votre avis » (Mes réservations, Mes trajets), réputation du conducteur (détail d'un trajet).
-  **Signalements** (classe SIGNALEMENT) : pas encore faits. Le profil (module 01) peut afficher
+  Les **signalements** (classe SIGNALEMENT) sont décrits plus bas (module 10). Le profil (module 01) peut afficher
   `GET /api/utilisateurs/{id}/avis` pour son compteur d'avis.
+- **10 Signalements** (branche `signalements`) : package backend `signalement`, table `signalement` (migration
+  V2026_11_10_1400, classe SIGNALEMENT : motif, description, statut, décision de l'administrateur, dates, signaleur,
+  personne visée, administrateur, trajet facultatif). La même migration ajoute `AVERTISSEMENT` et `SIGNALEMENT_CLASSE`
+  au journal `action_admin`. **Règles** : on ne signale que quelqu'un avec qui on a partagé un trajet (réservation
+  acceptée ou terminée, passager ↔ conducteur ; `ReservationRepository.ontPartageUnTrajet`), jamais soi-même ni un
+  administrateur ; un seul signalement ouvert (`EN_ATTENTE` / `EN_COURS`) par couple signaleur → signalé (index unique
+  partiel) ; 5 signalements par jour et par signaleur au plus (constante `SignalementService.MAX_PAR_JOUR`, 429) ;
+  motifs `COMPORTEMENT`, `CONDUITE_DANGEREUSE`, `NON_PRESENTATION`, `ANNULATION_TARDIVE`, `FRAUDE_DOCUMENTS`,
+  `HARCELEMENT`, `AUTRE` (description de 500 caractères, obligatoire pour `AUTRE`) ; pas de pièce jointe ni de
+  suspension automatique (la décision reste humaine). **Modération** : `PRENDRE_EN_CHARGE` (→ `EN_COURS`) puis une
+  décision motivée : `CLASSER_SANS_SUITE` (→ `REJETE`), `AVERTIR` (notification importante au signalé), `BLOQUER` ou
+  `BANNIR` (réutilisent `AdminService`, qui trace, ferme les sessions et prévient) — ces trois dernières donnent
+  `TRAITE`. Chaque décision est inscrite dans l'historique du compte signalé (`AdminService.tracerDecision`) et le
+  signaleur reçoit une notification `SIGNALEMENT_TRAITE` ; il ne voit jamais le détail de la décision, et le signalé ne
+  voit jamais l'identité du signaleur. API : `POST /api/signalements`, `GET /api/signalements/mes`, et pour les
+  administrateurs `GET /api/admin/signalements` (filtres `statut`, `utilisateur`, pagination),
+  `GET /api/admin/signalements/{id}`, `PATCH /api/admin/signalements/{id}` (`{decision, message}`).
+  **Site** (`features/signalements`) : lien « Signaler … » (`BoutonSignaler`) dans Mes réservations (conducteur) et
+  dans les demandes reçues par le conducteur (passagers) → `/signaler/:idUtilisateur?trajet=&nom=` (motif +
+  description) ; `/signalements` (Mes signalements). **Back-office** : `/admin/signalements` (menu « Signalements »,
+  filtre par statut, prise en charge, décision motivée) et lien « Voir les signalements visant cet utilisateur » sur la
+  fiche utilisateur (`?utilisateur=`). **Mobile** (`lib/features/signalements/signalements.dart`) : bouton « Signaler … »
+  sur Mes réservations et sur les passagers d'un trajet du conducteur, formulaire, « Mes signalements » depuis le
+  Profil ; la modération reste sur le site. Tests : `SignalementsParcoursTest`, `signalements.models.spec.ts`,
+  `test/signalements_test.dart`.
 - **09 Messagerie** (fonctionnalité facultative, branche `09-messagerie`) : package `messagerie`, tables `conversation`
   (une par trajet et par passager ; le conducteur est celui du trajet) et `message` (migration V2026_10_29_1000).
   Un passager écrit au conducteur d'un trajet à venir (même sans réserver) ou d'un trajet réservé ; le conducteur
@@ -167,10 +192,11 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   **Mot de passe oublié** (branche `mobile-mot-de-passe-oublie`, `lib/features/auth/mot_de_passe_oublie.dart`) : lien « Mot de passe oublié ? » sous la connexion, puis les 3 étapes du site (email ou téléphone → code à 6 chiffres, 5 essais, renvoi après le délai → nouveau mot de passe, même règle que l’inscription) via `Session` (`/api/auth/mot-de-passe/oublie`, `/verifier-code`, `/reinitialiser`) ; retour à la connexion avec un message de confirmation.
   **Paiements et reçus** (branche `mobile-paiements`, `lib/features/paiements/paiements.dart`) : entrée « Mes paiements » dans le Profil → `/paiements` (historique `/api/moi/paiements` : paiements comme passager en −, encaissements comme conducteur en + avec total encaissé, moyen, statut, référence ; tirer pour rafraîchir) et `/paiements/:reference/recu` (reçu `/api/paiements/{ref}/recu`, mêmes rubriques que le site, bandeau « Remboursé intégralement le … »), seulement pour les paiements réussis ou remboursés. À la place de « Imprimer / PDF » du site : bouton « Copier le reçu » (texte à coller dans un message ; pas de dépendance PDF).
   **Modification du profil** (branche `mobile-profil`, `lib/features/profil/modifier_profil.dart`) : bouton « Modifier mon profil » dans le Profil → `/profil/modifier`, comme l'en-tête et le bloc « À propos » du site : photo (galerie ou appareil photo via `image_picker`, réduite à 1024 px et réencodée en JPEG, 5 Mo au plus, envoyée tout de suite en multipart à `POST /api/moi/photo` via `Api.envoyerFichier`), prénom, nom et présentation (500 caractères) enregistrés par `PUT /api/moi` (`Session.modifierProfil`, sexe renvoyé inchangé, présentation vide → `null`) ; erreurs du serveur affichées sous le bon champ. Email et téléphone affichés sans pouvoir les modifier : ni le site ni l'API ne le permettent (ce sont les identifiants de connexion ; un changement demanderait une nouvelle vérification par code). La présentation s'affiche dans le Profil. iOS : `NSPhotoLibraryUsageDescription` ajouté.
+  **Signalements** (branche `signalements`) : voir le module 10.
   Reste : push, Google.
-- Tests : `./mvnw test` → 43 tests (dont `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
+- Tests : `./mvnw test` → 44 tests (dont `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 47 tests ; `flutter test` dans `mobile` → 32 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 50 tests ; `flutter test` dans `mobile` → 36 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 

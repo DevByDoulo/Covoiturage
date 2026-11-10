@@ -163,6 +163,12 @@ public class AdminService {
                 message, null);
     }
 
+    /** Enregistre dans l'historique une décision prise ailleurs (traitement d'un signalement). */
+    @Transactional
+    public void tracerDecision(Long adminId, Long utilisateurId, TypeActionAdmin type, String detail) {
+        tracer(adminId, charger(utilisateurId), type, detail);
+    }
+
     private void tracer(Long adminId, Utilisateur u, TypeActionAdmin type, String detail) {
         ActionAdmin a = new ActionAdmin();
         a.setAdmin(utilisateurs.getReferenceById(adminId));

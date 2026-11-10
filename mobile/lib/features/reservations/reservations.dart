@@ -11,6 +11,7 @@ import '../../core/theme.dart';
 import '../../shared/widgets.dart';
 import '../avis/avis.dart';
 import '../messages/messages.dart';
+import '../signalements/signalements.dart';
 
 /// Réservations du passager : suivi, code d'embarquement (PIN + QR), paiement en ligne et annulation.
 class ReservationsPage extends StatefulWidget {
@@ -215,6 +216,8 @@ class _ReservationsPageState extends State<ReservationsPage> {
                 TextButton(onPressed: () => _verifier(r), child: const Text('J\'ai payé : vérifier')),
               ],
               BoutonEcrire(idTrajet: r.idTrajet, prenom: r.conducteur.prenom),
+              if (r.statut == 'ACCEPTEE')
+                BoutonSignaler(idUtilisateur: r.conducteur.id, prenom: r.conducteur.prenom, idTrajet: r.idTrajet),
               if (r.statut == 'ACCEPTEE' && const ['PUBLIE', 'COMPLET', 'EN_COURS'].contains(r.statutTrajet))
                 TextButton.icon(
                   onPressed: () => context.push('/trajets/${r.idTrajet}/suivi'),
@@ -227,6 +230,12 @@ class _ReservationsPageState extends State<ReservationsPage> {
                 child: const Text('Annuler'),
               ),
             ]),
+          )
+        else if (r.statut == 'ACCEPTEE' || r.statut == 'TERMINEE')
+          // Voyage effectué (ou passager à bord) : on peut encore signaler le conducteur.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+            child: BoutonSignaler(idUtilisateur: r.conducteur.id, prenom: r.conducteur.prenom, idTrajet: r.idTrajet),
           ),
       ]),
     );

@@ -67,6 +67,7 @@
           </div>
           <div class="carte bloc">
             <h3>Historique</h3>
+            <p><a [routerLink]="['/admin/signalements']" [queryParams]="{ utilisateur: f.utilisateur.id }">Voir les signalements visant cet utilisateur</a></p>
             <ol class="historique">
               @for (a of f.historique; track $index) {
                 <li>

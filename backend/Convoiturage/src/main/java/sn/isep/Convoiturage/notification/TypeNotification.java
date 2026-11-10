@@ -22,5 +22,7 @@ public enum TypeNotification {
     /** Nouveau message dans une conversation (une seule notification non lue par conversation). */
     MESSAGE_RECU,
     /** Le conducteur commence à partager sa position : les passagers peuvent suivre son arrivée. */
-    POSITION_PARTAGEE
+    POSITION_PARTAGEE,
+    /** Un administrateur a traité un signalement (au signaleur : décision ; au signalé : avertissement). */
+    SIGNALEMENT_TRAITE
 }

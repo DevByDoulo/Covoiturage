@@ -23,6 +23,7 @@ const ICONES: Record<TypeNotification, NomIcone> = {
   AVIS_RECU: 'etoile',
   MESSAGE_RECU: 'discussion',
   POSITION_PARTAGEE: 'position',
+  SIGNALEMENT_TRAITE: 'drapeau',
 };
 
 /** Ton de l'icône : vert (bonne nouvelle), orange (à regarder), rouge (annulation, refus). */

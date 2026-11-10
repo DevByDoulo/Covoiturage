@@ -35,4 +35,18 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             order by t.dateHeureDepart desc
             """)
     List<Reservation> voyagesTerminesDepuis(@Param("utilisateurId") Long utilisateurId, @Param("depuis") LocalDateTime depuis);
+
+    /**
+     * Vrai si les deux personnes ont partagé un trajet (l'une passagère acceptée ou ayant voyagé, l'autre conductrice),
+     * éventuellement limité à {@code trajetId} (module 10 Signalements).
+     */
+    @Query("""
+            select count(r) > 0 from Reservation r
+            where r.statut in (sn.isep.Convoiturage.reservation.StatutReservation.ACCEPTEE,
+                               sn.isep.Convoiturage.reservation.StatutReservation.TERMINEE)
+              and (:trajetId is null or r.trajet.id = :trajetId)
+              and ((r.passager.id = :a and r.trajet.conducteur.id = :b)
+                or (r.passager.id = :b and r.trajet.conducteur.id = :a))
+            """)
+    boolean ontPartageUnTrajet(@Param("a") Long a, @Param("b") Long b, @Param("trajetId") Long trajetId);
 }

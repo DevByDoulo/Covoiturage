@@ -29,7 +29,14 @@ export interface UtilisateurLigne {
   derniereConnexion: string | null;
 }
 
-export type TypeAction = 'DOCUMENT_VALIDE' | 'DOCUMENT_REFUSE' | 'COMPTE_BLOQUE' | 'COMPTE_BANNI' | 'COMPTE_REACTIVE';
+export type TypeAction =
+  | 'DOCUMENT_VALIDE'
+  | 'DOCUMENT_REFUSE'
+  | 'COMPTE_BLOQUE'
+  | 'COMPTE_BANNI'
+  | 'COMPTE_REACTIVE'
+  | 'AVERTISSEMENT'
+  | 'SIGNALEMENT_CLASSE';
 
 export interface ActionAdmin {
   type: TypeAction;

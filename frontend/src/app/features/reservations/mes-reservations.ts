@@ -1,4 +1,5 @@
 import { BoutonMessage } from '../messages/bouton-message';
+import { BoutonSignaler } from '../signalements/bouton-signaler';
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -26,11 +27,12 @@ import { ReservationsService } from './reservations.service';
  */
 @Component({
   selector: 'app-mes-reservations',
-  imports: [RouterLink, DatePipe, FcfaPipe, Icone, Alerte, AvisADonnerBloc, BoutonMessage, QrCode],
+  imports: [RouterLink, DatePipe, FcfaPipe, Icone, Alerte, AvisADonnerBloc, BoutonMessage, BoutonSignaler, QrCode],
   template: `
     <header class="entete">
       <h1>Mes réservations</h1>
       <a routerLink="/paiements" class="bouton-lien"><app-icone nom="info" [taille]="16" /> Mes paiements et reçus</a>
+      <a routerLink="/signalements" class="bouton-lien"><app-icone nom="drapeau" [taille]="16" /> Mes signalements</a>
     </header>
 
     <!-- 05 — voyages terminés à noter -->
@@ -74,7 +76,12 @@ import { ReservationsService } from './reservations.service';
           @if (r.motifAnnulation && (r.statut === 'ANNULEE' || r.statut === 'REFUSEE')) {
             <p class="aide">{{ r.motifAnnulation }}</p>
           }
-          <div><app-bouton-message variante="lien" [idTrajet]="r.trajet.id" [libelle]="'Écrire à ' + r.trajet.conducteur.prenom" /></div>
+          <div>
+            <app-bouton-message variante="lien" [idTrajet]="r.trajet.id" [libelle]="'Écrire à ' + r.trajet.conducteur.prenom" />
+            @if (r.statut === 'ACCEPTEE' || r.statut === 'TERMINEE') {
+              <app-bouton-signaler [idUtilisateur]="r.trajet.conducteur.id" [idTrajet]="r.trajet.id" [nom]="r.trajet.conducteur.prenom" />
+            }
+          </div>
           <!-- 08 — suivre le conducteur en direct (s'il partage sa position) -->
           @if (r.statut === 'ACCEPTEE' && ['PUBLIE', 'COMPLET', 'EN_COURS'].includes(r.trajet.statut)) {
             <div><a class="bouton-lien" [routerLink]="['/trajets', r.trajet.id, 'suivi']">

@@ -58,6 +58,7 @@ const _icones = {
   'ALERTE_TRAJET': Icons.search,
   'AVIS_RECU': Icons.star_outline,
   'MESSAGE_RECU': Icons.chat_bubble_outline,
+  'SIGNALEMENT_TRAITE': Icons.flag_outlined,
 };
 
 class NotificationsPage extends StatefulWidget {

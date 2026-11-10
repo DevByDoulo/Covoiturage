@@ -32,12 +32,13 @@ chaque fonctionnalité ; ici, ne garder qu'une ligne par module.
   01 profil, 02 véhicules et documents, 03 trajets et recherche (PostGIS, carte Leaflet), alertes de recherche,
   12 prix (formule + service IA FastAPI/XGBoost), 04 réservations et paiements (Wave, PayDunya ; QR d'embarquement),
   05 avis, 06 notifications, 07 administration, 08 géolocalisation (Ma position, guidage vocal, suivi du conducteur
-  en direct), 09 messagerie, textes légaux (`/conditions`, `/confidentialite`).
+  en direct), 09 messagerie, 10 signalements (branche `signalements` : signaler après un trajet partagé, modération
+  dans le back-office, aussi dans l'appli mobile), textes légaux (`/conditions`, `/confidentialite`).
 - **Appli mobile Flutter** (`mobile/`, voir `mobile/README.md`) : parcours passager et conducteur, messagerie, avis,
   guidage vocal et suivi en direct. Mot de passe oublié fait (branche `mobile-mot-de-passe-oublie`), historique des paiements et reçus (branche `mobile-paiements`), modification du profil — photo, prénom, nom, présentation (branche `mobile-profil`). Reste : Google, push.
-- **Pas fait** : signalements (classe SIGNALEMENT), push navigateur (Firebase), suppression automatique des comptes.
+- **Pas fait** : push navigateur (Firebase), suppression automatique des comptes.
 - Version complète d'avant le 27/10/2026 : étiquette Git `archive/lot1-complet`.
-- **Tests** : `./mvnw test` (43), `npm test` (47) + `npx ng build`, `flutter test` dans `mobile` (32),
+- **Tests** : `./mvnw test` (44), `npm test` (50) + `npx ng build`, `flutter test` dans `mobile` (36),
   `python -m pytest` dans `ia-tarification` (20). Tests d'intégration : numéros de téléphone uniques (base partagée).
 - **Textes légaux** (`frontend/src/app/features/legal`) : à mettre à jour (texte + `VERSION_LEGALE`) à chaque
   fonctionnalité qui touche aux données ou aux règles. Version du 10/11/2026 : position en arrière-plan (mobile)

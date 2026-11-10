@@ -18,6 +18,8 @@ const LIBELLES_ACTION: Record<TypeAction, string> = {
   COMPTE_BLOQUE: 'Compte bloqué',
   COMPTE_BANNI: 'Compte banni',
   COMPTE_REACTIVE: 'Compte débloqué',
+  AVERTISSEMENT: 'Avertissement',
+  SIGNALEMENT_CLASSE: 'Signalement classé sans suite',
 };
 
 /** Fiche utilisateur du back-office (maquette « BO - Fiche utilisateur ») : compte, véhicules, documents, historique, blocage. */

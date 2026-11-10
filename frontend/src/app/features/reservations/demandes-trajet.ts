@@ -1,4 +1,5 @@
 import { BoutonMessage } from '../messages/bouton-message';
+import { BoutonSignaler } from '../signalements/bouton-signaler';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ErreurApi, lireErreur } from '../../core/api/erreur-api';
@@ -18,7 +19,7 @@ import { ReservationsService } from './reservations.service';
 /** 04 — Côté conducteur : demandes reçues sur un trajet (accepter / refuser) et embarquement par PIN. */
 @Component({
   selector: 'app-demandes-trajet',
-  imports: [FormsModule, FcfaPipe, Icone, Alerte, BoutonMessage, ScannerQr],
+  imports: [FormsModule, FcfaPipe, Icone, Alerte, BoutonMessage, BoutonSignaler, ScannerQr],
   template: `
     <section class="carte bloc" aria-labelledby="titre-passagers">
       <h2 id="titre-passagers"><app-icone nom="utilisateurs" /> Passagers</h2>
@@ -42,6 +43,9 @@ import { ReservationsService } from './reservations.service';
               </small>
               <br /><app-bouton-message variante="lien" [idTrajet]="idTrajet()" [idPassager]="r.passager.id"
                                         [libelle]="'Écrire à ' + r.passager.prenom" />
+              @if (r.statut === 'ACCEPTEE' || r.statut === 'TERMINEE') {
+                <br /><app-bouton-signaler [idUtilisateur]="r.passager.id" [idTrajet]="idTrajet()" [nom]="r.passager.prenom" />
+              }
             </div>
             @if (r.statut === 'EN_ATTENTE') {
               <div class="actions">
