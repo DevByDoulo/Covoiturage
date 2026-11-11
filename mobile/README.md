@@ -98,6 +98,12 @@ flutter run --dart-define=API_URL=http://<IP du PC>:8080/api
 
 Adresse du site (liens « Véhicules et documents ») : `--dart-define=SITE_URL=http://<IP du PC>:4200`.
 
+Raccourci qui détecte l'IP du PC tout seul (rien de personnel dans le dépôt) : `.\tool\lancer-telephone.ps1`.
+Le pare-feu Windows doit laisser entrer le port 8080. Liste de contrôle du test :
+[`docs/test-telephone-android.md`](../docs/test-telephone-android.md).
+
+L'icône Android (repère vert du logo) se régénère avec `python tool/generer_icone.py` (Pillow).
+
 Pour Android, il faut d'abord installer les *Android SDK Command-line Tools* (Android Studio → SDK Manager)
 puis accepter les licences avec `flutter doctor --android-licenses`.
 
