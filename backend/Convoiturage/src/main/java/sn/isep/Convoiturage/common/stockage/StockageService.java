@@ -69,6 +69,18 @@ public class StockageService {
         return new PathResource(chemin);
     }
 
+    /** Supprime un fichier stocké (sans erreur s'il n'existe plus ou si le nom n'est pas valide). */
+    public void supprimer(String nom, Dossier dossier) {
+        if (nom == null || !NOM_VALIDE.matcher(nom).matches()) return;
+        Path chemin = repertoire(dossier).resolve(nom).normalize();
+        if (!chemin.startsWith(racine)) return;
+        try {
+            Files.deleteIfExists(chemin);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Échec de la suppression du fichier", e);
+        }
+    }
+
     public static String typeMime(String nom) {
         if (nom.endsWith(".pdf")) return "application/pdf";
         if (nom.endsWith(".png")) return "image/png";

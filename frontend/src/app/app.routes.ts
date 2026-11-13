@@ -103,6 +103,12 @@ export const routes: Routes = [
         canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
         loadComponent: () => import('./features/profil/desactivation').then((m) => m.Desactivation),
       },
+      {
+        path: 'profil/suppression',
+        title: 'Supprimer mon compte · YOBALEMAsn',
+        canActivate: [roleGuard('PASSAGER', 'CONDUCTEUR')],
+        loadComponent: () => import('./features/profil/suppression-compte').then((m) => m.SuppressionCompte),
+      },
       // 09 — Messagerie
       {
         path: 'messages',

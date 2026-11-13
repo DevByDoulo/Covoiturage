@@ -40,8 +40,34 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   mobile (suivi du conducteur pendant le trajet, arrêt à la fin du trajet, position supprimée ensuite) ajouté aux
   conditions (§10) et à la confidentialité (§3 et §6) ; `VERSION_LEGALE` = « 10 novembre 2026 ».
   **À mettre à jour** (texte et date de version) à chaque fonctionnalité qui collecte ou transmet des données, ou
-  qui change les règles (commission, annulation). Pas encore de suppression automatique des comptes : elle se fait
-  sur demande, comme l'indique la politique.
+  qui change les règles (commission, annulation). La suppression des comptes est automatisée (voir ci-dessous).
+- **Suppression de compte (RGPD)** (branche `suppression-compte`) : backend `sn.isep.Convoiturage.suppression`
+  (`SuppressionCompteService`, `AnonymisationService`, `AnonymisationPlanifiee`), migration V2026_11_13_1500
+  (colonnes `date_suppression_demandee` et `date_anonymisation` ; statuts `SUPPRESSION_DEMANDEE` et `SUPPRIME` ; objet
+  OTP `CONFIRMATION_SUPPRESSION`). **API** : `POST /api/moi/suppression` (`{motDePasse, code}`) et
+  `POST /api/moi/suppression/code` (envoie le code des comptes sans mot de passe, c.-à-d. Google). Confirmation par
+  mot de passe (compté dans le limiteur de connexion) ou par code email/SMS ; compte administrateur refusé (403).
+  **Refus 409** (propriété `obstacles` + message clair) tant que l'utilisateur a un trajet à venir ou en cours en tant que
+  conducteur (`PUBLIE`, `COMPLET`, `EN_COURS`), une réservation `ACCEPTEE` à venir, ou un paiement **en ligne**
+  `EN_ATTENTE` / `REMBOURSEMENT_DEMANDE` (les espèces sont suivies par la réservation) ; les réservations `EN_ATTENTE`
+  sont annulées automatiquement. **Délai de grâce de 30 jours** : statut `SUPPRESSION_DEMANDEE`, jetons révoqués,
+  compte invisible (recherche et alertes ne retiennent que `ACTIF`, profil public 404) ; **se reconnecter (mot de passe ou
+  Google) annule** la suppression (réponse `suppressionAnnulee: true`, pas de `DELETE` : la session est déjà fermée).
+  **Anonymisation** : `AnonymisationPlanifiee` (`@Scheduled`, tous les jours à 3 h Dakar, un compte par transaction)
+  efface identité (prénom « Utilisateur », nom « Supprimé »), email, téléphone, identifiant Google, mot de passe, photo
+  et fichiers, présentation, documents et fichiers, photos de véhicules, contacts d'urgence, préférences, alertes,
+  jetons push, notifications, sessions, codes OTP, position, `paiement.numero_telephone`, texte des messages envoyés
+  (« [message supprimé] ») ; **conserve** paiements et réservations, trajets, véhicules (désactivés, immatriculation
+  `SUPPR-<id>`), avis (note et commentaire), signalements, journal d'administration. Les fichiers ne sont effacés
+  qu'après validation de la base. **Emails** (SMS à défaut) via `AlertesSecurite` : demande (avec date), annulation,
+  suppression définitive. **Site** : « Supprimer mon compte » dans le profil → `/profil/suppression`
+  (`features/profil/suppression-compte.ts`, mot de passe ou code), message sur la connexion après la demande, bandeau
+  « Suppression annulée » dans l'espace connecté. **Mobile** : `lib/features/profil/suppression_compte.dart`
+  (`/profil/suppression`, `Session.supprimerCompte`, message sur la connexion, bandeau à la reconnexion).
+  **Textes légaux** : confidentialité §6 (suppression, 30 jours, effacé / conservé, paiements 10 ans) et §9, conditions
+  (compte) ; `VERSION_LEGALE` reste « 13 novembre 2026 » (date de la modification). Tests :
+  `SuppressionCompteParcoursTest` (refus, annulation par reconnexion, anonymisation, compte Google par code),
+  `profil.service.spec.ts`, `suppression_compte_test.dart`.
 - La base garde **toutes les tables** du diagramme de classes (migration V1, à ne jamais modifier) : chaque
   module les reprend ou les fait évoluer par de nouvelles migrations datées.
 - **12 Calcul automatique du prix** (branche `12-prix`) : module backend `tarification` (repris de l'archive :
@@ -223,9 +249,9 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   **Signalements** (branche `signalements`) : voir le module 10.
   **Connexion avec Google** (branche `mobile-google`, `lib/core/google.dart` + `lib/features/auth/google.dart`) : bouton « Continuer avec Google » (séparateur « ou ») sur la connexion et l'inscription. Le package `google_sign_in` (7.x, `authenticate()`, puis déconnexion de Google pour pouvoir choisir un autre compte la fois suivante) fournit l'idToken, envoyé à `POST /api/auth/google` (`Session.connexionGoogle`, **même endpoint que le site, backend inchangé**) qui renvoie la session habituelle. `serverClientId` = ID client **Web** (celui du site), donc l'audience de l'idToken est bien le `GOOGLE_CLIENT_ID` vérifié par `GoogleTokenVerifier` (tokeninfo) ; le client Android n'est reconnu que par le paquet `sn.isep.yobalema` + SHA-1. Les ID clients passent par `--dart-define=GOOGLE_SERVER_CLIENT_ID=…` (et `GOOGLE_IOS_CLIENT_ID` plus tard), jamais dans le dépôt ; `tool/lancer-telephone.ps1` reprend la variable d'environnement du même nom. Cas gérés par `continuerAvecGoogle` (testé sans le plugin via l'interface `ServiceGoogle`) : annulation (rien d'affiché), compte connu → connecté, compte inconnu → `TELEPHONE_REQUIS` → écran `/google/telephone` (numéro + sexe, idToken gardé en mémoire seulement, numéro déjà pris affiché sous le champ) → code de vérification comme à l'inscription, erreur réseau / jeton refusé / plugin mal configuré → message dans le bandeau. Non disponible dans la version navigateur ; iOS à configurer (client iOS + schéma d'URL). Étapes Google Cloud et `gradlew signingReport` : `mobile/README.md`.
   Reste : push.
-- Tests : `./mvnw test` → 44 tests (dont `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
+- Tests : `./mvnw test` → 47 tests (dont `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 50 tests ; `flutter test` dans `mobile` → 48 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 59 tests ; `flutter test` dans `mobile` → 59 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 

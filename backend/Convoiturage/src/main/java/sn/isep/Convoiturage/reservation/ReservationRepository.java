@@ -23,6 +23,19 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     long countByStatut(StatutReservation statut);
 
+    List<Reservation> findByPassagerIdAndStatut(Long passagerId, StatutReservation statut);
+
+    /** Réservations acceptées du passager dont le trajet est en cours ou n'est pas encore parti (suppression de compte). */
+    @Query("""
+            select count(r) from Reservation r
+            where r.passager.id = :passagerId
+              and r.statut = :acceptee
+              and (r.trajet.statut = :enCours or r.trajet.dateHeureDepart > :maintenant)
+            """)
+    long compterAccepteesAVenir(@Param("passagerId") Long passagerId, @Param("acceptee") StatutReservation acceptee,
+                                @Param("enCours") sn.isep.Convoiturage.trajet.StatutTrajet enCours,
+                                @Param("maintenant") LocalDateTime maintenant);
+
     /**
      * Voyages effectués (réservations TERMINEE : passager embarqué, trajet terminé) où l'utilisateur était
      * passager ou conducteur, partis depuis {@code depuis} : ce sont les voyages qu'il peut encore noter (module 05).

@@ -35,16 +35,17 @@ chaque fonctionnalité ; ici, ne garder qu'une ligne par module.
   en direct), 09 messagerie, 10 signalements (branche `signalements` : signaler après un trajet partagé, modération
   dans le back-office, aussi dans l'appli mobile), textes légaux (`/conditions`, `/confidentialite`), notifications
   push FCM site + Android (branche `push-notifications` : table `appareil`, préférence `push_active` ; clés web
-  `environment.firebase` à compléter).
+  `environment.firebase` à compléter), suppression de compte RGPD (branche `suppression-compte` : demande avec
+  confirmation, délai de grâce de 30 jours annulé par la reconnexion, anonymisation planifiée ; site et mobile).
 - **Appli mobile Flutter** (`mobile/`, voir `mobile/README.md`) : parcours passager et conducteur, messagerie, avis,
   guidage vocal et suivi en direct, notifications push (`google-services.json` non commité). Mot de passe oublié fait (branche `mobile-mot-de-passe-oublie`), historique des paiements et reçus (branche `mobile-paiements`), modification du profil — photo, prénom, nom, présentation (branche `mobile-profil`), icône + test sur téléphone Android (branche `mobile-test-telephone`, `docs/test-telephone-android.md`), connexion Google (branche `mobile-google`, ID client Web en `--dart-define=GOOGLE_SERVER_CLIENT_ID`, même endpoint `/api/auth/google`). Reste : iOS (push APNs).
-- **Pas fait** : suppression automatique des comptes.
 - Version complète d'avant le 27/10/2026 : étiquette Git `archive/lot1-complet`.
-- **Tests** : `./mvnw test` (45), `npm test` (56) + `npx ng build`, `flutter test` dans `mobile` (55),
+- **Tests** : `./mvnw test` (47), `npm test` (59) + `npx ng build`, `flutter test` dans `mobile` (59),
   `python -m pytest` dans `ia-tarification` (20). Tests d'intégration : numéros de téléphone uniques (base partagée).
 - **Textes légaux** (`frontend/src/app/features/legal`) : à mettre à jour (texte + `VERSION_LEGALE`) à chaque
   fonctionnalité qui touche aux données ou aux règles. Version du 13/11/2026 : notifications push (jetons d'appareil,
-  Firebase Cloud Messaging, possibilité de les couper) mentionnées (branche `push-notifications`).
+  Firebase Cloud Messaging, possibilité de les couper) mentionnées (branche `push-notifications`) ; suppression de
+  compte, délai de 30 jours et durées de conservation ajoutés le même jour (branche `suppression-compte`).
 
 ## Répartition du travail (2 développeurs, depuis le 27/10/2026)
 

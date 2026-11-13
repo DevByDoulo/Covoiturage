@@ -112,6 +112,19 @@ class ProfilPage extends StatelessWidget {
             label: const Text('Ouvrir le site'),
           ),
         ]),
+        if (u.role != 'ADMIN') ...[
+          const SizedBox(height: 12),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.delete_outline, color: Couleurs.erreur),
+              title: const Text('Supprimer mon compte',
+                  style: TextStyle(fontWeight: FontWeight.w700, color: Couleurs.erreur)),
+              subtitle: const Text('Effacement de vos données (délai de 30 jours)'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/profil/suppression'),
+            ),
+          ),
+        ],
         const SizedBox(height: 20),
         OutlinedButton.icon(
           onPressed: () => _deconnecter(context),

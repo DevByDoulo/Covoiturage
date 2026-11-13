@@ -84,6 +84,14 @@ public class Utilisateur {
     @Column(name = "derniere_connexion")
     private LocalDateTime derniereConnexion;
 
+    /** Suppression de compte : date de la demande (délai de grâce de 30 jours) ; null sinon. */
+    @Column(name = "date_suppression_demandee")
+    private LocalDateTime dateSuppressionDemandee;
+
+    /** Date à laquelle les données personnelles ont été anonymisées. */
+    @Column(name = "date_anonymisation")
+    private LocalDateTime dateAnonymisation;
+
     @OneToOne(mappedBy = "utilisateur", cascade = CascadeType.ALL, orphanRemoval = true)
     private Preference preference;
 

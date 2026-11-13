@@ -28,7 +28,8 @@ public class ProfilService {
     @Transactional(readOnly = true)
     public ProfilPublicDto profilPublic(Long id) {
         Utilisateur u = charger(id);
-        if (u.getRole() == Role.ADMIN || u.getStatut() == StatutCompte.BANNI) throw ApiException.notFound("Utilisateur introuvable");
+        if (u.getRole() == Role.ADMIN || u.getStatut() == StatutCompte.BANNI
+                || u.getStatut() == StatutCompte.SUPPRESSION_DEMANDEE || u.getStatut() == StatutCompte.SUPPRIME) throw ApiException.notFound("Utilisateur introuvable");
         return ProfilPublicDto.de(u);
     }
 
