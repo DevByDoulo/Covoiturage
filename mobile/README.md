@@ -114,7 +114,18 @@ client Android (ou une empreinte) par poste ; une version publiée aura besoin d
    Si Google répond « mal configurée » ou ferme la fenêtre aussitôt, c'est presque toujours le SHA-1 ou le nom du
    paquet (la prise en compte peut prendre quelques minutes).
 
-Pas encore fait : notifications push (Firebase), escales à la publication.
+### Notifications push (Firebase Cloud Messaging)
+
+1. Console Firebase, projet `yobalemasn-9a0a4` → Paramètres du projet → application Android `sn.isep.yobalema` →
+   télécharger `google-services.json` et le copier dans `android/app/google-services.json`. Ce fichier est dans le
+   `.gitignore` : **ne pas le commiter**. Sans lui, l'appli se construit et fonctionne, sans notifications push.
+2. Backend : `app.firebase.credentials-path` (dans `application-local.yml`) ou `FIREBASE_CREDENTIALS_PATH` vers le JSON
+   du compte de service (hors du dépôt). Sans lui, les push sont seulement écrits dans la console (`[PUSH simulé]`).
+3. Après la connexion, l'appli demande l'autorisation (Android 13+), enregistre le jeton (`POST /api/moi/appareils`)
+   et le retire à la déconnexion. Toucher un push ouvre l'écran de la notification ; l'interrupteur « Notifications
+   push » du Profil les coupe sur tous les appareils du compte.
+
+Pas encore fait : push sur iOS (clé APNs), escales à la publication.
 
 ## Lancer
 

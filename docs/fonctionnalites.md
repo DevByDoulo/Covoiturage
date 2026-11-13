@@ -61,13 +61,40 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   plus bas (branche `alertes-recherche`).
 - **06 Notifications** (branche `06-notifications`, partie de `07-administration`) : module backend `notification`
   (repris de l'archive) — `NotificationService.notifier(destinataire, type, priorite, titre, contenu, lien)` :
-  enregistrée dans `notification` (lien vers l'écran, migration V2026_10_28_0900), push FCM si l'appareil a
-  envoyé son jeton (`FIREBASE_CREDENTIALS_PATH`, sinon journalisé), et **email (sinon SMS) si `Priorite.IMPORTANTE`**.
+  enregistrée dans `notification` (lien vers l'écran, migration V2026_10_28_0900), push FCM vers tous les appareils
+  de l'utilisateur (voir « Notifications push » ci-dessous), et **email (sinon SMS) si `Priorite.IMPORTANTE`**.
   `NotificationsActivite` écoute `ReservationEvenements`, `TrajetModifie` et `AvisPublie` (« Nouvel avis : 4/5 », lien
   vers `/profil`, qui affiche les avis reçus) avant validation de la transaction ;
   `RappelsTrajet` prévient conducteur et passagers 1 h avant le départ (toutes les 5 min, sans doublon) ; les
   décisions de l'admin passent aussi par là. Écrans : cloche avec compteur dans l'en-tête (rafraîchi toutes les
-  30 s) et `/notifications`. Reste : push dans le navigateur (projet Firebase à créer).
+  30 s) et `/notifications`.
+- **Notifications push** (branche `push-notifications`, complète le module 06 ; projet Firebase `yobalemasn-9a0a4`) :
+  table `appareil` (un jeton FCM par téléphone ou navigateur, `plateforme` ANDROID / IOS / WEB, unique, 10 par compte
+  au plus) et `utilisateur.push_active` (migration V2026_11_13_1000, qui reprend l'ancienne colonne `fcm_token`,
+  désormais inutilisée). API : `POST /api/moi/appareils` `{jeton, plateforme}` (idempotent ; un jeton connu d'un autre
+  compte passe à l'utilisateur courant), `DELETE /api/moi/appareils/{jeton}` (déconnexion), `GET`/`PUT
+  /api/moi/notifications/preferences` `{pushActive}` ; `PUT /api/moi/fcm-token` gardé pour compatibilité. Toute
+  notification créée par `NotificationService.notifier` (réservation, acceptation, message, trajet, position partagée,
+  rappel, alerte, avis, décisions de l'admin…) part en push si `pushActive` : un événement par appareil, envoyé
+  **après validation de la transaction et en arrière-plan** (`@Async` + `@TransactionalEventListener` ; rien si la
+  transaction est annulée, une panne FCM ne bloque rien). Données : `type`, `lien`, `notificationId`. Android : canal
+  `yobalema_notifications` ; navigateur : message « données seules » affiché par le service worker. Jeton refusé par
+  FCM (`UNREGISTERED`, `INVALID_ARGUMENT`, `SENDER_ID_MISMATCH`) → supprimé (`PushSender.Resultat.JETON_INVALIDE`).
+  Clé du compte de service : `app.firebase.credentials-path` dans `application-local.yml` ou `FIREBASE_CREDENTIALS_PATH`
+  (fichier hors du dépôt) ; absente ou illisible → push journalisés (`[PUSH simulé]`) ; toujours simulés en test.
+  **Site** : `features/notifications/push.service.ts` (Firebase chargé à la demande), `public/firebase-messaging-sw.js`
+  (affiche le push si aucun onglet n'est visible, ouvre le lien au clic ; onglet visible → cloche rafraîchie), bloc
+  « Notifications push » en haut de `/notifications` (préférence du compte + bouton « Activer sur ce navigateur », la
+  permission devant suivre un clic). Jeton réenregistré à l'ouverture de l'espace connecté si la permission est déjà
+  accordée, retiré à la déconnexion (`SessionService.avantDeconnexion`). **À compléter** : `environment.firebase`
+  (`apiKey`, `appId` de l'application Web Firebase, `vapidKey`) ; tant que c'est vide, le bloc affiche « pas encore
+  disponibles ». **Appli mobile** : `lib/core/push.dart` (`ServicePush`, `PlateformeFirebase`, `destinationPour`) —
+  après connexion, permission Android 13+ (`POST_NOTIFICATIONS`), jeton enregistré et renouvelé (`onTokenRefresh`) ;
+  à la déconnexion, `DELETE` puis `deleteToken` ; tap sur un push (appli fermée ou en arrière-plan) → écran du lien
+  (liens du site sans équivalent → Notifications) ; appli à l'écran → bandeau « Ouvrir ». Interrupteur « Notifications
+  push » dans le Profil (`features/notifications/preferences_push.dart`). `android/app/google-services.json` n'est
+  **pas commité** (`.gitignore`) : à copier depuis la console Firebase ; sans lui, l'appli se construit sans push.
+  iOS non configuré (clé APNs et `GoogleService-Info.plist` à ajouter).
 - **Alertes de recherche** (branche `alertes-recherche`, complète le module 03) : package backend `recherche` repris
   de l'archive (table `alerte_recherche`, migration V2026_10_25_1600) — `/api/moi/alertes` (créer, lister, supprimer ;
   10 alertes à venir au plus). À la publication d'un trajet (`TrajetPublie`, après validation de la transaction,

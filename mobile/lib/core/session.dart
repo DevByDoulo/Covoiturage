@@ -102,7 +102,13 @@ class Session extends ChangeNotifier {
     await api.postPublic('/auth/mot-de-passe/reinitialiser', {'jeton': jeton, 'nouveauMotDePasse': nouveauMotDePasse});
   }
 
+  /// Appelé avant la déconnexion, quand le jeton d'accès est encore valable (retrait du jeton push de l'appareil).
+  Future<void> Function()? avantDeconnexion;
+
   Future<void> deconnexion() async {
+    try {
+      await avantDeconnexion?.call();
+    } catch (_) {}
     final refresh = await _stockage.read(key: _cleRefresh);
     if (refresh != null) {
       try {

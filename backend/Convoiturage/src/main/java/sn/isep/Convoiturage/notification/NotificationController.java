@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import sn.isep.Convoiturage.common.SecurityUtils;
 import sn.isep.Convoiturage.notification.NotificationService.NotificationDto;
+import sn.isep.Convoiturage.notification.NotificationService.PreferencesNotificationDto;
 
 import java.util.Map;
 
@@ -31,6 +32,17 @@ public class NotificationController {
     public ResponseEntity<Void> marquerLue(@PathVariable Long id) {
         service.marquerLue(SecurityUtils.utilisateurCourantId(), id);
         return ResponseEntity.noContent().build();
+    }
+
+    /** Préférence : recevoir ou non les notifications push (elles restent visibles dans l'application). */
+    @GetMapping("/preferences")
+    public PreferencesNotificationDto preferences() {
+        return service.preferences(SecurityUtils.utilisateurCourantId());
+    }
+
+    @PutMapping("/preferences")
+    public PreferencesNotificationDto modifierPreferences(@RequestBody PreferencesNotificationDto req) {
+        return service.modifierPreferences(SecurityUtils.utilisateurCourantId(), req);
     }
 
     @PostMapping("/lues")

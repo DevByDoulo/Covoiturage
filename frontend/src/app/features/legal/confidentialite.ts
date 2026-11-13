@@ -78,9 +78,12 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
               <td>Permettre aux membres d'un trajet de s'organiser, et de se noter après le voyage.</td>
             </tr>
             <tr>
-              <td><strong>Notifications</strong> : historique des notifications, jeton de notification de votre appareil
-                (si vous les activez)</td>
-              <td>Vous prévenir (réservation, message, rappel avant le départ…).</td>
+              <td><strong>Notifications</strong> : historique des notifications ; pour les <strong>notifications
+                push</strong>, un jeton par appareil (téléphone ou navigateur) où vous êtes connecté et les avez
+                autorisées, avec le type d'appareil (Android, navigateur) et la date de dernière utilisation ; votre
+                choix de les recevoir ou non</td>
+              <td>Vous prévenir, même application ou site fermés (réservation, acceptation, message, trajet modifié,
+                position partagée, rappel avant le départ…). Le push ouvre l'écran concerné.</td>
             </tr>
             <tr>
               <td><strong>Sécurité</strong> : date de dernière connexion, adresse IP au moment des tentatives de
@@ -146,8 +149,9 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
               <td>Position de départ et point de rendez-vous, sans votre nom</td></tr>
             <tr><td>Open-Meteo</td><td>Météo prise en compte dans le prix</td>
               <td>Coordonnées du départ du trajet, sans donnée sur vous</td></tr>
-            <tr><td>Firebase (Google)</td><td>Notifications sur l'appareil, si activées</td>
-              <td>Jeton de l'appareil, titre et texte de la notification</td></tr>
+            <tr><td>Firebase Cloud Messaging (Google)</td><td>Notifications push sur votre téléphone ou votre
+                navigateur, si vous les avez autorisées</td>
+              <td>Jeton de l'appareil, titre et texte de la notification, écran à ouvrir</td></tr>
           </tbody>
         </table>
       </div>
@@ -163,6 +167,9 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
         <li><strong>Codes de vérification</strong> : quelques minutes (durée de validité du code).</li>
         <li><strong>Session</strong> : jusqu'à la fermeture de l'onglet, ou 30 jours au plus si vous cochez « Rester
           connecté ».</li>
+        <li><strong>Jeton de notification push</strong> : jusqu'à votre déconnexion de cet appareil, ou dès que
+          Firebase indique qu'il n'est plus valable (application désinstallée, autorisation retirée) ; au plus
+          10 appareils par compte, les plus anciens étant oubliés.</li>
         <li><strong>Position partagée en direct</strong> (y compris en arrière-plan depuis l'application mobile) : jusqu'à
           l'arrêt du partage ou la fin du trajet, 30 minutes au plus après le dernier envoi ; supprimée ensuite.</li>
       </ul>
@@ -188,7 +195,10 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
         <li><strong>accéder</strong> à vos données et en obtenir une copie ;</li>
         <li>les <strong>corriger</strong> (la plupart se modifient directement dans « Mon profil ») ;</li>
         <li>vous <strong>opposer</strong> à un usage ou demander leur <strong>suppression</strong> ;</li>
-        <li>retirer votre autorisation de géolocalisation dans les réglages de votre navigateur ou de votre téléphone.</li>
+        <li>retirer votre autorisation de géolocalisation dans les réglages de votre navigateur ou de votre téléphone ;</li>
+        <li><strong>couper les notifications push</strong> (interrupteur « Notifications push » de l'écran Notifications
+          du site ou du Profil de l'application, ou réglages de votre appareil) : elles restent visibles dans
+          l'application.</li>
       </ul>
       <p>Écrivez à <a [href]="'mailto:' + contact">{{ contact }}</a> depuis l'adresse de votre compte ; nous répondons
         sous un mois. Si vous n'êtes pas satisfait de notre réponse, vous pouvez saisir la

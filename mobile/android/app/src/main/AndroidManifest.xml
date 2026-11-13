@@ -7,6 +7,7 @@
     <!-- Partage de position du conducteur appli en arrière-plan : service au premier plan avec notification -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <!-- Android 13+ : notifications (push et service de position), demandée après la connexion -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <application
@@ -14,6 +15,10 @@
         android:usesCleartextTraffic="true"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Notifications push : canal créé par MainActivity, utilisé si le message n'en précise pas -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="yobalema_notifications" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
