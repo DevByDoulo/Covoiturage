@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'core/session.dart';
 import 'core/theme.dart';
 import 'features/auth/connexion.dart';
+import 'features/auth/google.dart';
 import 'features/auth/inscription.dart';
 import 'features/auth/mot_de_passe_oublie.dart';
 import 'features/auth/verification.dart';
@@ -24,7 +25,7 @@ import 'features/suivi/suivi_conducteur.dart';
 import 'features/trajet/detail_trajet.dart';
 
 /// Écrans accessibles sans être connecté.
-const _publics = {'/connexion', '/inscription', '/verification', '/mot-de-passe-oublie'};
+const _publics = {'/connexion', '/inscription', '/verification', '/mot-de-passe-oublie', '/google/telephone'};
 
 GoRouter creerRouteur(Session session) => GoRouter(
   initialLocation: '/rechercher',
@@ -59,6 +60,12 @@ GoRouter creerRouteur(Session session) => GoRouter(
     ),
     GoRoute(path: '/mot-de-passe-oublie', builder: (_, _) => const MotDePasseOubliePage()),
     GoRoute(path: '/inscription', builder: (_, _) => const InscriptionPage()),
+    // Premier passage par Google : numéro de téléphone (l'idToken n'est gardé qu'en mémoire, comme sur le site).
+    GoRoute(
+      path: '/google/telephone',
+      redirect: (_, etat) => etat.extra is String ? null : '/connexion',
+      builder: (_, etat) => GoogleTelephonePage(idToken: etat.extra as String),
+    ),
     GoRoute(
       path: '/verification',
       builder: (_, etat) => VerificationPage(demande: etat.extra as DemandeVerification),

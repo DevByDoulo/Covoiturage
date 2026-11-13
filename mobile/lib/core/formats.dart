@@ -52,3 +52,10 @@ List<(double, double)> decoderPolyline(String? encode) {
   }
   return points;
 }
+
+/// « 77 123 45 67 » ou « +221 77 123 45 67 » → « 771234567 » (9 chiffres) ; le backend ajoute l'indicatif +221.
+String numeroSenegal(String saisie) =>
+    saisie.replaceAll(RegExp(r'\D'), '').replaceFirst(RegExp(r'^221(?=\d{9}$)'), '');
+
+/// Numéro mobile sénégalais : 9 chiffres commençant par 7.
+bool numeroSenegalValide(String saisie) => RegExp(r'^7\d{8}$').hasMatch(numeroSenegal(saisie));

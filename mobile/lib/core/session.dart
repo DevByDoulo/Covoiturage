@@ -69,6 +69,15 @@ class Session extends ChangeNotifier {
 
   Future<AuthReponse> inscription(Map<String, dynamic> donnees) => _authentifier('/auth/inscription', donnees);
 
+  /// Connexion Google (même endpoint que le site). Au premier passage, le backend crée ou lie le compte et répond
+  /// TELEPHONE_REQUIS : on renvoie alors l'idToken avec le numéro (et le sexe), puis un code est envoyé.
+  Future<AuthReponse> connexionGoogle(String idToken, {String? telephone, String? sexe}) =>
+      _authentifier('/auth/google', {
+        'idToken': idToken,
+        'telephone': ?telephone,
+        'sexe': ?sexe,
+      });
+
   Future<AuthReponse> verifierCode(String identifiant, String code) =>
       _authentifier('/auth/otp/verifier', {'identifiant': identifiant, 'code': code});
 

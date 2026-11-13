@@ -17,5 +17,12 @@ if (-not $Ip) { throw "Adresse IP du PC introuvable : passez-la avec -Ip." }
 Write-Host "API : http://${Ip}:8080/api  (site : http://${Ip}:4200)"
 
 $arguments = @('run', "--dart-define=API_URL=http://${Ip}:8080/api", "--dart-define=SITE_URL=http://${Ip}:4200")
+# Connexion Google : ID client Web lu dans la variable d'environnement (jamais dans le dépôt).
+if ($env:GOOGLE_SERVER_CLIENT_ID) {
+    $arguments += "--dart-define=GOOGLE_SERVER_CLIENT_ID=$env:GOOGLE_SERVER_CLIENT_ID"
+    Write-Host "Connexion Google : activee"
+} else {
+    Write-Host "Connexion Google : desactivee (variable GOOGLE_SERVER_CLIENT_ID absente)"
+}
 if ($Appareil) { $arguments += @('-d', $Appareil) }
 & flutter @arguments

@@ -67,8 +67,54 @@ Mêmes règles que sur le site (`/trajets/:id/guidage` et `/trajets/:id/suivi`).
   réservations ou depuis la notification ; voiture sur la carte (`lib/shared/carte_direct.dart`, qui suit un point
   sans se reconstruire), distance, heure estimée, annonces vocales à 2 km, 1 km, 500 m, 200 m puis à l'arrivée.
 
-Pas encore fait : notifications push (Firebase), escales à la publication,
-connexion Google.
+## Connexion avec Google
+
+Même fonctionnement que le site : bouton **« Continuer avec Google »** sur la connexion et l'inscription
+(`lib/features/auth/google.dart`, logique dans `lib/core/google.dart`). Le package `google_sign_in` donne l'idToken
+Google, envoyé à `POST /api/auth/google` (même endpoint que le site), qui renvoie la session habituelle (jetons de
+l'appli). Au premier passage, le backend crée (ou lie par l'email vérifié) le compte et demande le numéro : écran
+« Votre numéro » (+ sexe), puis code de vérification comme à l'inscription. Fermer la fenêtre Google n'affiche
+rien ; les erreurs réseau, de configuration ou de jeton refusé s'affichent dans le bandeau de l'écran.
+
+Les ID clients **ne sont pas dans le dépôt** : on les passe au lancement.
+
+```bash
+flutter run --dart-define=GOOGLE_SERVER_CLIENT_ID=<ID client Web>.apps.googleusercontent.com
+```
+
+- `GOOGLE_SERVER_CLIENT_ID` = **ID client Web**, le même que `GOOGLE_CLIENT_ID` du backend (le backend vérifie que
+  l'idToken lui est destiné). Sans lui, le bouton affiche « La connexion Google n'est pas configurée… ».
+- Le **client Android** n'apparaît pas dans le code : Google le reconnaît au nom du paquet `sn.isep.yobalema` et à
+  l'empreinte SHA-1 de la clé de signature. Il doit exister dans le **même projet Google Cloud** que le client Web.
+- `.	ool\lancer-telephone.ps1` ajoute le `--dart-define` tout seul si la variable d'environnement
+  `GOOGLE_SERVER_CLIENT_ID` est définie (`$env:GOOGLE_SERVER_CLIENT_ID = "…"` dans la console avant de lancer).
+- Navigateur (`-d web-server`) : non disponible, utiliser le site. iOS : il faudra en plus un client iOS
+  (`--dart-define=GOOGLE_IOS_CLIENT_ID=…`) et son schéma d'URL inversé dans `ios/Runner/Info.plist`.
+
+**Empreinte SHA-1** (clé de debug, celle de `flutter run`), depuis `mobile/android` :
+
+```powershell
+.\gradlew signingReport
+```
+
+Relever la ligne `SHA1` de la variante `debug` (tâche `:app:signingReport`). Il faut avoir lancé une fois
+`flutter build apk --debug` (ou `flutter run`) pour que Gradle soit prêt. Chaque PC a sa propre clé de debug : un
+client Android (ou une empreinte) par poste ; une version publiée aura besoin du SHA-1 de la clé de publication.
+
+**Console Google Cloud** (projet qui contient déjà le client Web du site) :
+
+1. *API et services → Écran de consentement OAuth* : vérifier qu'il est configuré (nom YOBALEMAsn, email
+   d'assistance) ; en mode « Test », ajouter les comptes Google des testeurs.
+2. *API et services → Identifiants → Créer des identifiants → ID client OAuth*, type **Android** : nom du paquet
+   `sn.isep.yobalema`, empreinte **SHA-1** relevée ci-dessus. Créer (rien à copier : ce client n'est pas utilisé
+   dans le code).
+3. Dans la même page, copier l'ID du client **Web** existant (celui du site, `GOOGLE_CLIENT_ID` du backend) : c'est la
+   valeur de `GOOGLE_SERVER_CLIENT_ID`.
+4. Lancer le backend avec ce `GOOGLE_CLIENT_ID`, puis l'appli avec `--dart-define=GOOGLE_SERVER_CLIENT_ID=…`.
+   Si Google répond « mal configurée » ou ferme la fenêtre aussitôt, c'est presque toujours le SHA-1 ou le nom du
+   paquet (la prise en compte peut prendre quelques minutes).
+
+Pas encore fait : notifications push (Firebase), escales à la publication.
 
 ## Lancer
 

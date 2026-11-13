@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'core/api.dart';
+import 'core/google.dart';
 import 'core/localisation.dart';
 import 'core/session.dart';
 import 'core/voix.dart';
@@ -27,6 +28,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         Provider.value(value: api),
+        Provider<ServiceGoogle>(create: (_) => ServiceGooglePlugin(ConfigGoogle.environnement)),
         ChangeNotifierProvider.value(value: session),
         ChangeNotifierProvider.value(value: compteur),
         ChangeNotifierProvider.value(value: messages),
