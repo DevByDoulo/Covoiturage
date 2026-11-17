@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { Router } from '@angular/router';
 import { ErreurApi, lireErreur } from '../../core/api/erreur-api';
 import { Alerte } from '../../shared/ui/alerte';
+import { BlocPush } from './bloc-push';
 import { Icone, NomIcone } from '../../shared/ui/icone';
 import { Notification, NotificationsService, TypeNotification } from './notifications.service';
 
@@ -45,7 +46,7 @@ const TONS: Partial<Record<TypeNotification, 'succes' | 'attente' | 'erreur'>> =
 /** Écran « Notifications » (module 06) : liste, non lues mises en avant, ouverture de l'écran concerné au clic. */
 @Component({
   selector: 'app-notifications',
-  imports: [DatePipe, Icone, Alerte],
+  imports: [DatePipe, Icone, Alerte, BlocPush],
   template: `
     <div class="page">
       <header class="titre">
@@ -54,6 +55,8 @@ const TONS: Partial<Record<TypeNotification, 'succes' | 'attente' | 'erreur'>> =
           <button class="bouton-lien" type="button" (click)="toutLire()">Tout marquer comme lu</button>
         }
       </header>
+
+      <app-bloc-push />
 
       @if (erreur(); as e) {
         <app-alerte type="erreur">{{ e.message }}</app-alerte>

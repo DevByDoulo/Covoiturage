@@ -45,13 +45,6 @@ public class ProfilController {
         return profils.changerPhoto(SecurityUtils.utilisateurCourantId(), fichier);
     }
 
-    /** Jeton Firebase Cloud Messaging de l'appareil, envoyé par l'application après connexion. */
-    @PutMapping("/moi/fcm-token")
-    public ResponseEntity<Void> enregistrerFcmToken(@Valid @RequestBody FcmTokenRequete req) {
-        profils.enregistrerFcmToken(SecurityUtils.utilisateurCourantId(), req.token());
-        return ResponseEntity.noContent().build();
-    }
-
     @GetMapping("/moi/contacts-urgence")
     public List<ContactUrgenceDto> mesContactsUrgence() {
         return contactsUrgence.mesContacts(SecurityUtils.utilisateurCourantId());

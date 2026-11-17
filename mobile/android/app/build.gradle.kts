@@ -5,6 +5,14 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Notifications push : google-services.json (console Firebase, projet yobalemasn-9a0a4) n'est pas commité.
+// Sans lui, l'application se construit quand même, sans notifications push.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+} else {
+    logger.warn("android/app/google-services.json absent : notifications push désactivées")
+}
+
 android {
     namespace = "sn.isep.yobalema"
     compileSdk = flutter.compileSdkVersion

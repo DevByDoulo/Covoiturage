@@ -14,6 +14,7 @@ import sn.isep.Convoiturage.auth.ExpediteurEmails.EmailAEnvoyer;
 import sn.isep.Convoiturage.auth.SmsSender;
 import sn.isep.Convoiturage.common.ApiException;
 import sn.isep.Convoiturage.utilisateur.Utilisateur;
+import sn.isep.Convoiturage.utilisateur.UtilisateurRepository;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -32,10 +33,15 @@ public class NotificationService {
     private final NotificationRepository notifications;
     private final ApplicationEventPublisher evenements;
     private final PushSender pushSender;
+    private final AppareilService appareils;
+    private final UtilisateurRepository utilisateurs;
     private final EmailSender emails;
     private final SmsSender sms;
 
-    public record PushAEnvoyer(String fcmToken, String titre, String contenu, Map<String, String> donnees) {}
+    public record PushAEnvoyer(String jeton, PlateformeAppareil plateforme, String titre, String contenu,
+                               Map<String, String> donnees) {}
+
+    public record PreferencesNotificationDto(boolean pushActive) {}
 
     public record NotificationDto(Long id, TypeNotification type, String titre, String contenu, String lien, boolean lu,
                                   LocalDateTime dateEnvoi) {
@@ -71,22 +77,50 @@ public class NotificationService {
         }
         notifications.save(n);
 
-        if (destinataire.getFcmToken() != null) {
+        if (destinataire.isPushActive()) {
             Map<String, String> donnees = new HashMap<>();
             donnees.put("type", type.name());
+            donnees.put("notificationId", String.valueOf(n.getId()));
             if (lien != null) donnees.put("lien", lien);
-            evenements.publishEvent(new PushAEnvoyer(destinataire.getFcmToken(), n.getTitre(), n.getContenu(), donnees));
+            for (Appareil a : appareils.appareilsDe(destinataire.getId())) {
+                evenements.publishEvent(new PushAEnvoyer(a.getJeton(), a.getPlateforme(), n.getTitre(), n.getContenu(),
+                        Map.copyOf(donnees)));
+            }
         }
     }
 
+    /**
+     * Après la validation de la transaction métier (rien n'est envoyé si elle est annulée), en arrière-plan : une
+     * panne de Firebase ne bloque ni ne ralentit la réservation, le message… Les jetons rejetés sont supprimés.
+     */
     @Async
     @TransactionalEventListener(fallbackExecution = true)
     public void envoyerPush(PushAEnvoyer push) {
         try {
-            pushSender.envoyer(push.fcmToken(), push.titre(), push.contenu(), push.donnees());
+            if (pushSender.envoyer(push.jeton(), push.plateforme(), push.titre(), push.contenu(), push.donnees())
+                    == PushSender.Resultat.JETON_INVALIDE) {
+                appareils.supprimerJetonInvalide(push.jeton());
+                log.info("Jeton push invalide supprimé ({})", push.plateforme());
+            }
         } catch (RuntimeException e) {
             log.warn("Notification push non envoyée : {}", e.getMessage());
         }
+    }
+
+    @Transactional(readOnly = true)
+    public PreferencesNotificationDto preferences(Long utilisateurId) {
+        return new PreferencesNotificationDto(charger(utilisateurId).isPushActive());
+    }
+
+    @Transactional
+    public PreferencesNotificationDto modifierPreferences(Long utilisateurId, PreferencesNotificationDto req) {
+        Utilisateur u = charger(utilisateurId);
+        u.setPushActive(req.pushActive());
+        return new PreferencesNotificationDto(u.isPushActive());
+    }
+
+    private Utilisateur charger(Long utilisateurId) {
+        return utilisateurs.findById(utilisateurId).orElseThrow(() -> ApiException.notFound("Utilisateur introuvable"));
     }
 
     @Transactional(readOnly = true)

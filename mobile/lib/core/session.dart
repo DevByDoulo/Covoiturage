@@ -69,6 +69,15 @@ class Session extends ChangeNotifier {
 
   Future<AuthReponse> inscription(Map<String, dynamic> donnees) => _authentifier('/auth/inscription', donnees);
 
+  /// Connexion Google (même endpoint que le site). Au premier passage, le backend crée ou lie le compte et répond
+  /// TELEPHONE_REQUIS : on renvoie alors l'idToken avec le numéro (et le sexe), puis un code est envoyé.
+  Future<AuthReponse> connexionGoogle(String idToken, {String? telephone, String? sexe}) =>
+      _authentifier('/auth/google', {
+        'idToken': idToken,
+        'telephone': ?telephone,
+        'sexe': ?sexe,
+      });
+
   Future<AuthReponse> verifierCode(String identifiant, String code) =>
       _authentifier('/auth/otp/verifier', {'identifiant': identifiant, 'code': code});
 
@@ -93,7 +102,13 @@ class Session extends ChangeNotifier {
     await api.postPublic('/auth/mot-de-passe/reinitialiser', {'jeton': jeton, 'nouveauMotDePasse': nouveauMotDePasse});
   }
 
+  /// Appelé avant la déconnexion, quand le jeton d'accès est encore valable (retrait du jeton push de l'appareil).
+  Future<void> Function()? avantDeconnexion;
+
   Future<void> deconnexion() async {
+    try {
+      await avantDeconnexion?.call();
+    } catch (_) {}
     final refresh = await _stockage.read(key: _cleRefresh);
     if (refresh != null) {
       try {

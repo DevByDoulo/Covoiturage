@@ -3,8 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api.dart';
+import '../../core/formats.dart';
 import '../../core/session.dart';
 import '../../shared/widgets.dart';
+import 'google.dart';
 import 'verification.dart';
 
 /// Inscription : un code est ensuite envoyé par email (ou SMS) pour vérifier le compte.
@@ -39,7 +41,7 @@ class _InscriptionPageState extends State<InscriptionPage> {
   }
 
   /// 77 123 45 67 → 771234567 (9 chiffres) ; le backend ajoute l'indicatif +221.
-  String get _numero => _telephone.text.replaceAll(RegExp(r'\D'), '').replaceFirst(RegExp(r'^221(?=\d{9}$)'), '');
+  String get _numero => numeroSenegal(_telephone.text);
 
   Future<void> _inscrire() async {
     setState(() {
@@ -90,6 +92,8 @@ class _InscriptionPageState extends State<InscriptionPage> {
               key: _formulaire,
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 if (_erreur != null) ...[Bandeau(_erreur!), const SizedBox(height: 12)],
+                BoutonGoogle(surErreur: (m) => setState(() => _erreur = m)),
+                const SeparateurOu(),
                 Row(children: [
                   Expanded(
                     child: TextFormField(
@@ -123,7 +127,7 @@ class _InscriptionPageState extends State<InscriptionPage> {
                   controller: _telephone,
                   keyboardType: TextInputType.phone,
                   decoration: _deco('Téléphone (77 123 45 67)', 'telephone', Icons.phone_outlined),
-                  validator: (_) => RegExp(r'^7\d{8}$').hasMatch(_numero)
+                  validator: (_) => numeroSenegalValide(_telephone.text)
                       ? null
                       : 'Numéro sénégalais à 9 chiffres, commençant par 7',
                 ),

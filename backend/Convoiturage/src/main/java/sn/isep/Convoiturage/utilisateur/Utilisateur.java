@@ -73,8 +73,9 @@ public class Utilisateur {
     @Column(name = "note_moyenne", precision = 3, scale = 2)
     private BigDecimal noteMoyenne;
 
-    @Column(name = "fcm_token")
-    private String fcmToken;
+    /** 06 Notifications : faux si l'utilisateur a coupé les notifications push (les jetons sont dans « appareil »). */
+    @Column(name = "push_active", nullable = false)
+    private boolean pushActive = true;
 
     @Column(name = "date_creation", nullable = false, updatable = false)
     private LocalDateTime dateCreation;

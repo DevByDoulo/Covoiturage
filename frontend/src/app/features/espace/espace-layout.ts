@@ -7,6 +7,7 @@ import { LienMessages } from '../messages/lien-messages';
 import { MessagesService } from '../messages/messages.service';
 import { Cloche } from '../notifications/cloche';
 import { NotificationsService } from '../notifications/notifications.service';
+import { PushService } from '../notifications/push.service';
 import { initiales, urlFichier } from '../profil/profil.service';
 
 interface EntreeMenu {
@@ -277,6 +278,7 @@ export class EspaceLayout {
   protected readonly session = inject(SessionService);
   private readonly notifications = inject(NotificationsService);
   private readonly messages = inject(MessagesService);
+  private readonly push = inject(PushService);
   protected readonly estAdmin = computed(() => this.session.utilisateur()?.role === 'ADMIN');
 
   protected readonly nom = computed(() => {
@@ -301,6 +303,8 @@ export class EspaceLayout {
     this.notifications.suivre(true);
     // 09 — Compteur des messages non lus (l'administrateur n'a pas de messagerie).
     this.messages.suivre(!this.estAdmin());
+    // 06 — Notifications push du navigateur : jeton réenregistré si elles ont déjà été autorisées.
+    this.push.demarrer();
     inject(DestroyRef).onDestroy(() => {
       this.notifications.suivre(false);
       this.messages.suivre(false);

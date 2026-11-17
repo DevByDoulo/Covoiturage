@@ -43,6 +43,7 @@ leurs responsables ; l'ancienne version reste sous l'étiquette Git `archive/lot
 | `CORS_ALLOWED_ORIGINS` | Origines autorisées, séparées par des virgules |
 | `GOOGLE_CLIENT_ID` | Vérification du « Se connecter avec Google » |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_TELEPHONE` | Premier administrateur |
+| `FIREBASE_CREDENTIALS_PATH` | JSON du compte de service Firebase, hors du dépôt (ou `app.firebase.credentials-path` dans `application-local.yml`) ; vide : push seulement journalisés |
 | `GOOGLE_MAPS_API_KEY` | Itinéraires Google Routes (sinon distance à vol d'oiseau × 1,25) |
 | `IA_TARIFICATION_URL`, `IA_TARIFICATION_DELAI` | Service `ia-tarification` (vide : prix par la formule seule ; délai 2 s) |
 | `WAVE_API_KEY`, `WAVE_SECRET_WEBHOOK` | Wave Business (vides : Wave non proposé) |

@@ -22,7 +22,7 @@ le diagramme de classes de référence est `docs/conception/CoVoiturage_Diagramm
 Les tables et entités suivent **les noms du diagramme de classes** (`utilisateur`, `trajet`, `id_trajet`,
 `reservation`…). Pour un nouvel écran, partir de la maquette correspondante dans `docs/maquettes/`.
 
-## État du projet (10/11/2026)
+## État du projet (13/11/2026)
 
 Le détail de chaque module (tables, API, écrans, règles, branches) est dans
 **[`docs/fonctionnalites.md`](docs/fonctionnalites.md)** : le lire avant de toucher à un module. Le compléter à
@@ -33,16 +33,18 @@ chaque fonctionnalité ; ici, ne garder qu'une ligne par module.
   12 prix (formule + service IA FastAPI/XGBoost), 04 réservations et paiements (Wave, PayDunya ; QR d'embarquement),
   05 avis, 06 notifications, 07 administration, 08 géolocalisation (Ma position, guidage vocal, suivi du conducteur
   en direct), 09 messagerie, 10 signalements (branche `signalements` : signaler après un trajet partagé, modération
-  dans le back-office, aussi dans l'appli mobile), textes légaux (`/conditions`, `/confidentialite`).
+  dans le back-office, aussi dans l'appli mobile), textes légaux (`/conditions`, `/confidentialite`), notifications
+  push FCM site + Android (branche `push-notifications` : table `appareil`, préférence `push_active` ; clés web
+  `environment.firebase` à compléter).
 - **Appli mobile Flutter** (`mobile/`, voir `mobile/README.md`) : parcours passager et conducteur, messagerie, avis,
-  guidage vocal et suivi en direct. Mot de passe oublié fait (branche `mobile-mot-de-passe-oublie`), historique des paiements et reçus (branche `mobile-paiements`), modification du profil — photo, prénom, nom, présentation (branche `mobile-profil`). Reste : Google, push.
-- **Pas fait** : push navigateur (Firebase), suppression automatique des comptes.
+  guidage vocal et suivi en direct, notifications push (`google-services.json` non commité). Mot de passe oublié fait (branche `mobile-mot-de-passe-oublie`), historique des paiements et reçus (branche `mobile-paiements`), modification du profil — photo, prénom, nom, présentation (branche `mobile-profil`), icône + test sur téléphone Android (branche `mobile-test-telephone`, `docs/test-telephone-android.md`), connexion Google (branche `mobile-google`, ID client Web en `--dart-define=GOOGLE_SERVER_CLIENT_ID`, même endpoint `/api/auth/google`). Reste : iOS (push APNs).
+- **Pas fait** : suppression automatique des comptes.
 - Version complète d'avant le 27/10/2026 : étiquette Git `archive/lot1-complet`.
-- **Tests** : `./mvnw test` (44), `npm test` (50) + `npx ng build`, `flutter test` dans `mobile` (36),
+- **Tests** : `./mvnw test` (45), `npm test` (56) + `npx ng build`, `flutter test` dans `mobile` (55),
   `python -m pytest` dans `ia-tarification` (20). Tests d'intégration : numéros de téléphone uniques (base partagée).
 - **Textes légaux** (`frontend/src/app/features/legal`) : à mettre à jour (texte + `VERSION_LEGALE`) à chaque
-  fonctionnalité qui touche aux données ou aux règles. Version du 10/11/2026 : position en arrière-plan (mobile)
-  mentionnée (branche `legal-position-mobile`).
+  fonctionnalité qui touche aux données ou aux règles. Version du 13/11/2026 : notifications push (jetons d'appareil,
+  Firebase Cloud Messaging, possibilité de les couper) mentionnées (branche `push-notifications`).
 
 ## Répartition du travail (2 développeurs, depuis le 27/10/2026)
 
@@ -140,6 +142,8 @@ En profil `dev` : les codes partent **par email** si `spring.mail` est configur�
 - La console PowerShell affiche mal les accents de `psql` (« prÃªtes ») : c'est seulement l'affichage.
 - Les avertissements git « LF will be replaced by CRLF » sont normaux sous Windows.
 - Sans `GOOGLE_CLIENT_ID`, le bouton Google affiche un message d'information.
+- **Firebase (push)** : `mobile/android/app/google-services.json` et la clé du compte de service backend ne sont
+  jamais commités (copie locale ; chemin de la clé dans `application-local.yml`). Les tests forcent l'envoi simulé.
 - Les limites anti-abus (5 échecs de connexion, quotas de codes par IP) sont en mémoire : suffisant pour
   une instance ; derrière un proxy, activer `server.forward-headers-strategy: framework`.
 

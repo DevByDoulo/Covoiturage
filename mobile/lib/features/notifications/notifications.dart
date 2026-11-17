@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/api.dart';
 import '../../core/modeles.dart';
+import '../../core/push.dart';
 import '../../core/theme.dart';
 import '../../shared/widgets.dart';
 import '../messages/messages.dart';
@@ -97,14 +98,13 @@ class _NotificationsPageState extends State<NotificationsPage> {
       setState(() => n.lu = true);
       api.post('/moi/notifications/${n.id}/lue').then((_) => compteur.compter(), onError: (_) {});
     }
-    // Liens du site : seuls ceux qui existent dans l'application mobile sont suivis.
-    final lien = n.lien ?? '';
-    if (RegExp(r'^/trajets/\d+(/(suivi|guidage))?$').hasMatch(lien)) {
-      context.push(lien);
-    } else if (RegExp(r'^/messages(/\d+)?$').hasMatch(lien)) {
-      context.push(lien);
-    } else if (lien.startsWith('/reservations')) {
-      context.go('/reservations');
+    // Liens du site : seuls ceux qui existent dans l'application mobile sont suivis (même règle que le push).
+    final destination = destinationPour(n.lien);
+    if (destination.chemin == '/notifications') return;
+    if (destination.empiler) {
+      context.push(destination.chemin);
+    } else {
+      context.go(destination.chemin);
     }
   }
 

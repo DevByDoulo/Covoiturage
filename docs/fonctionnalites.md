@@ -61,13 +61,40 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   plus bas (branche `alertes-recherche`).
 - **06 Notifications** (branche `06-notifications`, partie de `07-administration`) : module backend `notification`
   (repris de l'archive) — `NotificationService.notifier(destinataire, type, priorite, titre, contenu, lien)` :
-  enregistrée dans `notification` (lien vers l'écran, migration V2026_10_28_0900), push FCM si l'appareil a
-  envoyé son jeton (`FIREBASE_CREDENTIALS_PATH`, sinon journalisé), et **email (sinon SMS) si `Priorite.IMPORTANTE`**.
+  enregistrée dans `notification` (lien vers l'écran, migration V2026_10_28_0900), push FCM vers tous les appareils
+  de l'utilisateur (voir « Notifications push » ci-dessous), et **email (sinon SMS) si `Priorite.IMPORTANTE`**.
   `NotificationsActivite` écoute `ReservationEvenements`, `TrajetModifie` et `AvisPublie` (« Nouvel avis : 4/5 », lien
   vers `/profil`, qui affiche les avis reçus) avant validation de la transaction ;
   `RappelsTrajet` prévient conducteur et passagers 1 h avant le départ (toutes les 5 min, sans doublon) ; les
   décisions de l'admin passent aussi par là. Écrans : cloche avec compteur dans l'en-tête (rafraîchi toutes les
-  30 s) et `/notifications`. Reste : push dans le navigateur (projet Firebase à créer).
+  30 s) et `/notifications`.
+- **Notifications push** (branche `push-notifications`, complète le module 06 ; projet Firebase `yobalemasn-9a0a4`) :
+  table `appareil` (un jeton FCM par téléphone ou navigateur, `plateforme` ANDROID / IOS / WEB, unique, 10 par compte
+  au plus) et `utilisateur.push_active` (migration V2026_11_13_1000, qui reprend l'ancienne colonne `fcm_token`,
+  désormais inutilisée). API : `POST /api/moi/appareils` `{jeton, plateforme}` (idempotent ; un jeton connu d'un autre
+  compte passe à l'utilisateur courant), `DELETE /api/moi/appareils/{jeton}` (déconnexion), `GET`/`PUT
+  /api/moi/notifications/preferences` `{pushActive}` ; `PUT /api/moi/fcm-token` gardé pour compatibilité. Toute
+  notification créée par `NotificationService.notifier` (réservation, acceptation, message, trajet, position partagée,
+  rappel, alerte, avis, décisions de l'admin…) part en push si `pushActive` : un événement par appareil, envoyé
+  **après validation de la transaction et en arrière-plan** (`@Async` + `@TransactionalEventListener` ; rien si la
+  transaction est annulée, une panne FCM ne bloque rien). Données : `type`, `lien`, `notificationId`. Android : canal
+  `yobalema_notifications` ; navigateur : message « données seules » affiché par le service worker. Jeton refusé par
+  FCM (`UNREGISTERED`, `INVALID_ARGUMENT`, `SENDER_ID_MISMATCH`) → supprimé (`PushSender.Resultat.JETON_INVALIDE`).
+  Clé du compte de service : `app.firebase.credentials-path` dans `application-local.yml` ou `FIREBASE_CREDENTIALS_PATH`
+  (fichier hors du dépôt) ; absente ou illisible → push journalisés (`[PUSH simulé]`) ; toujours simulés en test.
+  **Site** : `features/notifications/push.service.ts` (Firebase chargé à la demande), `public/firebase-messaging-sw.js`
+  (affiche le push si aucun onglet n'est visible, ouvre le lien au clic ; onglet visible → cloche rafraîchie), bloc
+  « Notifications push » en haut de `/notifications` (préférence du compte + bouton « Activer sur ce navigateur », la
+  permission devant suivre un clic). Jeton réenregistré à l'ouverture de l'espace connecté si la permission est déjà
+  accordée, retiré à la déconnexion (`SessionService.avantDeconnexion`). **À compléter** : `environment.firebase`
+  (`apiKey`, `appId` de l'application Web Firebase, `vapidKey`) ; tant que c'est vide, le bloc affiche « pas encore
+  disponibles ». **Appli mobile** : `lib/core/push.dart` (`ServicePush`, `PlateformeFirebase`, `destinationPour`) —
+  après connexion, permission Android 13+ (`POST_NOTIFICATIONS`), jeton enregistré et renouvelé (`onTokenRefresh`) ;
+  à la déconnexion, `DELETE` puis `deleteToken` ; tap sur un push (appli fermée ou en arrière-plan) → écran du lien
+  (liens du site sans équivalent → Notifications) ; appli à l'écran → bandeau « Ouvrir ». Interrupteur « Notifications
+  push » dans le Profil (`features/notifications/preferences_push.dart`). `android/app/google-services.json` n'est
+  **pas commité** (`.gitignore`) : à copier depuis la console Firebase ; sans lui, l'appli se construit sans push.
+  iOS non configuré (clé APNs et `GoogleService-Info.plist` à ajouter).
 - **Alertes de recherche** (branche `alertes-recherche`, complète le module 03) : package backend `recherche` repris
   de l'archive (table `alerte_recherche`, migration V2026_10_25_1600) — `/api/moi/alertes` (créer, lister, supprimer ;
   10 alertes à venir au plus). À la publication d'un trajet (`TrajetPublie`, après validation de la transaction,
@@ -192,11 +219,13 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   **Mot de passe oublié** (branche `mobile-mot-de-passe-oublie`, `lib/features/auth/mot_de_passe_oublie.dart`) : lien « Mot de passe oublié ? » sous la connexion, puis les 3 étapes du site (email ou téléphone → code à 6 chiffres, 5 essais, renvoi après le délai → nouveau mot de passe, même règle que l’inscription) via `Session` (`/api/auth/mot-de-passe/oublie`, `/verifier-code`, `/reinitialiser`) ; retour à la connexion avec un message de confirmation.
   **Paiements et reçus** (branche `mobile-paiements`, `lib/features/paiements/paiements.dart`) : entrée « Mes paiements » dans le Profil → `/paiements` (historique `/api/moi/paiements` : paiements comme passager en −, encaissements comme conducteur en + avec total encaissé, moyen, statut, référence ; tirer pour rafraîchir) et `/paiements/:reference/recu` (reçu `/api/paiements/{ref}/recu`, mêmes rubriques que le site, bandeau « Remboursé intégralement le … »), seulement pour les paiements réussis ou remboursés. À la place de « Imprimer / PDF » du site : bouton « Copier le reçu » (texte à coller dans un message ; pas de dépendance PDF).
   **Modification du profil** (branche `mobile-profil`, `lib/features/profil/modifier_profil.dart`) : bouton « Modifier mon profil » dans le Profil → `/profil/modifier`, comme l'en-tête et le bloc « À propos » du site : photo (galerie ou appareil photo via `image_picker`, réduite à 1024 px et réencodée en JPEG, 5 Mo au plus, envoyée tout de suite en multipart à `POST /api/moi/photo` via `Api.envoyerFichier`), prénom, nom et présentation (500 caractères) enregistrés par `PUT /api/moi` (`Session.modifierProfil`, sexe renvoyé inchangé, présentation vide → `null`) ; erreurs du serveur affichées sous le bon champ. Email et téléphone affichés sans pouvoir les modifier : ni le site ni l'API ne le permettent (ce sont les identifiants de connexion ; un changement demanderait une nouvelle vérification par code). La présentation s'affiche dans le Profil. iOS : `NSPhotoLibraryUsageDescription` ajouté.
+  **Test sur téléphone Android** (branche `mobile-test-telephone`) : icône d'application (repère vert du logo, icône adaptative Android 8+ et monochrome, générée par `mobile/tool/generer_icone.py`), nom « YOBALEMAsn » (déjà dans le manifeste), script `mobile/tool/lancer-telephone.ps1` qui détecte l'IP Wi-Fi du PC et lance `flutter run --dart-define=API_URL=… --dart-define=SITE_URL=…` (aucune adresse dans le dépôt), liste de contrôle [`docs/test-telephone-android.md`](test-telephone-android.md) (connexion, réservation, QR d'embarquement, guidage vocal, partage de position écran éteint). Le pare-feu Windows doit autoriser le port 8080.
   **Signalements** (branche `signalements`) : voir le module 10.
-  Reste : push, Google.
+  **Connexion avec Google** (branche `mobile-google`, `lib/core/google.dart` + `lib/features/auth/google.dart`) : bouton « Continuer avec Google » (séparateur « ou ») sur la connexion et l'inscription. Le package `google_sign_in` (7.x, `authenticate()`, puis déconnexion de Google pour pouvoir choisir un autre compte la fois suivante) fournit l'idToken, envoyé à `POST /api/auth/google` (`Session.connexionGoogle`, **même endpoint que le site, backend inchangé**) qui renvoie la session habituelle. `serverClientId` = ID client **Web** (celui du site), donc l'audience de l'idToken est bien le `GOOGLE_CLIENT_ID` vérifié par `GoogleTokenVerifier` (tokeninfo) ; le client Android n'est reconnu que par le paquet `sn.isep.yobalema` + SHA-1. Les ID clients passent par `--dart-define=GOOGLE_SERVER_CLIENT_ID=…` (et `GOOGLE_IOS_CLIENT_ID` plus tard), jamais dans le dépôt ; `tool/lancer-telephone.ps1` reprend la variable d'environnement du même nom. Cas gérés par `continuerAvecGoogle` (testé sans le plugin via l'interface `ServiceGoogle`) : annulation (rien d'affiché), compte connu → connecté, compte inconnu → `TELEPHONE_REQUIS` → écran `/google/telephone` (numéro + sexe, idToken gardé en mémoire seulement, numéro déjà pris affiché sous le champ) → code de vérification comme à l'inscription, erreur réseau / jeton refusé / plugin mal configuré → message dans le bandeau. Non disponible dans la version navigateur ; iOS à configurer (client iOS + schéma d'URL). Étapes Google Cloud et `gradlew signingReport` : `mobile/README.md`.
+  Reste : push.
 - Tests : `./mvnw test` → 44 tests (dont `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 50 tests ; `flutter test` dans `mobile` → 36 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 50 tests ; `flutter test` dans `mobile` → 48 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 

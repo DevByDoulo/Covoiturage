@@ -64,9 +64,4 @@ public class ProfilService {
         u.setPhotoProfil(stockage.enregistrer(fichier, StockageService.Dossier.PHOTOS).nom());
         return ProfilDto.de(u);
     }
-
-    @Transactional
-    public void enregistrerFcmToken(Long id, String token) {
-        charger(id).setFcmToken(token.isBlank() ? null : token);
-    }
 }

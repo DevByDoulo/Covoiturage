@@ -1,7 +1,6 @@
 package sn.isep.Convoiturage.utilisateur;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
@@ -64,8 +63,6 @@ public final class UtilisateurDtos {
             @NotBlank @Size(max = 80) String nom,
             @Size(max = 500) String bio,
             Sexe sexe) {}
-
-    public record FcmTokenRequete(@NotNull @Size(max = 255) String token) {}
 
     public record ContactUrgenceRequete(
             @NotBlank @Size(max = 120) String nom,

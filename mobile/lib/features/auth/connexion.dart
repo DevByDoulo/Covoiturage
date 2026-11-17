@@ -6,6 +6,7 @@ import '../../core/api.dart';
 import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../shared/widgets.dart';
+import 'google.dart';
 import 'verification.dart';
 
 /// Connexion par email ou numéro de téléphone (le compte doit être vérifié ; sinon un code est renvoyé).
@@ -117,8 +118,10 @@ class _ConnexionPageState extends State<ConnexionPage> {
                           ? const SizedBox.square(dimension: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
                           : const Text('Se connecter'),
                     ),
+                    const SeparateurOu(),
+                    BoutonGoogle(surErreur: (m) => setState(() => _erreur = m)),
                     const SizedBox(height: 16),
-                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Wrap(alignment: WrapAlignment.center, crossAxisAlignment: WrapCrossAlignment.center, children: [
                       const Text('Pas encore de compte ?'),
                       TextButton(onPressed: () => context.push('/inscription'), child: const Text("S'inscrire")),
                     ]),

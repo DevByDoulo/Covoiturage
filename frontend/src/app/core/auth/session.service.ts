@@ -142,7 +142,21 @@ export class SessionService {
     this.confirmationDeconnexion.set(true);
   }
 
+  private readonly actionsAvantDeconnexion: Array<() => void> = [];
+
+  /** Action lancée juste avant une déconnexion volontaire, jeton d'accès encore valable (ex. retrait du jeton push). */
+  avantDeconnexion(action: () => void): void {
+    this.actionsAvantDeconnexion.push(action);
+  }
+
   deconnexion(): void {
+    for (const action of this.actionsAvantDeconnexion) {
+      try {
+        action();
+      } catch {
+        // la déconnexion continue
+      }
+    }
     const refresh = lireRefresh();
     if (refresh) {
       this.http.post(`${this.api}/deconnexion`, { refreshToken: refresh }).subscribe({ error: () => {} });

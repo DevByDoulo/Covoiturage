@@ -8,6 +8,7 @@ import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../shared/widgets.dart';
 import '../avis/avis.dart';
+import '../notifications/preferences_push.dart';
 
 /// Profil, accès à « Modifier mon profil » (photo, prénom, nom, présentation) et déconnexion.
 /// Préférences, contacts d'urgence, véhicules et documents se gèrent sur le site.
@@ -89,6 +90,8 @@ class ProfilPage extends StatelessWidget {
             onTap: () => context.push('/paiements'),
           ),
         ),
+        const SizedBox(height: 12),
+        const InterrupteurPush(),
         const SizedBox(height: 12),
         Card(
           child: ListTile(
