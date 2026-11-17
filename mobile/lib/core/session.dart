@@ -23,6 +23,12 @@ class Session extends ChangeNotifier {
 
   bool get connecte => utilisateur != null;
 
+  /// Vrai juste après une demande de suppression de compte : l'écran de connexion rappelle le délai de grâce.
+  bool suppressionDemandee = false;
+
+  /// Vrai juste après une connexion qui a annulé une suppression de compte : l'application l'annonce une fois.
+  bool suppressionAnnulee = false;
+
   /// Au démarrage : rouvre la session avec le refresh token enregistré.
   Future<void> restaurer() async {
     try {
@@ -102,6 +108,19 @@ class Session extends ChangeNotifier {
     await api.postPublic('/auth/mot-de-passe/reinitialiser', {'jeton': jeton, 'nouveauMotDePasse': nouveauMotDePasse});
   }
 
+  /// Compte sans mot de passe (Google) : envoie par email ou SMS le code qui confirme la suppression du compte.
+  Future<AuthReponse> envoyerCodeSuppression() async =>
+      AuthReponse.depuisJson(await api.post('/moi/suppression/code', {}) as Map<String, dynamic>);
+
+  /// Demande la suppression du compte (RGPD) : confirmée par le mot de passe, ou par un code pour un compte Google.
+  /// Délai de grâce de 30 jours, annulé par une reconnexion ; refusée (409, message explicatif) tant qu'un trajet à
+  /// venir, une réservation acceptée à venir ou un paiement en attente existe. Réussie, la session est fermée.
+  Future<void> supprimerCompte({String? motDePasse, String? code}) async {
+    await api.post('/moi/suppression', {'motDePasse': motDePasse, 'code': code});
+    suppressionDemandee = true;
+    await _oublier();
+  }
+
   /// Appelé avant la déconnexion, quand le jeton d'accès est encore valable (retrait du jeton push de l'appareil).
   Future<void> Function()? avantDeconnexion;
 
@@ -121,6 +140,8 @@ class Session extends ChangeNotifier {
   Future<AuthReponse> _authentifier(String chemin, Map<String, dynamic> corps) async {
     final r = AuthReponse.depuisJson(await api.postPublic(chemin, corps) as Map<String, dynamic>);
     if (r.connecte) {
+      suppressionDemandee = false;
+      if (r.suppressionAnnulee) suppressionAnnulee = true;
       api.accessToken = r.accessToken;
       await _stockage.write(key: _cleRefresh, value: r.refreshToken);
       utilisateur = r.utilisateur;

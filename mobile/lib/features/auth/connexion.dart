@@ -74,6 +74,12 @@ class _ConnexionPageState extends State<ConnexionPage> {
                     const SizedBox(height: 32),
                     const Text('Connexion', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
                     const SizedBox(height: 16),
+                    if (context.read<Session>().suppressionDemandee) ...[
+                      const Bandeau(
+                          "Suppression demandée : votre compte sera supprimé dans 30 jours. Reconnectez-vous avant pour l'annuler.",
+                          succes: true),
+                      const SizedBox(height: 12),
+                    ],
                     if (widget.reinitialise) ...[
                       const Bandeau('Mot de passe modifié. Connectez-vous avec le nouveau.', succes: true),
                       const SizedBox(height: 12),

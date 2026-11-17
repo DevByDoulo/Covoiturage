@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> {
@@ -21,6 +23,14 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
     long countByStatut(StatutCompte statut);
 
     long countByRole(Role role);
+
+    /** Comptes dont la demande de suppression date d'avant {@code limite} (délai de grâce écoulé). */
+    @Query("""
+            select u.id from Utilisateur u
+            where u.statut = sn.isep.Convoiturage.utilisateur.StatutCompte.SUPPRESSION_DEMANDEE
+              and u.dateSuppressionDemandee <= :limite
+            """)
+    List<Long> comptesASupprimer(@Param("limite") LocalDateTime limite);
 
     long countByConducteurValideTrue();
 

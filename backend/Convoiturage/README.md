@@ -87,6 +87,7 @@ circulaire entre modules : passer par des événements Spring.
 | GET/PUT | `/api/moi`, `/api/moi/preferences`, POST `/api/moi/photo`, PUT `/api/moi/fcm-token` | connecté |
 | GET/POST/DELETE | `/api/moi/contacts-urgence[/{id}]` (3 au plus) | connecté |
 | PUT | `/api/moi/mot-de-passe` (`motDePasseActuel`, `nouveauMotDePasse` ; renvoie de nouveaux jetons) ; POST `/api/moi/desactivation` (`motDePasse`) | connecté |
+| POST | `/api/moi/suppression/code` (envoie le code de confirmation d'un compte sans mot de passe) ; POST `/api/moi/suppression` (`motDePasse` ou `code`) : demande de suppression, délai de grâce de 30 jours annulé par une reconnexion, puis anonymisation planifiée ; 409 avec `obstacles` si un trajet, une réservation acceptée ou un paiement est en cours | connecté |
 | GET | `/api/utilisateurs/{id}` (profil public) | public |
 | POST/GET/PUT/DELETE | `/api/moi/vehicules[/{id}]` ; POST `/api/moi/vehicules/{id}/photo` | connecté |
 | GET | `/api/moi/notifications?page&taille`, `/api/moi/notifications/non-lues` ; POST `/api/moi/notifications/{id}/lue`, `/lues` | connecté |

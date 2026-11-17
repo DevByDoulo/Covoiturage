@@ -18,6 +18,7 @@ import 'features/notifications/notifications.dart';
 import 'features/paiements/paiements.dart';
 import 'features/profil/modifier_profil.dart';
 import 'features/profil/profil.dart';
+import 'features/profil/suppression_compte.dart';
 import 'features/recherche/recherche.dart';
 import 'features/signalements/signalements.dart';
 import 'features/reservations/reservations.dart';
@@ -90,6 +91,8 @@ GoRouter creerRouteur(Session session) => GoRouter(
     ),
     // 01 — modification du profil (photo, prénom, nom, présentation)
     GoRoute(path: '/profil/modifier', builder: (_, _) => const ModifierProfilPage()),
+    // Suppression du compte (RGPD)
+    GoRoute(path: '/profil/suppression', builder: (_, _) => const SuppressionComptePage()),
     // 04 — historique des paiements et reçus
     GoRoute(path: '/paiements', builder: (_, _) => const MesPaiementsPage()),
     GoRoute(
@@ -144,6 +147,17 @@ class _Cadre extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final nonLues = context.watch<CompteurNotifications>().nonLues;
+    final session = context.read<Session>();
+    if (session.suppressionAnnulee) {
+      // Reconnexion pendant le délai de grâce : la suppression du compte vient d'être annulée.
+      session.suppressionAnnulee = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Bon retour ! La suppression de votre compte a été annulée.')),
+        );
+      });
+    }
     return Scaffold(
       body: navigation,
       // Cinq onglets : libellés plus petits pour tenir sur une ligne (« Réservations », « Notifications »).

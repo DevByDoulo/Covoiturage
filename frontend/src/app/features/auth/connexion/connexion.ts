@@ -27,6 +27,7 @@ export class Connexion {
   readonly expiree = input<string>();
   readonly reinitialise = input<string>();
   readonly desactive = input<string>();
+  readonly suppression = input<string>();
 
   protected readonly form = inject(FormBuilder).nonNullable.group({
     identifiant: ['', Validators.required],

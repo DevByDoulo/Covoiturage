@@ -101,12 +101,12 @@ public class AuthService {
         }
         limiteur.reinitialiser(cle);
         Utilisateur u = trouve.get();
-        reactiverSiDesactive(u);
+        boolean suppressionAnnulee = reactiverSiDesactive(u);
         if (u.getStatut() == StatutCompte.EN_ATTENTE_OTP) {
             return envoyerCodeVerification(u);
         }
         verifierPeutSeConnecter(u);
-        return AuthReponse.connecte(tokens.emettre(u), ProfilDto.de(u));
+        return AuthReponse.connecte(tokens.emettre(u), ProfilDto.de(u), suppressionAnnulee);
     }
 
     /**
@@ -133,10 +133,10 @@ public class AuthService {
         if (u.getSexe() == null && req.sexe() != null) u.setSexe(req.sexe());
 
         if (u.estVerifie() && u.getTelephone() != null) {
-            reactiverSiDesactive(u);
+            boolean suppressionAnnulee = reactiverSiDesactive(u);
             utilisateurs.save(u);
             verifierPeutSeConnecter(u);
-            return AuthReponse.connecte(tokens.emettre(u), ProfilDto.de(u));
+            return AuthReponse.connecte(tokens.emettre(u), ProfilDto.de(u), suppressionAnnulee);
         }
         if (req.telephone() == null || req.telephone().isBlank()) {
             utilisateurs.save(u);
@@ -256,8 +256,46 @@ public class AuthService {
         }
     }
 
-    private static void reactiverSiDesactive(Utilisateur u) {
-        if (u.getStatut() == StatutCompte.DESACTIVE) u.setStatut(StatutCompte.ACTIF);
+    /**
+     * Une connexion réussie réactive un compte désactivé et annule une suppression en cours (délai de grâce).
+     *
+     * @return vrai si une suppression de compte vient d'être annulée
+     */
+    private boolean reactiverSiDesactive(Utilisateur u) {
+        if (u.getStatut() == StatutCompte.DESACTIVE) {
+            u.setStatut(StatutCompte.ACTIF);
+        } else if (u.getStatut() == StatutCompte.SUPPRESSION_DEMANDEE) {
+            u.setStatut(StatutCompte.ACTIF);
+            u.setDateSuppressionDemandee(null);
+            alertes.suppressionAnnulee(u);
+            return true;
+        }
+        return false;
+    }
+
+    /** Envoie à l'utilisateur connecté le code qui confirme la suppression de son compte (compte sans mot de passe). */
+    @Transactional
+    public AuthReponse envoyerCodeSuppression(Long utilisateurId) {
+        Utilisateur u = charger(utilisateurId);
+        if (u.getTelephone() == null) throw ApiException.badRequest("Aucun numéro de téléphone n'est associé à ce compte");
+        return envoyerCode(u, ObjetOtp.CONFIRMATION_SUPPRESSION);
+    }
+
+    /**
+     * Confirme l'identité avant une action irréversible : mot de passe actuel, ou code reçu par email / SMS pour
+     * un compte créé avec Google (sans mot de passe).
+     */
+    public void confirmerIdentite(Utilisateur u, String motDePasse, String code) {
+        if (u.getMotDePasse() != null) {
+            verifierMotDePasseActuel(u, motDePasse, "motDePasse");
+            return;
+        }
+        if (code == null || code.isBlank()) throw ApiException.badRequest("Saisissez le code reçu").surChamp("code");
+        try {
+            otp.verifier(u.getTelephone(), ObjetOtp.CONFIRMATION_SUPPRESSION, code.trim());
+        } catch (ApiException e) {
+            throw e.surChamp("code");
+        }
     }
 
     /** Compte pouvant récupérer son mot de passe : actif et avec un numéro (auquel les codes sont rattachés). */
@@ -276,7 +314,11 @@ public class AuthService {
 
     /** Envoie le code de vérification du compte (email si possible, sinon SMS) et décrit l'envoi à l'interface. */
     private AuthReponse envoyerCodeVerification(Utilisateur u) {
-        CanalOtp canal = otp.envoyer(u.getTelephone(), u.getEmail(), ObjetOtp.VERIFICATION_TELEPHONE);
+        return envoyerCode(u, ObjetOtp.VERIFICATION_TELEPHONE);
+    }
+
+    private AuthReponse envoyerCode(Utilisateur u, ObjetOtp objet) {
+        CanalOtp canal = otp.envoyer(u.getTelephone(), u.getEmail(), objet);
         return canal == CanalOtp.EMAIL
                 ? AuthReponse.otpEnvoye(canal, null, masquerEmail(u.getEmail()), props.otp())
                 : AuthReponse.otpEnvoye(canal, Telephones.masquer(u.getTelephone()), null, props.otp());
@@ -323,6 +365,8 @@ public class AuthService {
             case BLOQUE -> throw ApiException.forbidden("Votre compte est temporairement bloqué. Contactez le support.");
             case BANNI -> throw ApiException.forbidden("Votre compte a été banni.");
             case DESACTIVE -> throw ApiException.forbidden("Ce compte a été désactivé.");
+            case SUPPRESSION_DEMANDEE -> throw ApiException.forbidden("La suppression de ce compte est en cours.");
+            case SUPPRIME -> throw ApiException.forbidden("Ce compte a été supprimé.");
             case EN_ATTENTE_OTP -> throw ApiException.forbidden("Veuillez d'abord vérifier votre numéro de téléphone.");
             case ACTIF -> { }
         }

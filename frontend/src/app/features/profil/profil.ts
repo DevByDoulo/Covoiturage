@@ -45,6 +45,11 @@ import { PreferencesTrajet } from './preferences-trajet';
               <span class="menu__texte">Désactiver mon compte</span>
               <app-icone nom="chevron-droite" [taille]="18" />
             </a>
+            <a routerLink="/profil/suppression" class="menu__danger">
+              <span class="pictogramme"><app-icone nom="poubelle" [taille]="19" /></span>
+              <span class="menu__texte">Supprimer mon compte<small>Effacement de vos données (30 jours)</small></span>
+              <app-icone nom="chevron-droite" [taille]="18" />
+            </a>
           }
         </nav>
 

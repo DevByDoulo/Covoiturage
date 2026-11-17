@@ -71,20 +71,25 @@ public final class AuthDtos {
     public record AuthReponse(EtapeAuth etape, String accessToken, String refreshToken, Long expiresIn,
                               CanalOtp canal, String telephoneMasque, String emailMasque,
                               Integer otpValiditeSecondes, Integer renvoiPossibleDansSecondes,
-                              ProfilDto utilisateur) {
+                              ProfilDto utilisateur, Boolean suppressionAnnulee) {
 
         static AuthReponse connecte(TokenService.Jetons j, ProfilDto u) {
+            return connecte(j, u, false);
+        }
+
+        /** suppressionAnnulee : la connexion a annulé une suppression de compte en cours (délai de grâce). */
+        static AuthReponse connecte(TokenService.Jetons j, ProfilDto u, boolean suppressionAnnulee) {
             return new AuthReponse(EtapeAuth.CONNECTE, j.accessToken(), j.refreshToken(), j.expiresIn(),
-                    null, null, null, null, null, u);
+                    null, null, null, null, null, u, suppressionAnnulee ? Boolean.TRUE : null);
         }
 
         static AuthReponse otpEnvoye(CanalOtp canal, String telephoneMasque, String emailMasque, AppProperties.Otp conf) {
             return new AuthReponse(EtapeAuth.OTP_ENVOYE, null, null, null, canal, telephoneMasque, emailMasque,
-                    conf.validiteMinutes() * 60, conf.delaiRenvoiSecondes(), null);
+                    conf.validiteMinutes() * 60, conf.delaiRenvoiSecondes(), null, null);
         }
 
         static AuthReponse telephoneRequis() {
-            return new AuthReponse(EtapeAuth.TELEPHONE_REQUIS, null, null, null, null, null, null, null, null, null);
+            return new AuthReponse(EtapeAuth.TELEPHONE_REQUIS, null, null, null, null, null, null, null, null, null, null);
         }
     }
 }

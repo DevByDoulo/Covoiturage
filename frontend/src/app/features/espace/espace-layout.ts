@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { SessionService } from '../../core/auth/session.service';
+import { Alerte } from '../../shared/ui/alerte';
 import { Icone, NomIcone } from '../../shared/ui/icone';
 import { Logo } from '../../shared/ui/logo';
 import { LienMessages } from '../messages/lien-messages';
@@ -25,7 +26,7 @@ interface EntreeMenu {
  */
 @Component({
   selector: 'app-espace-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Logo, Cloche, LienMessages],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Alerte, Icone, Logo, Cloche, LienMessages],
   template: `
     <header class="barre">
       <a class="barre__logo" [routerLink]="session.pageAccueil()" aria-label="Accueil YOBALEMAsn"><app-logo /></a>
@@ -59,7 +60,15 @@ interface EntreeMenu {
           </span>
         </a>
       </header>
-      <main class="contenu"><router-outlet /></main>
+      <main class="contenu">
+        @if (session.suppressionAnnulee()) {
+          <app-alerte type="succes" titre="Suppression de compte annulée">
+            Bon retour ! Votre compte est de nouveau actif.
+            <button class="fermer" type="button" (click)="session.suppressionAnnulee.set(false)">Fermer</button>
+          </app-alerte>
+        }
+        <router-outlet />
+      </main>
     </div>
 
     <nav class="onglets" aria-label="Navigation principale">
@@ -179,6 +188,14 @@ interface EntreeMenu {
       width: 36px;
       height: 36px;
       font-size: 14px;
+    }
+    .fermer {
+      margin-left: 8px;
+      background: none;
+      border: 0;
+      color: inherit;
+      text-decoration: underline;
+      cursor: pointer;
     }
     .contenu {
       max-width: 1080px;

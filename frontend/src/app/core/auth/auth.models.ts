@@ -46,6 +46,8 @@ export interface AuthReponse {
   otpValiditeSecondes?: number;
   renvoiPossibleDansSecondes?: number;
   utilisateur?: Profil;
+  /** Vrai quand cette connexion a annulé une suppression de compte en cours (délai de grâce de 30 jours). */
+  suppressionAnnulee?: boolean;
 }
 
 /** Code de « mot de passe oublié » accepté : le jeton autorise le nouveau mot de passe pendant validiteSecondes. */

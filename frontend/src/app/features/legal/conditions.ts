@@ -60,8 +60,10 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
         <li>Votre compte est personnel. Gardez votre mot de passe secret ; toute action faite avec votre compte est
           réputée faite par vous. Prévenez-nous sans attendre si vous pensez qu'il a été utilisé par quelqu'un d'autre.</li>
         <li>Sur un appareil partagé, ne cochez pas « Rester connecté » et déconnectez-vous après usage.</li>
-        <li>Vous pouvez désactiver votre compte depuis votre profil (il est réactivé à la connexion suivante) ou demander
-          sa suppression à l'adresse de contact.</li>
+        <li>Vous pouvez désactiver votre compte depuis votre profil (il est réactivé à la connexion suivante) ou
+          <strong>le supprimer</strong> (« Supprimer mon compte ») : la suppression devient définitive après 30 jours, sauf
+          si vous vous reconnectez avant, et elle est refusée tant que vous avez un trajet à venir, une réservation
+          acceptée à venir ou un paiement en attente.</li>
       </ul>
 
       <h2 id="conducteur">4. Devenir conducteur</h2>

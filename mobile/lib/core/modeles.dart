@@ -18,6 +18,7 @@ class Profil {
     required this.role,
     required this.conducteurValide,
     this.noteMoyenne,
+    this.motDePasseDefini = true,
   });
 
   final int id;
@@ -34,6 +35,9 @@ class Profil {
   final bool conducteurValide;
   final double? noteMoyenne;
 
+  /// Faux pour un compte créé avec Google : la suppression du compte se confirme alors par un code.
+  final bool motDePasseDefini;
+
   bool get estFemme => sexe == 'FEMME';
   String get nomComplet => '$prenom $nom';
 
@@ -49,12 +53,22 @@ class Profil {
         role: j['role'] as String,
         conducteurValide: j['conducteurValide'] == true,
         noteMoyenne: (j['noteMoyenne'] as num?)?.toDouble(),
+        motDePasseDefini: j['motDePasseDefini'] != false,
       );
 }
 
 /// Réponse de /api/auth/* : soit des jetons (CONNECTE), soit un code envoyé (OTP_ENVOYE).
 class AuthReponse {
-  AuthReponse({required this.etape, this.accessToken, this.refreshToken, this.canal, this.destination, this.utilisateur, this.renvoiDans});
+  AuthReponse({
+    required this.etape,
+    this.accessToken,
+    this.refreshToken,
+    this.canal,
+    this.destination,
+    this.utilisateur,
+    this.renvoiDans,
+    this.suppressionAnnulee = false,
+  });
 
   final String etape;
   final String? accessToken;
@@ -68,6 +82,9 @@ class AuthReponse {
   final Profil? utilisateur;
   final int? renvoiDans;
 
+  /// Vrai si cette connexion a annulé une suppression de compte en cours (délai de grâce de 30 jours).
+  final bool suppressionAnnulee;
+
   bool get connecte => etape == 'CONNECTE';
 
   factory AuthReponse.depuisJson(Map<String, dynamic> j) => AuthReponse(
@@ -78,6 +95,7 @@ class AuthReponse {
         destination: (j['emailMasque'] ?? j['telephoneMasque']) as String?,
         utilisateur: j['utilisateur'] == null ? null : Profil.depuisJson(j['utilisateur'] as Map<String, dynamic>),
         renvoiDans: (j['renvoiPossibleDansSecondes'] as num?)?.toInt(),
+        suppressionAnnulee: j['suppressionAnnulee'] == true,
       );
 }
 

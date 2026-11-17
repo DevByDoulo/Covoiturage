@@ -137,6 +137,9 @@ export class SessionService {
   /** Fenêtre « Se déconnecter ? » ouverte (affichée par ConfirmationDeconnexion, à la racine). */
   readonly confirmationDeconnexion = signal(false);
 
+  /** La dernière connexion a annulé une suppression de compte : l'espace connecté l'annonce une fois. */
+  readonly suppressionAnnulee = signal(false);
+
   /** Boutons Déconnexion : demandent d'abord une confirmation. */
   demanderDeconnexion(): void {
     this.confirmationDeconnexion.set(true);
@@ -196,6 +199,7 @@ export class SessionService {
   private traiter(r: AuthReponse, identifiant: string): void {
     if (r.etape === 'CONNECTE') {
       this.ouvrirSession(r);
+      if (r.suppressionAnnulee) this.suppressionAnnulee.set(true);
       this.definirVerification(null);
       this.idTokenGoogle = null;
     } else if (r.etape === 'OTP_ENVOYE') {

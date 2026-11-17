@@ -65,6 +65,21 @@ export class ProfilService {
       .post<void>(`${this.api}/desactivation`, { motDePasse })
       .pipe(tap(() => this.session.oublierSession()));
   }
+
+  /** Compte sans mot de passe (Google) : envoie par email ou SMS le code qui confirme la suppression. */
+  envoyerCodeSuppression(): Observable<AuthReponse> {
+    return this.http.post<AuthReponse>(`${this.api}/suppression/code`, {});
+  }
+
+  /**
+   * Demande la suppression du compte (délai de grâce de 30 jours, annulé par une reconnexion). Refusée avec un message
+   * explicatif tant qu'un trajet, une réservation acceptée ou un paiement est en cours.
+   */
+  supprimerCompte(motDePasse: string | null, code: string | null): Observable<{ dateSuppressionDefinitive: string }> {
+    return this.http
+      .post<{ dateSuppressionDefinitive: string }>(`${this.api}/suppression`, { motDePasse, code })
+      .pipe(tap(() => this.session.oublierSession()));
+  }
 }
 
 /** Adresse complète d'un fichier servi par le backend (« /api/fichiers/photos/… »). */

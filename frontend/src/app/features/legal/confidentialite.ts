@@ -159,11 +159,20 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
       <h2 id="conservation">6. Durées de conservation</h2>
       <ul>
         <li><strong>Compte, profil, trajets, réservations, messages, avis</strong> : tant que votre compte existe. Un compte
-          désactivé reste conservé (vous pouvez le réactiver en vous reconnectant). Pour une
-          <strong>suppression définitive</strong>, écrivez-nous : nous la faisons dans un délai d'un mois, sauf les
-          éléments que nous devons garder pour un litige en cours ou une obligation légale (par exemple les justificatifs
-          de paiement).</li>
-        <li><strong>Documents du conducteur</strong> : tant que vous proposez des trajets ; supprimés sur demande.</li>
+          désactivé reste conservé (vous pouvez le réactiver en vous reconnectant).</li>
+        <li><strong>Suppression de votre compte</strong> : vous pouvez la demander vous-même depuis « Mon profil » (site
+          et application). Votre compte devient aussitôt invisible et vous êtes déconnecté ; pendant
+          <strong>30 jours</strong>, vous pouvez annuler en vous reconnectant. Passé ce délai, vos données personnelles
+          sont <strong>définitivement effacées</strong> : nom, email, téléphone, photo, présentation, documents (permis,
+          carte grise, pièce d'identité), contacts d'urgence, alertes de recherche, jetons de notification, notifications,
+          position et numéros de téléphone de paiement ; le texte de vos messages est remplacé par « message supprimé ».
+          Sont seulement conservés, sans lien avec votre identité (votre nom devient « Utilisateur supprimé »), ce que
+          la loi ou l'intégrité du service exigent : <strong>paiements et réservations pendant 10 ans</strong>
+          (obligations comptables), trajets passés, avis donnés ou reçus (note et commentaire) et signalements. Un email
+          vous prévient à la demande, à l'annulation et à la suppression définitive. La suppression est refusée tant que
+          vous avez un trajet à venir en tant que conducteur, une réservation acceptée à venir ou un paiement en attente.</li>
+        <li><strong>Documents du conducteur</strong> : tant que vous proposez des trajets ; supprimés avec votre compte
+          ou sur demande.</li>
         <li><strong>Codes de vérification</strong> : quelques minutes (durée de validité du code).</li>
         <li><strong>Session</strong> : jusqu'à la fermeture de l'onglet, ou 30 jours au plus si vous cochez « Rester
           connecté ».</li>
@@ -194,7 +203,8 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
       <ul>
         <li><strong>accéder</strong> à vos données et en obtenir une copie ;</li>
         <li>les <strong>corriger</strong> (la plupart se modifient directement dans « Mon profil ») ;</li>
-        <li>vous <strong>opposer</strong> à un usage ou demander leur <strong>suppression</strong> ;</li>
+        <li>vous <strong>opposer</strong> à un usage ou demander leur <strong>suppression</strong> (droit à l'effacement :
+          « Supprimer mon compte » dans « Mon profil », voir la section 6) ;</li>
         <li>retirer votre autorisation de géolocalisation dans les réglages de votre navigateur ou de votre téléphone ;</li>
         <li><strong>couper les notifications push</strong> (interrupteur « Notifications push » de l'écran Notifications
           du site ou du Profil de l'application, ou réglages de votre appareil) : elles restent visibles dans

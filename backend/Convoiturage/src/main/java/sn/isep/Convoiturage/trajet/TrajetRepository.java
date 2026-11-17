@@ -28,6 +28,15 @@ public interface TrajetRepository extends JpaRepository<Trajet, Long> {
 
     long countByStatut(StatutTrajet statut);
 
+    /** Trajets du conducteur en cours, ou publiés / complets et pas encore partis (suppression de compte). */
+    @Query("""
+            select count(t) from Trajet t
+            where t.conducteur.id = :conducteurId
+              and (t.statut = :enCours or (t.statut in :ouverts and t.dateHeureDepart > :maintenant))
+            """)
+    long compterAVenir(@Param("conducteurId") Long conducteurId, @Param("enCours") StatutTrajet enCours,
+                       @Param("ouverts") Collection<StatutTrajet> ouverts, @Param("maintenant") LocalDateTime maintenant);
+
     /** Ligne brute de la recherche : distances au tracé et points de ramassage/dépose projetés sur l'itinéraire. */
     interface ResultatRecherche {
         Long getIdTrajet();
