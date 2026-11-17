@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api.dart';
+import '../../core/escales.dart';
 import '../../core/formats.dart';
 import '../../core/localisation.dart';
 import '../../core/modeles.dart';
@@ -19,8 +20,12 @@ import '../recherche/champ_lieu.dart';
 /// Délai minimal entre la publication et le départ (comme sur le site).
 const _delaiMinimal = Duration(minutes: 30);
 
+/// Champ que la carte remplit : le départ, l'arrivée, ou l'escale d'index >= 0.
+const _champDepart = -1;
+const _champArrivee = -2;
+
 /// Publication d'un trajet : départ et arrivée, date, véhicule et options, puis prix proposé par l'IA
-/// (ajustable dans la fourchette) et publication. Les escales se gèrent sur le site.
+/// (ajustable dans la fourchette) et publication. Jusqu'à 5 escales, comme sur le site.
 class PublierPage extends StatefulWidget {
   const PublierPage({super.key});
 
@@ -34,7 +39,8 @@ class _PublierPageState extends State<PublierPage> {
 
   Lieu? _depart;
   Lieu? _arrivee;
-  bool _departActif = true;
+  final _escales = EscalesSaisies();
+  int _champ = _champDepart;
 
   DateTime _date = _demainHuitHeures();
   int _places = 3;
@@ -105,13 +111,13 @@ class _PublierPageState extends State<PublierPage> {
 
   /// Demande d'estimation ; null tant que le départ, l'arrivée ou le véhicule manquent.
   Map<String, dynamic>? get _demande {
-    if (_depart == null || _arrivee == null || _idVehicule == null) return null;
+    if (_depart == null || _arrivee == null || _idVehicule == null || !_escales.complete) return null;
     Map<String, dynamic> point(Lieu l) => {'lieu': l.libelle, 'latitude': l.latitude, 'longitude': l.longitude};
     return {
       'idVehicule': _idVehicule,
       'depart': point(_depart!),
       'arrivee': point(_arrivee!),
-      'escales': const [],
+      'escales': _escales.pourApi(),
       'dateHeureDepart': dateHeureApi(_date),
       'nombrePlaces': _places,
       'typeRoute': _route,
@@ -127,7 +133,7 @@ class _PublierPageState extends State<PublierPage> {
   Future<void> _calculer() async {
     final demande = _demande;
     if (demande == null) {
-      setState(() => _erreur = 'Choisissez le départ et l\'arrivée.');
+      setState(() => _erreur = 'Choisissez le départ, l\'arrivée et l\'adresse de chaque escale.');
       return;
     }
     if (_departTropProche) {
@@ -200,23 +206,84 @@ class _PublierPageState extends State<PublierPage> {
   /// Toucher la carte place le point du champ actif, puis l'adresse est retrouvée.
   Future<void> _placerSurCarte(double lat, double lng) async {
     final provisoire = Lieu('Point sur la carte', lat, lng);
-    final departActif = _departActif;
+    final champ = _champ;
+    // L'escale est repérée par son identifiant : elle a pu être déplacée pendant la recherche d'adresse.
+    final idEscale = champ >= 0 && champ < _escales.nombre ? _escales.liste[champ].id : null;
     setState(() {
-      if (departActif) {
+      if (champ == _champDepart) {
         _depart = provisoire;
-        if (_arrivee == null) _departActif = false;
-      } else {
+        if (_arrivee == null) _champ = _champArrivee;
+      } else if (champ == _champArrivee) {
         _arrivee = provisoire;
+      } else if (idEscale != null) {
+        _escales.definir(champ, provisoire);
       }
     });
     final adresse = await context.read<Geocodage>().adresseDe(lat, lng);
     if (adresse == null || !mounted) return;
     setState(() {
       final lieu = Lieu(adresse, lat, lng);
-      if (departActif && _depart == provisoire) _depart = lieu;
-      if (!departActif && _arrivee == provisoire) _arrivee = lieu;
+      if (champ == _champDepart && _depart == provisoire) _depart = lieu;
+      if (champ == _champArrivee && _arrivee == provisoire) _arrivee = lieu;
+      if (idEscale != null) {
+        final i = _escales.liste.indexWhere((e) => e.id == idEscale);
+        if (i >= 0 && _escales.liste[i].lieu == provisoire) _escales.definir(i, lieu);
+      }
     });
   }
+
+  void _ajouterEscale() => setState(() {
+        if (_escales.ajouter() != null) _champ = _escales.nombre - 1;
+      });
+
+  void _retirerEscale(int i) => setState(() {
+        _escales.retirer(i);
+        _champ = _champDepart;
+      });
+
+  void _deplacerEscale(int i, int delta) => setState(() {
+        final nouveau = _escales.deplacer(i, delta);
+        if (_champ == i) _champ = nouveau;
+      });
+
+  /// Une escale : champ d'adresse (avec « Ma position »), monter / descendre / supprimer.
+  Widget _ligneEscale(int i, EscaleSaisie e) => Padding(
+        key: ValueKey('escale-${e.id}'),
+        padding: const EdgeInsets.only(top: 10),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+            child: ChampLieu(
+              libelle: 'Escale ${i + 1}',
+              lieu: e.lieu,
+              couleur: Couleurs.orange,
+              maPosition: true,
+              surChoix: (l) => setState(() {
+                _escales.definir(i, l);
+                _champ = _champDepart;
+              }),
+            ),
+          ),
+          Column(mainAxisSize: MainAxisSize.min, children: [
+            IconButton(
+              visualDensity: VisualDensity.compact,
+              tooltip: 'Monter l\'escale',
+              icon: const Icon(Icons.arrow_upward),
+              onPressed: i > 0 ? () => _deplacerEscale(i, -1) : null,
+            ),
+            IconButton(
+              visualDensity: VisualDensity.compact,
+              tooltip: 'Descendre l\'escale',
+              icon: const Icon(Icons.arrow_downward),
+              onPressed: i < _escales.nombre - 1 ? () => _deplacerEscale(i, 1) : null,
+            ),
+          ]),
+          IconButton(
+            tooltip: 'Supprimer l\'escale',
+            icon: const Icon(Icons.delete_outline, color: Couleurs.erreur),
+            onPressed: () => _retirerEscale(i),
+          ),
+        ]),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -244,9 +311,10 @@ class _PublierPageState extends State<PublierPage> {
           maPosition: true,
           surChoix: (l) => setState(() {
             _depart = l;
-            _departActif = _arrivee != null;
+            _champ = _arrivee != null ? _champ : _champArrivee;
           }),
         ),
+        for (var i = 0; i < _escales.nombre; i++) _ligneEscale(i, _escales.liste[i]),
         const SizedBox(height: 10),
         ChampLieu(
           libelle: 'Arrivée',
@@ -254,13 +322,21 @@ class _PublierPageState extends State<PublierPage> {
           couleur: Couleurs.erreur,
           surChoix: (l) => setState(() => _arrivee = l),
         ),
-        const SizedBox(height: 10),
-        Row(children: [
+        const SizedBox(height: 6),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: _escales.plein ? null : _ajouterEscale,
+            icon: const Icon(Icons.add_location_alt_outlined),
+            label: Text(_escales.plein ? 'Maximum $maxEscales escales' : 'Ajouter une escale'),
+          ),
+        ),
+        Wrap(spacing: 6, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
           const Text('La carte place : '),
-          const SizedBox(width: 6),
-          ChoiceChip(label: const Text('Départ'), selected: _departActif, onSelected: (_) => setState(() => _departActif = true)),
-          const SizedBox(width: 6),
-          ChoiceChip(label: const Text('Arrivée'), selected: !_departActif, onSelected: (_) => setState(() => _departActif = false)),
+          ChoiceChip(label: const Text('Départ'), selected: _champ == _champDepart, onSelected: (_) => setState(() => _champ = _champDepart)),
+          for (var i = 0; i < _escales.nombre; i++)
+            ChoiceChip(label: Text('Escale ${i + 1}'), selected: _champ == i, onSelected: (_) => setState(() => _champ = i)),
+          ChoiceChip(label: const Text('Arrivée'), selected: _champ == _champArrivee, onSelected: (_) => setState(() => _champ = _champArrivee)),
         ]),
         const SizedBox(height: 8),
         Carte(
@@ -269,6 +345,7 @@ class _PublierPageState extends State<PublierPage> {
           surTouche: _placerSurCarte,
           reperes: [
             if (_depart != null) Repere(_depart!.latitude, _depart!.longitude, 'depart', etiquette: 'A'),
+            for (final (l, n) in _escales.reperes()) Repere(l.latitude, l.longitude, 'escale', etiquette: n),
             if (_arrivee != null) Repere(_arrivee!.latitude, _arrivee!.longitude, 'arrivee', etiquette: 'B'),
           ],
         ),

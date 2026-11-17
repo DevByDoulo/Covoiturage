@@ -25,7 +25,7 @@ Application Android / iOS du covoiturage, branchée sur la même API que le site
 - **Publier** : départ et arrivée (recherche, « Ma position » ou carte), date et heure, véhicule validé, places,
   route nationale ou autoroute (péages), réservation sur validation ou immédiate, bagages, souplesse, « réservé
   aux femmes » pour une conductrice. « Calculer le prix » appelle `/trajets/estimation` (IA + formule) : prix
-  recommandé, curseur dans la fourchette, détail des coûts ; puis publication. Les escales se gèrent sur le site.
+  recommandé, curseur dans la fourchette, détail des coûts ; puis publication. Jusqu'à 5 escales (recherche de lieu, « Ma position » ou carte ; monter, descendre, supprimer), comme sur le site.
 - **Mon trajet** : carte, passagers (accepter / refuser avec motif), **embarquement** par QR code
   (`mobile_scanner`, caméra) ou code à 6 chiffres, avec le montant à encaisser en espèces ; démarrer (une heure
   avant le départ au plus tôt), terminer, annuler avec motif. Depuis le détail public d'un de ses trajets, le
@@ -125,7 +125,7 @@ client Android (ou une empreinte) par poste ; une version publiée aura besoin d
    et le retire à la déconnexion. Toucher un push ouvre l'écran de la notification ; l'interrupteur « Notifications
    push » du Profil les coupe sur tous les appareils du compte.
 
-Pas encore fait : push sur iOS (clé APNs), escales à la publication.
+Pas encore fait : push sur iOS (clé APNs).
 
 ## Lancer
 
