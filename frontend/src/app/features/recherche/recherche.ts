@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { catchError, of, switchMap, tap } from 'rxjs';
 import { ErreurApi, lireErreur } from '../../core/api/erreur-api';
 import { SessionService } from '../../core/auth/session.service';
@@ -14,9 +14,10 @@ import { Icone } from '../../shared/ui/icone';
 import { AlertesService } from '../alertes/alertes.service';
 import { MesAlertes } from '../alertes/mes-alertes';
 import { CarteTrajet } from '../trajets/carte-trajet/carte-trajet';
-import { ChampLieu } from '../trajets/champ-lieu/champ-lieu';
 import { CriteresRecherche, Trajet } from '../trajets/trajets.models';
 import { TrajetsService } from '../trajets/trajets.service';
+import { BarreRecherche } from './barre-recherche';
+import { aujourdhui, parametresRecherche } from './parametres-recherche';
 
 type Tri = 'heure' | 'prix' | 'proximite';
 
@@ -26,7 +27,7 @@ type Tri = 'heure' | 'prix' | 'proximite';
  */
 @Component({
   selector: 'app-recherche',
-  imports: [ReactiveFormsModule, DatePipe, Carte, ChampLieu, CarteTrajet, Icone, Alerte, MesAlertes],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, Carte, BarreRecherche, CarteTrajet, Icone, Alerte, MesAlertes],
   templateUrl: './recherche.html',
   styleUrl: './recherche.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -55,7 +56,8 @@ export class Recherche {
   readonly femmes = input<string>();
   readonly conducteur = input<string>();
 
-  protected readonly aujourdhui = new Date().toISOString().slice(0, 10);
+  protected readonly dateRecherche = signal(aujourdhui());
+  protected readonly passagers = signal(1);
   protected readonly depart = signal<Lieu | null>(null);
   protected readonly arrivee = signal<Lieu | null>(null);
   protected readonly champActif = signal<'depart' | 'arrivee'>('depart');
@@ -64,8 +66,6 @@ export class Recherche {
   protected readonly estFemme = computed(() => this.session.utilisateur()?.sexe === 'FEMME');
 
   protected readonly form = inject(FormBuilder).nonNullable.group({
-    date: [this.aujourdhui],
-    places: [1],
     hmin: [''],
     hmax: [''],
     prix: [''],
@@ -146,9 +146,9 @@ export class Recherche {
       untracked(() => {
         this.depart.set({ libelle: this.de() ?? 'Départ', latitude: c.latDepart, longitude: c.lngDepart });
         this.arrivee.set({ libelle: this.a() ?? 'Arrivée', latitude: c.latArrivee, longitude: c.lngArrivee });
+        this.dateRecherche.set(c.date);
+        this.passagers.set(c.places ?? 1);
         this.form.patchValue({
-          date: c.date,
-          places: c.places ?? 1,
           hmin: c.heureMin ?? '',
           hmax: c.heureMax ?? '',
           prix: c.prixMax?.toString() ?? '',
@@ -185,6 +185,11 @@ export class Recherche {
       });
   }
 
+  /** Adresse de la recherche en cours : le visiteur y revient après s'être connecté. */
+  protected urlCourante(): string {
+    return this.router.url;
+  }
+
   protected definirLieu(cle: 'depart' | 'arrivee', lieu: Lieu): void {
     (cle === 'depart' ? this.depart : this.arrivee).set(lieu);
     if (cle === 'depart' && !this.arrivee()) this.champActif.set('arrivee');
@@ -195,17 +200,6 @@ export class Recherche {
       libelle: `Point sur la carte (${point.latitude.toFixed(4)}, ${point.longitude.toFixed(4)})`,
       ...point,
     });
-  }
-
-  protected inverser(): void {
-    const d = this.depart();
-    this.depart.set(this.arrivee());
-    this.arrivee.set(d);
-  }
-
-  protected changerPlaces(delta: number): void {
-    const n = this.form.controls.places.value + delta;
-    if (n >= 1 && n <= 8) this.form.controls.places.setValue(n);
   }
 
   /** Lance la recherche en écrivant les critères dans l'URL. */
@@ -221,14 +215,7 @@ export class Recherche {
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: {
-        de: d.libelle,
-        dlat: d.latitude.toFixed(6),
-        dlng: d.longitude.toFixed(6),
-        a: a.libelle,
-        alat: a.latitude.toFixed(6),
-        alng: a.longitude.toFixed(6),
-        date: v.date || this.aujourdhui,
-        places: v.places > 1 ? v.places : null,
+        ...parametresRecherche(d, a, this.dateRecherche(), this.passagers()),
         hmin: v.hmin || null,
         hmax: v.hmax || null,
         prix: v.prix || null,

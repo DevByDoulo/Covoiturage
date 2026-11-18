@@ -42,7 +42,7 @@
           <div><dt>Route</dt><dd>{{ libellesRoute[t.typeRoute] }}</dd></div>
         </dl>
         <!-- 08 — Géolocalisation : itinéraire jusqu'au point de départ, depuis la position du passager -->
-        @if (t.statut === 'PUBLIE' || t.statut === 'COMPLET' || (t.statut === 'EN_COURS' && !estConducteur())) {
+        @if (!visiteur() && (t.statut === 'PUBLIE' || t.statut === 'COMPLET' || (t.statut === 'EN_COURS' && !estConducteur()))) {
           <a class="bouton bouton--secondaire" [routerLink]="['/trajets', t.id, 'guidage']">
             <app-icone nom="position" [taille]="16" /> Guidage vocal jusqu'au point de départ
           </a>
@@ -73,13 +73,32 @@
         @if (!estConducteur()) {
           <p class="conducteur">Conducteur : <strong>{{ t.conducteur.prenom }} {{ t.conducteur.nomInitiale }}</strong></p>
           <!-- 09 — Messagerie -->
-          <div><app-bouton-message [idTrajet]="t.id" [libelle]="'Écrire à ' + t.conducteur.prenom" /></div>
+          @if (visiteur()) {
+            <a class="bouton bouton--secondaire" routerLink="/auth/connexion" [queryParams]="{ retour: urlTrajet() }">
+              <app-icone nom="discussion" [taille]="16" /> Se connecter pour écrire à {{ t.conducteur.prenom }}
+            </a>
+          } @else {
+            <div><app-bouton-message [idTrajet]="t.id" [libelle]="'Écrire à ' + t.conducteur.prenom" /></div>
+          }
         }
       </section>
 
       <!-- 04 — Réservation (passager) ou demandes reçues et embarquement (conducteur) -->
       @if (!estConducteur() && t.statut === 'PUBLIE' && modifiable()) {
-        <app-reserver-trajet [trajet]="t" />
+        @if (visiteur()) {
+          <section class="carte bloc" aria-labelledby="titre-visiteur">
+            <h2 id="titre-visiteur"><app-icone nom="valide" /> Réserver</h2>
+            <p class="aide">Connectez-vous ou créez un compte gratuit pour réserver une place sur ce trajet, payer et écrire au
+              conducteur.</p>
+            <a class="bouton bouton--primaire" routerLink="/auth/connexion" [queryParams]="{ retour: urlTrajet() }">
+              Se connecter pour réserver
+            </a>
+            <p class="aide centre">Pas encore de compte ?
+              <a routerLink="/auth/inscription" [queryParams]="{ retour: urlTrajet() }">S'inscrire</a></p>
+          </section>
+        } @else {
+          <app-reserver-trajet [trajet]="t" />
+        }
       }
       <!-- 08 — position du conducteur en direct -->
       @if (estConducteur() && (t.statut === 'PUBLIE' || t.statut === 'COMPLET' || t.statut === 'EN_COURS')) {

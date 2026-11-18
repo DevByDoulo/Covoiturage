@@ -80,6 +80,6 @@
     </button>
   </form>
 
-  <p class="bas-de-page">Pas encore de compte ? <a routerLink="/auth/inscription">S'inscrire</a></p>
+  <p class="bas-de-page">Pas encore de compte ? <a routerLink="/auth/inscription" [queryParams]="retourValide() ? { retour: retourValide() } : null">S'inscrire</a></p>
   <p class="pied-securite"><app-icone nom="bouclier" [taille]="15" /> Trajets sécurisés avec vérification d'identité</p>
 </div>

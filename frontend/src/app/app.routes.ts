@@ -1,5 +1,12 @@
 import { Routes } from '@angular/router';
-import { connecteGuard, invitesGuard, roleGuard, verificationGuard } from './core/auth/auth.guards';
+import {
+  connecteGuard,
+  idTrajetMatch,
+  invitesGuard,
+  roleGuard,
+  verificationGuard,
+  visiteurMatch,
+} from './core/auth/auth.guards';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'accueil' },
@@ -70,6 +77,33 @@ export const routes: Routes = [
         path: 'utilisateurs/:id',
         title: 'Fiche utilisateur · YOBALEMAsn',
         loadComponent: () => import('./features/admin/fiche-utilisateur').then((m) => m.FicheUtilisateurPage),
+      },
+    ],
+  },
+  {
+    // Pages publiques pour un visiteur (sans compte) : accueil, recherche, détail d'un trajet. Placées avant l'espace
+    // connecté : un utilisateur connecté ne passe pas `visiteurMatch` et retrouve les mêmes chemins dans son espace.
+    // Toute autre page (réserver, écrire, publier…) mène à la connexion avec retour (connecteGuard ci-dessous).
+    path: '',
+    canMatch: [visiteurMatch],
+    loadComponent: () => import('./features/public/public-layout').then((m) => m.PublicLayout),
+    children: [
+      {
+        path: 'accueil',
+        title: 'Covoiturage au Sénégal · YOBALEMAsn',
+        data: { pleineLargeur: true },
+        loadComponent: () => import('./features/public/accueil-public').then((m) => m.AccueilPublic),
+      },
+      {
+        path: 'rechercher',
+        title: 'Rechercher un trajet · YOBALEMAsn',
+        loadComponent: () => import('./features/recherche/recherche').then((m) => m.Recherche),
+      },
+      {
+        path: 'trajets/:id',
+        canMatch: [idTrajetMatch],
+        title: 'Trajet · YOBALEMAsn',
+        loadComponent: () => import('./features/trajets/detail/detail-trajet').then((m) => m.DetailTrajet),
       },
     ],
   },

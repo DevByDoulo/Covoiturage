@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -17,6 +17,7 @@ import {
   champsIdentiques,
   chiffresTelephone,
   enErreur,
+  retourSur,
   telephoneSenegalValidator,
 } from '../formulaire';
 
@@ -27,7 +28,7 @@ import {
   styleUrl: '../auth-commun.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Inscription {
+export class Inscription implements OnInit {
   private readonly session = inject(SessionService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
@@ -51,6 +52,14 @@ export class Inscription {
   protected readonly erreur = signal<ErreurApi | null>(null);
   protected readonly googleIndisponible = signal(false);
   protected readonly enErreur = (nom: string) => enErreur(this.form, nom);
+
+  /** Paramètre d'URL (lié par le routeur) : page à rejoindre après l'inscription. */
+  readonly retour = input<string>();
+  protected readonly retourValide = computed(() => retourSur(this.retour()));
+
+  ngOnInit(): void {
+    this.session.memoriserRetour(this.retour());
+  }
 
   protected confirmationDifferente(): boolean {
     const c = this.form.controls.confirmation;
@@ -97,7 +106,7 @@ export class Inscription {
             ? '/auth/google/telephone'
             : r.etape === 'OTP_ENVOYE'
               ? '/auth/verification'
-              : this.session.pageAccueil(),
+              : this.session.pageApresConnexion(),
         ),
       error: (e) => this.erreur.set(lireErreur(e)),
     });

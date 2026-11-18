@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ErreurApi, lireErreur } from '../../../core/api/erreur-api';
@@ -18,7 +18,7 @@ import { enErreur, retourSur } from '../formulaire';
   styleUrl: '../auth-commun.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Connexion {
+export class Connexion implements OnInit {
   private readonly session = inject(SessionService);
   private readonly router = inject(Router);
 
@@ -40,6 +40,13 @@ export class Connexion {
   protected readonly googleIndisponible = signal(false);
   protected readonly bloque = computed(() => this.erreur()?.status === 429);
   protected readonly enErreur = (nom: string) => enErreur(this.form, nom);
+  /** Retour prévu, repris dans le lien vers l'inscription. */
+  protected readonly retourValide = computed(() => retourSur(this.retour()));
+
+  ngOnInit(): void {
+    // Mémorisé pour traverser le code de vérification ; une visite sans retour efface l'ancien.
+    this.session.memoriserRetour(this.retour());
+  }
 
   protected soumettre(): void {
     if (this.form.invalid) {
@@ -73,6 +80,6 @@ export class Connexion {
   private suite(r: AuthReponse): void {
     if (r.etape === 'OTP_ENVOYE') this.router.navigateByUrl('/auth/verification');
     else if (r.etape === 'TELEPHONE_REQUIS') this.router.navigateByUrl('/auth/google/telephone');
-    else this.router.navigateByUrl(retourSur(this.retour()) ?? this.session.pageAccueil());
+    else this.router.navigateByUrl(this.session.pageApresConnexion());
   }
 }

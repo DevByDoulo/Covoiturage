@@ -19,7 +19,7 @@ export const VERSION_LEGALE = '18 novembre 2026';
     <div class="legal">
       <header class="legal__entete">
         <a [routerLink]="retour()" class="legal__logo" aria-label="YOBALEMAsn"><app-logo /></a>
-        <a [routerLink]="retour()" class="bouton-lien">{{ connecte() ? 'Retour à mon espace' : 'Retour à la connexion' }}</a>
+        <a [routerLink]="retour()" class="bouton-lien">{{ connecte() ? 'Retour à mon espace' : "Retour à l'accueil" }}</a>
       </header>
       <main class="legal__corps">
         <h1>{{ titre() }}</h1>
@@ -97,5 +97,5 @@ export class PageLegale {
   protected readonly contact = CONTACT_LEGAL;
   protected readonly version = VERSION_LEGALE;
   protected readonly connecte = this.session.estConnecte;
-  protected readonly retour = computed(() => (this.connecte() ? this.session.pageAccueil() : '/auth/connexion'));
+  protected readonly retour = computed(() => (this.connecte() ? this.session.pageAccueil() : '/accueil'));
 }

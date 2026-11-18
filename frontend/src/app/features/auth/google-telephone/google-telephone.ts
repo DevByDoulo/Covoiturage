@@ -94,7 +94,7 @@ export class GoogleTelephone implements OnInit {
     this.envoi.set(true);
     this.erreur.set(null);
     this.session.connexionGoogle(idToken, '+221' + chiffresTelephone(telephone), sexe).subscribe({
-      next: (r) => this.router.navigateByUrl(r.etape === 'CONNECTE' ? this.session.pageAccueil() : '/auth/verification'),
+      next: (r) => this.router.navigateByUrl(r.etape === 'CONNECTE' ? this.session.pageApresConnexion() : '/auth/verification'),
       error: (e) => {
         const err = lireErreur(e);
         if (!appliquerErreurServeur(this.form, err)) this.erreur.set(err);

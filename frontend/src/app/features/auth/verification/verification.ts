@@ -41,7 +41,7 @@ export class Verification {
     this.envoi.set(true);
     this.erreur.set(null);
     this.session.verifierOtp(code).subscribe({
-      next: () => this.router.navigateByUrl(this.session.pageAccueil()),
+      next: () => this.router.navigateByUrl(this.session.pageApresConnexion()),
       error: (e) => {
         this.erreur.set(lireErreur(e));
         this.envoi.set(false);

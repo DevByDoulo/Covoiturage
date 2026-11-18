@@ -26,8 +26,6 @@
   h2 { display: flex; align-items: center; gap: 8px; font-size: 16px; }
 }
 
-.inverser { align-self: flex-start; margin-top: -8px; }
-
 .ligne {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -43,27 +41,6 @@ select {
   background: transparent;
   font: inherit;
   color: var(--texte);
-}
-
-.compteur {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 50px;
-  padding: 0 6px;
-  border-radius: var(--rayon);
-  background: var(--surface);
-  box-shadow: var(--ombre);
-  button {
-    width: 36px;
-    height: 36px;
-    border: 0;
-    border-radius: 10px;
-    background: var(--surface-2);
-    font-size: 20px;
-    cursor: pointer;
-  }
-  output { font-size: 18px; font-weight: 700; }
 }
 
 .filtres {
