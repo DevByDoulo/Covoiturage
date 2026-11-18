@@ -1,13 +1,5 @@
 <div class="ecran">
-  <div class="marque">
-    <div class="marque__tuile"><app-logo /></div>
-    <span class="pastille"><app-icone nom="feuille" [taille]="14" /> Covoiturage intelligent &amp; solidaire</span>
-  </div>
-
-  <div class="titres">
-    <h1>Bon retour !</h1>
-    <p>Retrouvez vos trajets du quotidien et vos compagnons de route.</p>
-  </div>
+  <h1 id="titre-connexion">Indiquez votre numéro de téléphone ou votre adresse e-mail</h1>
 
   @if (reinitialise()) {
     <app-alerte type="succes" titre="Mot de passe modifié">Connectez-vous avec votre nouveau mot de passe.</app-alerte>
@@ -21,47 +13,41 @@
     <app-alerte type="info">Votre session a expiré. Reconnectez-vous pour continuer.</app-alerte>
   }
 
-  <app-bouton-google (jeton)="google($event)" (indisponible)="googleIndisponible.set(true)" />
-  @if (googleIndisponible()) {
-    <app-alerte type="info">La connexion Google n'est pas encore activée. Utilisez votre email ou votre téléphone.</app-alerte>
-  }
-
-  <div class="separateur">ou</div>
-
   <form class="formulaire" [formGroup]="form" (ngSubmit)="soumettre()" novalidate>
     <div class="champ" [class.champ--erreur]="enErreur('identifiant')">
-      <label class="libelle" for="identifiant">Email ou Téléphone (+221)</label>
+      <label class="sr-only" for="identifiant">Téléphone (+221) ou e-mail</label>
       <div class="saisie">
-        <app-icone nom="arobase" />
         <input
           id="identifiant"
           formControlName="identifiant"
           autocomplete="username"
           inputmode="email"
-          placeholder="awa.diop@gmail.com"
+          placeholder="Saisir n° de tél. ou e-mail"
           [attr.aria-invalid]="enErreur('identifiant')"
+          [attr.aria-describedby]="enErreur('identifiant') ? 'erreur-identifiant' : null"
         />
       </div>
       @if (enErreur('identifiant')) {
-        <p class="message-erreur"><app-icone nom="alerte" [taille]="14" /> Saisissez votre email ou votre numéro</p>
+        <p class="message-erreur" id="erreur-identifiant"><app-icone nom="alerte" [taille]="14" /> Saisissez votre e-mail ou votre numéro</p>
       }
     </div>
 
     <div class="champ" [class.champ--erreur]="enErreur('motDePasse')">
-      <label class="libelle" for="motDePasse">Mot de passe</label>
-      <app-champ-mot-de-passe idChamp="motDePasse" formControlName="motDePasse" autocomplete="current-password" />
-      <div class="ligne-lien">
-        @if (enErreur('motDePasse')) {
-          <p class="message-erreur"><app-icone nom="alerte" [taille]="14" /> Saisissez votre mot de passe</p>
-        }
-        <a routerLink="/auth/mot-de-passe-oublie">Mot de passe oublié ?</a>
-      </div>
+      <label class="sr-only" for="motDePasse">Mot de passe</label>
+      <app-champ-mot-de-passe idChamp="motDePasse" formControlName="motDePasse" autocomplete="current-password"
+                              placeholder="Mot de passe" [decritPar]="enErreur('motDePasse') ? 'erreur-mot-de-passe' : ''" />
+      @if (enErreur('motDePasse')) {
+        <p class="message-erreur" id="erreur-mot-de-passe"><app-icone nom="alerte" [taille]="14" /> Saisissez votre mot de passe</p>
+      }
     </div>
 
-    <label class="case">
-      <input type="checkbox" formControlName="resterConnecte" />
-      <span>Rester connecté <small>(à ne pas cocher sur un appareil partagé)</small></span>
-    </label>
+    <div class="options">
+      <label class="case">
+        <input type="checkbox" formControlName="resterConnecte" />
+        <span>Rester connecté</span>
+      </label>
+      <a routerLink="/auth/mot-de-passe-oublie">Mot de passe oublié ?</a>
+    </div>
 
     @if (erreur(); as e) {
       @if (bloque()) {
@@ -75,11 +61,22 @@
       @if (envoi()) {
         <span class="chargement" aria-hidden="true"></span> Connexion…
       } @else {
-        <app-icone nom="connexion" /> Se connecter
+        Continuer
       }
     </button>
   </form>
 
-  <p class="bas-de-page">Pas encore de compte ? <a routerLink="/auth/inscription" [queryParams]="retourValide() ? { retour: retourValide() } : null">S'inscrire</a></p>
-  <p class="pied-securite"><app-icone nom="bouclier" [taille]="15" /> Trajets sécurisés avec vérification d'identité</p>
+  <div class="separateur">ou</div>
+
+  <app-bouton-google forme="rectangular" (jeton)="google($event)" (indisponible)="googleIndisponible.set(true)" />
+  @if (googleIndisponible()) {
+    <app-alerte type="info">La connexion Google n'est pas encore activée. Utilisez votre e-mail ou votre téléphone.</app-alerte>
+  }
+  <a class="bouton bouton--secondaire" routerLink="/auth/inscription"
+     [queryParams]="retourValide() ? { retour: retourValide() } : null">Créer un compte</a>
+
+  <p class="mention">
+    « Rester connecté » garde la session 30 jours : à ne pas cocher sur un appareil partagé. Si votre compte n'est pas
+    encore vérifié, un code vous sera envoyé par SMS ou par e-mail.
+  </p>
 </div>

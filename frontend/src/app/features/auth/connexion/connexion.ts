@@ -8,14 +8,13 @@ import { Alerte } from '../../../shared/ui/alerte';
 import { BoutonGoogle } from '../../../shared/ui/bouton-google';
 import { ChampMotDePasse } from '../../../shared/ui/champ-mot-de-passe';
 import { Icone } from '../../../shared/ui/icone';
-import { Logo } from '../../../shared/ui/logo';
 import { enErreur, retourSur } from '../formulaire';
 
 @Component({
   selector: 'app-connexion',
-  imports: [ReactiveFormsModule, RouterLink, Logo, Icone, Alerte, ChampMotDePasse, BoutonGoogle],
+  imports: [ReactiveFormsModule, RouterLink, Icone, Alerte, ChampMotDePasse, BoutonGoogle],
   templateUrl: './connexion.html',
-  styleUrl: '../auth-commun.scss',
+  styleUrl: './connexion.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Connexion implements OnInit {

@@ -18,6 +18,7 @@ export const routes: Routes = [
       {
         path: 'connexion',
         title: 'Connexion · YOBALEMAsn',
+        data: { epure: true },
         canActivate: [invitesGuard],
         loadComponent: () => import('./features/auth/connexion/connexion').then((m) => m.Connexion),
       },

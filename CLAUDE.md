@@ -41,7 +41,8 @@ chaque fonctionnalité ; ici, ne garder qu'une ligne par module.
   seulement, effacés 6 mois après le trajet ; site et mobile façon WhatsApp ; signalement d'un message précis),
   accueil public du site (branche `accueil-public` : visiteur sans compte sur `/accueil`, `/rechercher`, `/trajets/:id`
   via `canMatch: [visiteurMatch]` ; connexion demandée pour réserver, écrire, publier, avec `retour` conservé jusqu'au
-  code de vérification ; backend inchangé).
+  code de vérification ; backend inchangé), design épuré de la connexion inspiré d'Uber (branche `connexion-design` :
+  donnée de route `epure`, bandeau + colonne centrée ; fonctionnement inchangé).
 - **Appli mobile Flutter** (`mobile/`, voir `mobile/README.md`) : parcours passager et conducteur, messagerie, avis,
   guidage vocal et suivi en direct, notifications push (`google-services.json` non commité). Mot de passe oublié fait (branche `mobile-mot-de-passe-oublie`), historique des paiements et reçus (branche `mobile-paiements`), modification du profil — photo, prénom, nom, présentation (branche `mobile-profil`), icône + test sur téléphone Android (branche `mobile-test-telephone`, `docs/test-telephone-android.md`), connexion Google (branche `mobile-google`, ID client Web en `--dart-define=GOOGLE_SERVER_CLIENT_ID`, même endpoint `/api/auth/google`), escales à la publication (branche `mobile-escales` : ajout, ordre, suppression, jusqu'à 5 ; pas de prix par tronçon ni de réservation de segment, absents du site et de l'API). Reste : iOS (push APNs).
 - Version complète d'avant le 27/10/2026 : étiquette Git `archive/lot1-complet`.

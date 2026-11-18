@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { Icone } from '../../shared/ui/icone';
 import { Logo } from '../../shared/ui/logo';
@@ -6,12 +6,19 @@ import { Logo } from '../../shared/ui/logo';
 /**
  * Cadre des écrans d'authentification : colonne centrée (mobile-first, comme les maquettes) ;
  * sur grand écran, un panneau de présentation s'ajoute à gauche.
+ * Donnée de route `epure` (écran de connexion) : bandeau vert en haut avec le logo et colonne étroite centrée,
+ * sans panneau de présentation (inspiré de la page de connexion d'Uber).
  */
 @Component({
   selector: 'app-auth-layout',
   imports: [RouterOutlet, RouterLink, Logo, Icone],
   template: `
-    <div class="cadre">
+    @if (epure()) {
+      <header class="bandeau">
+        <a routerLink="/accueil" aria-label="YOBALEMAsn, accueil"><app-logo /></a>
+      </header>
+    }
+    <div class="cadre" [class.cadre--epure]="epure()">
       <aside class="presentation" aria-hidden="true">
         <app-logo />
         <div>
@@ -25,7 +32,7 @@ import { Logo } from '../../shared/ui/logo';
         <p class="presentation__pied">Dakar · Thiès · Saint-Louis · Touba · Ziguinchor</p>
       </aside>
       <main class="contenu">
-        <router-outlet />
+        <router-outlet (activate)="activer()" />
         <p class="liens-legaux">
           <a routerLink="/conditions">Conditions d'utilisation</a> · <a routerLink="/confidentialite">Confidentialité</a>
         </p>
@@ -33,6 +40,20 @@ import { Logo } from '../../shared/ui/logo';
     </div>
   `,
   styles: `
+    .bandeau {
+      --logo-texte: #fff;
+      display: flex;
+      align-items: center;
+      height: 64px;
+      padding: 0 16px;
+      background: #0d3d2b;
+    }
+    .cadre--epure {
+      min-height: calc(100dvh - 64px);
+      background: var(--surface);
+      .presentation { display: none; }
+      .contenu { max-width: 442px; align-self: start; padding: 32px 16px; }
+    }
     .liens-legaux {
       margin: 24px 0 8px;
       font-size: 13px;
@@ -59,6 +80,11 @@ import { Logo } from '../../shared/ui/logo';
       .contenu {
         align-self: center;
         padding: 40px 16px;
+      }
+      .bandeau { padding: 0 72px; }
+      .cadre--epure {
+        grid-template-columns: 1fr;
+        .contenu { padding: 96px 16px 40px; }
       }
       .presentation {
         display: flex;
@@ -101,4 +127,11 @@ import { Logo } from '../../shared/ui/logo';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AuthLayout {}
+export class AuthLayout {
+  private readonly outlet = viewChild.required(RouterOutlet);
+  protected readonly epure = signal(false);
+
+  protected activer(): void {
+    this.epure.set(!!this.outlet().activatedRouteData['epure']);
+  }
+}

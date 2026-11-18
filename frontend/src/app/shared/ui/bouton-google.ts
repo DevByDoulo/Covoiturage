@@ -71,6 +71,8 @@ function chargerGis(): Promise<GoogleIdentity> {
 })
 export class BoutonGoogle implements AfterViewInit {
   readonly libelle = input('Continuer avec Google');
+  /** Forme du bouton officiel : arrondie (par défaut) ou rectangulaire (écran de connexion épuré). */
+  readonly forme = input<'pill' | 'rectangular'>('pill');
   /** idToken Google à transmettre au backend. */
   readonly jeton = output<string>();
   /** Clic alors que Google n'est pas configuré ou n'a pas pu être chargé. */
@@ -93,7 +95,7 @@ export class BoutonGoogle implements AfterViewInit {
         google.accounts.id.renderButton(el, {
           theme: 'outline',
           size: 'large',
-          shape: 'pill',
+          shape: this.forme(),
           text: 'continue_with',
           locale: 'fr',
           width: Math.min(el.clientWidth || 360, 400),
