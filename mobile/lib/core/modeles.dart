@@ -455,17 +455,36 @@ class ConversationResume {
       );
 }
 
+/// Message d'une conversation : un texte ou un vocal ([vocal]). Vocal : [contenu] est null (ou « [message supprimé] »),
+/// [audioDisponible] passe à faux quand le fichier est effacé (6 mois après le trajet, compte supprimé), [ecoute]
+/// passe à vrai quand le destinataire l'a écouté.
 class MessageApp {
-  MessageApp(this.id, this.contenu, this.dateEnvoi, this.deMoi, this.lu);
+  MessageApp(this.id, this.contenu, this.dateEnvoi, this.deMoi, this.lu,
+      {this.vocal = false, this.dureeMs, this.formeOnde = const [], this.audioDisponible = false, this.ecoute = false});
 
   final int id;
-  final String contenu;
+  final String? contenu;
   final DateTime dateEnvoi;
   final bool deMoi;
   final bool lu;
+  final bool vocal;
+  final int? dureeMs;
+  final List<int> formeOnde;
+  final bool audioDisponible;
+  final bool ecoute;
 
-  factory MessageApp.depuisJson(Map<String, dynamic> j) =>
-      MessageApp(_i(j['id']), j['contenu'] as String, _date(j['dateEnvoi']), j['deMoi'] == true, j['lu'] == true);
+  factory MessageApp.depuisJson(Map<String, dynamic> j) => MessageApp(
+        _i(j['id']),
+        j['contenu'] as String?,
+        _date(j['dateEnvoi']),
+        j['deMoi'] == true,
+        j['lu'] == true,
+        vocal: j['type'] == 'VOCAL',
+        dureeMs: j['dureeMs'] == null ? null : _i(j['dureeMs']),
+        formeOnde: [for (final n in (j['formeOnde'] as List? ?? const [])) (n as num).toInt()],
+        audioDisponible: j['audioDisponible'] == true,
+        ecoute: j['ecoute'] == true,
+      );
 }
 
 /// Conversation ouverte (GET /api/moi/conversations/{id}, qui marque les messages reçus comme lus).

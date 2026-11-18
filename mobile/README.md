@@ -39,6 +39,16 @@ Application Android / iOS du covoiturage, branchée sur la même API que le site
   (le backend donne la raison).
 - Boutons **« Écrire à … »** : détail d'un trajet (au conducteur), Mes réservations (au conducteur), Mon trajet
   (à chaque passager). La notification « Nouveau message » ouvre la conversation.
+- **Messages vocaux** (façon WhatsApp) : champ vide → le bouton d'envoi devient un **micro**. Maintenir appuyé
+  enregistre (minuteur) ; glisser vers la gauche annule ; glisser vers le haut verrouille (mains libres : Supprimer,
+  Pause / Reprendre, Envoyer) ; relâcher envoie. Moins d'une seconde : ignoré ; 5 minutes : envoi automatique.
+  Bulle : lecture / pause, forme d'onde (toucher ou glisser pour avancer), durée, vitesse 1x / 1,5x / 2x, micro bleu
+  une fois écouté par l'autre. Packages : `record` (AAC dans un M4A mono à 48 kbit/s, fichier temporaire effacé après
+  l'envoi), `just_audio` (lecture d'une copie temporaire téléchargée avec le jeton, effacée à la fermeture de
+  l'écran), `path_provider`, `cross_file`. Permissions : `RECORD_AUDIO` (`AndroidManifest.xml`) et
+  `NSMicrophoneUsageDescription` (`Info.plist`) ; si le micro est refusé, un message invite à l'autoriser dans les
+  réglages. Logique testée sans plugin : `lib/features/messages/vocal.dart` (`ControleurVocal`, `test/vocal_test.dart`).
+- **Signaler un message** (texte ou vocal) : appui long sur un message reçu → « Signaler ce message ».
 
 Un lien direct ou une notification ouverts pendant la restauration de la session mènent bien à l'écran demandé ;
 s'il n'y a pas d'écran en dessous, le bouton retour ramène à l'accueil.

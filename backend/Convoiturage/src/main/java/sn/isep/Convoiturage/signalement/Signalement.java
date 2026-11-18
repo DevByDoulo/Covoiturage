@@ -39,6 +39,10 @@ public class Signalement {
     @Column(nullable = false, length = 30)
     private MotifSignalement motif;
 
+    /** Message signalé (texte ou vocal), facultatif ; vidé si le message disparaît. */
+    @Column(name = "id_message")
+    private Long idMessage;
+
     @Column(length = 500)
     private String description;
 

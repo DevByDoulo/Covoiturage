@@ -74,6 +74,15 @@ app:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
   stockage:
     repertoire: ${STOCKAGE_REPERTOIRE:./uploads}
+  messagerie:
+    # 09 Messagerie : messages vocaux, rangés dans <stockage.repertoire>/vocaux (hors du dépôt, noms aléatoires),
+    # servis seulement aux deux participants. Durées au format Spring (1s, 5m, 180d).
+    vocal:
+      taille-max: 3MB
+      duree-min: 1s
+      duree-max: 5m
+      # Fichier effacé ce délai après le départ du trajet (le message reste, « vocal expiré »).
+      conservation: 180d
   google:
     # ID client OAuth Google (vérification des idToken du « Se connecter avec Google »)
     client-id: ${GOOGLE_CLIENT_ID:}

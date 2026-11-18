@@ -9,6 +9,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <!-- Android 13+ : notifications (push et service de position), demandée après la connexion -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 09 Messagerie : messages vocaux -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <application
         android:label="YOBALEMAsn"

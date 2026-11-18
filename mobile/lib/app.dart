@@ -106,6 +106,7 @@ GoRouter creerRouteur(Session session) => GoRouter(
         idUtilisateur: int.parse(etat.pathParameters['id']!),
         idTrajet: int.tryParse(etat.uri.queryParameters['trajet'] ?? ''),
         prenom: etat.uri.queryParameters['nom'],
+        idMessage: int.tryParse(etat.uri.queryParameters['message'] ?? ''),
       ),
     ),
     GoRoute(path: '/signalements', builder: (_, _) => const MesSignalementsPage()),

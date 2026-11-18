@@ -13,6 +13,13 @@ app:
     secret: dGVzdC1vbmx5LXNlY3JldC1jb3ZvaXRpYS0zMi1ieXRlcy1taW5pbXVtLW9rIQ==
   stockage:
     repertoire: ${java.io.tmpdir}/covoitia-tests
+  messagerie:
+    # Valeurs fixes : application-local.yml ne doit pas changer les tests des messages vocaux.
+    vocal:
+      taille-max: 3MB
+      duree-min: 1s
+      duree-max: 5m
+      conservation: 180d
   firebase:
     # Push toujours simulés en test, même si application-local.yml pointe vers le compte de service Firebase.
     credentials-path: ""

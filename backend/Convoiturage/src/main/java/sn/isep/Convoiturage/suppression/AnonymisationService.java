@@ -23,7 +23,7 @@ import java.util.List;
  * <p><b>Effacé</b> : identité (prénom, nom, email, téléphone, identifiant Google, mot de passe, sexe, présentation, photo),
  * documents (permis, carte grise, pièce d'identité) et photos de véhicules avec leurs fichiers, contacts d'urgence,
  * préférences, alertes de recherche, jetons d'appareil (push), notifications, sessions, codes de vérification,
- * position partagée, numéros de téléphone de paiement, texte des messages envoyés.
+ * position partagée, numéros de téléphone de paiement, texte des messages envoyés et fichiers des messages vocaux.
  *
  * <p><b>Conservé</b> (obligation légale ou intégrité des données, sans lien avec l'identité) : paiements et réservations,
  * trajets, véhicules (désactivés, immatriculation effacée), avis (note et commentaire, auteur « Utilisateur S. »),
@@ -56,6 +56,7 @@ public class AnonymisationService {
         List<String> photos = new ArrayList<>(colonne("select photo from vehicule where id_proprietaire = :id and photo is not null", id));
         if (u.getPhotoProfil() != null) photos.add(u.getPhotoProfil());
         List<String> documents = colonne("select fichier from document where id_utilisateur = :id", id);
+        List<String> vocaux = colonne("select fichier_audio from message where id_expediteur = :id and fichier_audio is not null", id);
 
         executer("delete from document where id_utilisateur = :id", id);
         executer("update vehicule set actif = false, photo = null, immatriculation = concat('SUPPR-', id_vehicule) "
@@ -69,7 +70,8 @@ public class AnonymisationService {
         executer("delete from position_conducteur where id_trajet in (select id_trajet from trajet where id_conducteur = :id)", id);
         executer("update paiement set numero_telephone = null where id_reservation in "
                 + "(select id_reservation from reservation where id_passager = :id)", id);
-        em.createNativeQuery("update message set contenu = :texte where id_expediteur = :id")
+        // Texte remplacé ; vocaux : le fichier est effacé (après validation), le message reste « supprimé ».
+        em.createNativeQuery("update message set contenu = :texte, fichier_audio = null, forme_onde = null where id_expediteur = :id")
                 .setParameter("texte", MESSAGE_SUPPRIME).setParameter("id", id).executeUpdate();
         if (telephone != null) {
             em.createNativeQuery("delete from otp_code where telephone = :tel").setParameter("tel", telephone).executeUpdate();
@@ -86,15 +88,16 @@ public class AnonymisationService {
         em.clear();
 
         alertes.compteSupprime(prenom, email, telephone);
-        supprimerFichiersApresValidation(photos, documents);
+        supprimerFichiersApresValidation(photos, documents, vocaux);
         return true;
     }
 
     /** Les fichiers ne sont effacés qu'une fois la base validée : un échec de la transaction ne doit rien perdre. */
-    private void supprimerFichiersApresValidation(List<String> photos, List<String> documents) {
+    private void supprimerFichiersApresValidation(List<String> photos, List<String> documents, List<String> vocaux) {
         Runnable suppression = () -> {
             photos.forEach(nom -> stockage.supprimer(nom, Dossier.PHOTOS));
             documents.forEach(nom -> stockage.supprimer(nom, Dossier.DOCUMENTS));
+            vocaux.forEach(nom -> stockage.supprimer(nom, Dossier.VOCAUX));
         };
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

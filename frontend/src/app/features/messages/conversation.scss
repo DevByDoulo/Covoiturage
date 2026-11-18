@@ -138,3 +138,16 @@
 @media (max-width: 899px) {
   .conversation { height: calc(100dvh - 160px); }
 }
+
+.signaler { margin-right: 4px; color: inherit; opacity: 0.6; &:hover, &:focus-visible { opacity: 1; } }
+
+.enregistrement {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--surface-2);
+  .minuteur { display: flex; flex: 1; align-items: center; gap: 10px; font-variant-numeric: tabular-nums; }
+  .point { width: 10px; height: 10px; border-radius: 50%; background: #e53935; transition: transform 0.1s; }
+  .bouton--primaire { width: 44px; height: 44px; padding: 0; border-radius: 50%; }
+}

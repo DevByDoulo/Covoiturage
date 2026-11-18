@@ -2,10 +2,16 @@ package sn.isep.Convoiturage.messagerie;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.multipart.MultipartFile;
 import sn.isep.Convoiturage.common.ApiException;
+import sn.isep.Convoiturage.common.stockage.StockageService;
+import sn.isep.Convoiturage.common.stockage.StockageService.Dossier;
 import sn.isep.Convoiturage.messagerie.MessagerieDtos.*;
 import sn.isep.Convoiturage.messagerie.MessagerieEvenements.MessageEnvoye;
 import sn.isep.Convoiturage.reservation.ReservationRepository;
@@ -17,16 +23,20 @@ import sn.isep.Convoiturage.utilisateur.Utilisateur;
 import sn.isep.Convoiturage.utilisateur.UtilisateurDtos.UtilisateurResume;
 import sn.isep.Convoiturage.utilisateur.UtilisateurRepository;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 09 — Messagerie entre le conducteur d'un trajet et un passager. Un passager peut écrire au conducteur d'un trajet
  * à venir (pour poser une question avant de réserver) ou d'un trajet qu'il a réservé ; le conducteur écrit aux
  * passagers qui ont réservé. On peut écrire jusqu'à {@link #JOURS_APRES_DEPART} jours après le départ ; ensuite la
- * conversation reste lisible.
+ * conversation reste lisible. Un message est un texte ou un vocal ; le fichier d'un vocal n'est servi qu'aux deux
+ * participants (et à l'administrateur qui modère un signalement visant ce message).
  */
 @Service
 @RequiredArgsConstructor
@@ -46,6 +56,11 @@ public class MessagerieService {
     private final ReservationRepository reservations;
     private final UtilisateurRepository utilisateurs;
     private final ApplicationEventPublisher evenements;
+    private final StockageService stockage;
+    private final VocalProperties vocal;
+
+    /** Fichier d'un message vocal, servi par l'API (jamais par une URL publique). */
+    public record FichierAudio(Resource ressource, String typeMime) {}
 
     /** Retrouve (ou crée) la conversation d'un trajet avec un passager, et renvoie son identifiant. */
     @Transactional
@@ -83,7 +98,7 @@ public class MessagerieService {
             Message dernier = messages.findFirstByConversationIdOrderByDateEnvoiDescIdDesc(c.getId()).orElse(null);
             liste.add(new ConversationResume(c.getId(), TrajetResume.de(c.getTrajet()),
                     UtilisateurResume.de(c.interlocuteurDe(utilisateurId)), c.conducteur().getId().equals(utilisateurId),
-                    dernier == null ? null : apercu(dernier.getContenu()),
+                    dernier == null ? null : dernier.apercu(120),
                     dernier != null && dernier.getExpediteur().getId().equals(utilisateurId),
                     c.getDateDernierMessage(),
                     messages.countByConversationIdAndExpediteurIdNotAndDateLectureIsNull(c.getId(), utilisateurId)));
@@ -108,24 +123,103 @@ public class MessagerieService {
     @Transactional
     public MessageDto envoyer(Long utilisateurId, Long conversationId, EnvoiRequete req) {
         Conversation c = charger(utilisateurId, conversationId);
-        Utilisateur expediteur = utilisateurs.findById(utilisateurId).orElseThrow(() -> ApiException.notFound("Utilisateur introuvable"));
-        if (!expediteur.estActif()) throw ApiException.forbidden("Votre compte ne permet pas d'envoyer de message");
-        String raison = fermeture(c);
-        if (raison != null) throw ApiException.conflict(raison);
         String contenu = req.contenu().strip();
         if (contenu.isEmpty()) throw ApiException.badRequest("Le message est vide").surChamp("contenu");
-        if (messages.countByExpediteurIdAndDateEnvoiAfter(utilisateurId, LocalDateTime.now().minusMinutes(10)) >= MESSAGES_MAX_PAR_10_MIN) {
-            throw ApiException.tooManyRequests("Vous envoyez trop de messages : patientez quelques minutes");
-        }
+        Utilisateur expediteur = verifierEnvoi(utilisateurId, c);
 
         Message m = new Message();
-        m.setConversation(c);
-        m.setExpediteur(expediteur);
         m.setContenu(contenu);
-        messages.save(m);
-        c.setDateDernierMessage(m.getDateEnvoi());
-        evenements.publishEvent(new MessageEnvoye(m.getId()));
+        return publier(c, expediteur, m);
+    }
+
+    /**
+     * Message vocal : le format est reconnu aux octets du fichier et la durée lue dans le fichier (jamais celle
+     * annoncée par le client). Le fichier est rangé sous un nom aléatoire ; il est effacé si l'enregistrement en base
+     * échoue (la tâche de nettoyage rattrape les autres cas).
+     */
+    @Transactional
+    public MessageDto envoyerVocal(Long utilisateurId, Long conversationId, MultipartFile fichier, String formeOnde) {
+        Conversation c = charger(utilisateurId, conversationId);
+        Utilisateur expediteur = verifierEnvoi(utilisateurId, c);
+        if (fichier == null || fichier.isEmpty()) throw ApiException.badRequest("Message vocal manquant").surChamp("fichier");
+        if (fichier.getSize() > vocal.tailleMax().toBytes()) {
+            throw ApiException.badRequest("Le message vocal dépasse la taille maximale (" + vocal.tailleMax().toMegabytes() + " Mo)")
+                    .surChamp("fichier");
+        }
+        String onde = FormeOnde.valider(formeOnde);
+        byte[] octets;
+        try {
+            octets = fichier.getBytes();
+        } catch (IOException e) {
+            throw new UncheckedIOException("Lecture du message vocal impossible", e);
+        }
+        AnalyseAudio.Resultat audio = AnalyseAudio.analyser(octets).orElseThrow(() -> ApiException
+                .badRequest("Format audio non accepté (formats acceptés : WebM, Ogg, MP4/M4A, AAC)").surChamp("fichier"));
+        // Tolérances : la durée lue dans un WebM peut manquer d'une trame, et l'application coupe à la limite.
+        if (audio.dureeMs() < vocal.dureeMin().toMillis() - 100) {
+            throw ApiException.badRequest("Message vocal trop court").surChamp("fichier");
+        }
+        if (audio.dureeMs() > vocal.dureeMax().toMillis() + 1000) {
+            throw ApiException.badRequest("Message vocal trop long : " + vocal.dureeMax().toMinutes() + " minutes au plus")
+                    .surChamp("fichier");
+        }
+
+        String nom = stockage.enregistrer(octets, audio.extension(), Dossier.VOCAUX);
+        effacerSiAnnule(nom);
+        Message m = new Message();
+        m.setType(TypeMessage.VOCAL);
+        m.setFichierAudio(nom);
+        m.setTypeMimeAudio(audio.typeMime());
+        m.setDureeMs((int) Math.min(audio.dureeMs(), vocal.dureeMax().toMillis()));
+        m.setFormeOnde(onde);
+        return publier(c, expediteur, m);
+    }
+
+    /** Fichier d'un vocal, pour les deux participants seulement ; les autres reçoivent 404 comme si rien n'existait. */
+    @Transactional(readOnly = true)
+    public FichierAudio audio(Long utilisateurId, Long conversationId, Long messageId) {
+        Conversation c = charger(utilisateurId, conversationId);
+        return fichierDe(messages.findById(messageId).filter(m -> m.getConversation().getId().equals(c.getId())));
+    }
+
+    /** Le destinataire a écouté le vocal : « écouté » côté expéditeur (le message devient aussi lu). */
+    @Transactional
+    public MessageDto marquerEcoute(Long utilisateurId, Long conversationId, Long messageId) {
+        Conversation c = charger(utilisateurId, conversationId);
+        Message m = messages.findById(messageId).filter(x -> x.getConversation().getId().equals(c.getId()) && x.estVocal())
+                .orElseThrow(() -> ApiException.notFound("Message vocal introuvable"));
+        if (!m.getExpediteur().getId().equals(utilisateurId) && m.getDateEcoute() == null) {
+            LocalDateTime maintenant = LocalDateTime.now();
+            m.setDateEcoute(maintenant);
+            if (m.getDateLecture() == null) m.setDateLecture(maintenant);
+        }
         return MessageDto.de(m, utilisateurId);
+    }
+
+    // ------------------------------------------------------------------ Signalements et modération
+
+    /**
+     * Message qu'un utilisateur veut signaler : il doit participer à la conversation sans en être l'auteur.
+     * Pour les autres, le message n'existe pas.
+     */
+    @Transactional(readOnly = true)
+    public MessageSignale messageASignaler(Long signaleurId, Long messageId) {
+        return messages.findById(messageId)
+                .filter(m -> m.getConversation().participe(signaleurId) && !m.getExpediteur().getId().equals(signaleurId))
+                .map(MessageSignale::de)
+                .orElseThrow(() -> ApiException.notFound("Message introuvable"));
+    }
+
+    /** Message visé par un signalement, pour le back-office (vide s'il a disparu). */
+    @Transactional(readOnly = true)
+    public Optional<MessageSignale> messageSignale(Long messageId) {
+        return messages.findById(messageId).map(MessageSignale::de);
+    }
+
+    /** Fichier d'un vocal signalé : l'appelant (module signalements, rôle ADMIN) a vérifié le signalement. */
+    @Transactional(readOnly = true)
+    public FichierAudio audioSignale(Long messageId) {
+        return fichierDe(messages.findById(messageId));
     }
 
     @Transactional(readOnly = true)
@@ -134,6 +228,44 @@ public class MessagerieService {
     }
 
     // ------------------------------------------------------------------ utilitaires
+
+    /** Compte actif, conversation ouverte, limite anti-abus : commun au texte et au vocal. */
+    private Utilisateur verifierEnvoi(Long utilisateurId, Conversation c) {
+        Utilisateur expediteur = utilisateurs.findById(utilisateurId).orElseThrow(() -> ApiException.notFound("Utilisateur introuvable"));
+        if (!expediteur.estActif()) throw ApiException.forbidden("Votre compte ne permet pas d'envoyer de message");
+        String raison = fermeture(c);
+        if (raison != null) throw ApiException.conflict(raison);
+        if (messages.countByExpediteurIdAndDateEnvoiAfter(utilisateurId, LocalDateTime.now().minusMinutes(10)) >= MESSAGES_MAX_PAR_10_MIN) {
+            throw ApiException.tooManyRequests("Vous envoyez trop de messages : patientez quelques minutes");
+        }
+        return expediteur;
+    }
+
+    private MessageDto publier(Conversation c, Utilisateur expediteur, Message m) {
+        m.setConversation(c);
+        m.setExpediteur(expediteur);
+        messages.save(m);
+        c.setDateDernierMessage(m.getDateEnvoi());
+        evenements.publishEvent(new MessageEnvoye(m.getId()));
+        return MessageDto.de(m, expediteur.getId());
+    }
+
+    private FichierAudio fichierDe(Optional<Message> message) {
+        Message m = message.filter(x -> x.estVocal() && x.getFichierAudio() != null)
+                .orElseThrow(() -> ApiException.notFound("Message vocal introuvable ou expiré"));
+        return new FichierAudio(stockage.charger(m.getFichierAudio(), Dossier.VOCAUX), m.getTypeMimeAudio());
+    }
+
+    /** Si la transaction est annulée, le fichier déjà écrit est effacé tout de suite. */
+    private void effacerSiAnnule(String nom) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) return;
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int statut) {
+                if (statut != STATUS_COMMITTED) stockage.supprimer(nom, Dossier.VOCAUX);
+            }
+        });
+    }
 
     /** Seuls les deux participants voient la conversation ; pour les autres, elle n'existe pas. */
     private Conversation charger(Long utilisateurId, Long conversationId) {
@@ -148,9 +280,5 @@ public class MessagerieService {
             return "Cette conversation est fermée : le trajet date de plus de " + JOURS_APRES_DEPART + " jours";
         }
         return null;
-    }
-
-    private static String apercu(String contenu) {
-        return contenu.length() > 120 ? contenu.substring(0, 117) + "..." : contenu;
     }
 }

@@ -25,10 +25,20 @@ export interface ConversationResume {
 
 export interface MessageConversation {
   id: number;
-  contenu: string;
+  type: 'TEXTE' | 'VOCAL';
+  /** Null pour un vocal (sauf « [message supprimé] » si l'expéditeur a supprimé son compte). */
+  contenu: string | null;
+  /** Vocal : durée lue dans le fichier par le serveur. */
+  dureeMs: number | null;
+  /** Vocal : niveaux de 0 à 100 (peut être vide). */
+  formeOnde: number[];
+  /** Vocal : faux une fois le fichier effacé (expiration 6 mois après le trajet, compte supprimé). */
+  audioDisponible: boolean;
   dateEnvoi: string;
   deMoi: boolean;
   lu: boolean;
+  /** Vocal : écouté par le destinataire. */
+  ecoute: boolean;
 }
 
 export interface ConversationDetail {
@@ -89,5 +99,26 @@ export class MessagesService {
 
   envoyer(id: number, contenu: string): Observable<MessageConversation> {
     return this.http.post<MessageConversation>(`${this.api}/${id}/messages`, { contenu });
+  }
+
+  /** Message vocal : le serveur vérifie le format et lit la durée dans le fichier. */
+  envoyerVocal(id: number, fichier: Blob, nomFichier: string, formeOnde: number[]): Observable<MessageConversation> {
+    const donnees = new FormData();
+    donnees.append('fichier', fichier, nomFichier);
+    if (formeOnde.length) donnees.append('formeOnde', formeOnde.join(','));
+    return this.http.post<MessageConversation>(`${this.api}/${id}/vocaux`, donnees);
+  }
+
+  /**
+   * Fichier d'un vocal, chargé avec le jeton de session (l'intercepteur l'ajoute) : il n'a pas d'URL publique, la
+   * lecture se fait ensuite depuis une URL locale « blob: ».
+   */
+  audio(idConversation: number, idMessage: number): Observable<Blob> {
+    return this.http.get(`${this.api}/${idConversation}/messages/${idMessage}/audio`, { responseType: 'blob' });
+  }
+
+  /** Le destinataire a écouté le vocal. */
+  marquerEcoute(idConversation: number, idMessage: number): Observable<MessageConversation> {
+    return this.http.post<MessageConversation>(`${this.api}/${idConversation}/messages/${idMessage}/ecoute`, null);
   }
 }

@@ -161,10 +161,11 @@ class NotificationsActivite {
         Utilisateur destinataire = m.getConversation().interlocuteurDe(m.getExpediteur().getId());
         String lien = "/messages/" + m.getConversation().getId();
         if (notifications.nonLueEnAttente(destinataire.getId(), TypeNotification.MESSAGE_RECU, lien)) return;
-        String contenu = m.getContenu().length() > 140 ? m.getContenu().substring(0, 137) + "..." : m.getContenu();
+        // Vocal : « 🎤 Message vocal (0:23) », sans guillemets (c'est une description, pas une citation).
+        String apercu = m.estVocal() ? m.apercu(140) : "« " + m.apercu(140) + " »";
         notifications.notifier(destinataire, TypeNotification.MESSAGE_RECU, Priorite.NORMALE,
                 "Nouveau message de " + m.getExpediteur().getPrenom(),
-                "À propos du " + trajet(m.getConversation().getTrajet()).substring(3) + " : « " + contenu + " »", lien);
+                "À propos du " + trajet(m.getConversation().getTrajet()).substring(3) + " : " + apercu, lien);
     }
 
     // ------------------------------------------------------------------ Textes
