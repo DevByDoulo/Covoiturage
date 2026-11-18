@@ -41,6 +41,23 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   une ligne, bouton vert « Continuer », séparateur « ou », bouton Google rectangulaire (nouvelle entrée `forme` de
   `BoutonGoogle` ; le bouton officiel de Google n'est pas restylable), bouton gris « Créer un compte », mention
   en petit. Le fonctionnement ne change pas : identifiant + mot de passe, Google, `retour`, alertes.
+- **Inscription avec Google seulement, en plusieurs étapes** (branche `inscription-google`, partie de
+  `connexion-design`, site seulement, backend inchangé), une question par écran comme Uber, dans le même cadre
+  épuré (donnée de route `epure` sur `/auth/inscription`, `/auth/google/telephone` et `/auth/verification`) :
+  1. `/auth/inscription` : « Créez votre compte avec Google », liste des 5 étapes, bouton Google « S'inscrire avec
+     Google » (nouvelle entrée `texte` de `BoutonGoogle`), « J'ai déjà un compte » (garde `retour`). **Le formulaire
+     e-mail + mot de passe est retiré du site** (l'appli mobile garde le sien ; `POST /api/auth/inscription` reste dans
+     l'API). Compte Google déjà inscrit → connecté directement ; prénom, nom et e-mail repris de Google.
+  2. à 4. `/auth/google/telephone` (`GoogleTelephone`, une étape à la fois, « Retour » et « Étape n sur 5 », focus
+     placé sur le titre à chaque étape) : numéro (+221, vérifié par SMS ; « Bienvenue Awa ! » grâce au prénom lu dans
+     l'idToken par `google-jeton.ts`, affichage seulement), sexe (obligatoire désormais, gros boutons radio),
+     conditions (liens vers les deux textes, case « J'ai 18 ans ou plus et j'accepte… » obligatoire) → `POST
+     /api/auth/google` avec téléphone + sexe. Numéro refusé (déjà associé à un compte) : retour à l'étape 2, message
+     gardé à part (`erreurTelephone`, sinon effacé à la recréation du champ) jusqu'à ce que le numéro change.
+  5. `/auth/verification?inscription=1` : code reçu par SMS, « Étape 5 sur 5 » ; l'en-tête de page est remplacé par
+     un lien « Retour ».
+  Textes légaux (version du 18/11/2026, même jour) : conditions (inscription sur le site avec un compte Google) et
+  confidentialité (données transmises par Google : prénom, nom, e-mail, identifiant).
 - **Textes légaux** (branche `pages-legales`) : pages publiques `/conditions` et `/confidentialite`
   (`features/legal`, cadre commun `page-legale.ts` : contact `CONTACT_LEGAL`, date `VERSION_LEGALE`), liens depuis
   l'inscription, le pied des écrans de connexion, le profil, et dans l'appli mobile (`LiensLegaux`, qui ouvre le
@@ -326,8 +343,8 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   Reste : push.
 - Tests : `./mvnw test` → 56 tests (dont `MessagesVocauxParcoursTest`, `AnalyseAudioTest`, `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 90 tests (dont guards, retour après connexion,
-  intercepteur visiteur, `BarreRecherche`, paramètres de recherche) ; `flutter test` dans `mobile` → 79 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 100 tests (dont guards, retour après connexion,
+  intercepteur visiteur, `BarreRecherche`, paramètres de recherche, inscription Google en étapes) ; `flutter test` dans `mobile` → 79 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 

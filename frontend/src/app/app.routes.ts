@@ -25,12 +25,14 @@ export const routes: Routes = [
       {
         path: 'inscription',
         title: 'Créer un compte · YOBALEMAsn',
+        data: { epure: true },
         canActivate: [invitesGuard],
         loadComponent: () => import('./features/auth/inscription/inscription').then((m) => m.Inscription),
       },
       {
         path: 'verification',
         title: 'Vérification · YOBALEMAsn',
+        data: { epure: true },
         canActivate: [verificationGuard],
         loadComponent: () => import('./features/auth/verification/verification').then((m) => m.Verification),
       },
@@ -42,7 +44,8 @@ export const routes: Routes = [
       },
       {
         path: 'google/telephone',
-        title: 'Votre numéro · YOBALEMAsn',
+        title: 'Inscription · YOBALEMAsn',
+        data: { epure: true },
         loadComponent: () =>
           import('./features/auth/google-telephone/google-telephone').then((m) => m.GoogleTelephone),
       },

@@ -1,0 +1,73 @@
+<form class="ecran" [formGroup]="form" (ngSubmit)="continuer()" novalidate>
+  <div class="haut">
+    <button type="button" class="retour" (click)="precedent()"><app-icone nom="fleche-gauche" [taille]="20" /> Retour</button>
+    <span class="etape">Étape {{ etape() }} sur 5</span>
+  </div>
+
+  @switch (etape()) {
+    @case (2) {
+      <h1 #titre tabindex="-1" id="titre-etape">
+        @if (prenom) { Bienvenue {{ prenom }} ! }
+        Quel est votre numéro de téléphone ?
+      </h1>
+      <p class="sous-titre">Il est vérifié par SMS pour la sécurité des trajets, et n'est jamais montré aux autres membres.</p>
+      <div class="champ" [class.champ--erreur]="messageTelephone()">
+        <label class="sr-only" for="telephone">Numéro de téléphone (+221)</label>
+        <div class="saisie">
+          <span class="indicatif"><app-drapeau-senegal /> +221</span>
+          <input id="telephone" type="tel" formControlName="telephone" autocomplete="tel-national" inputmode="tel"
+                 placeholder="77 123 45 67" [attr.aria-invalid]="!!messageTelephone()"
+                 [attr.aria-describedby]="messageTelephone() ? 'erreur-telephone' : null" />
+        </div>
+        @if (messageTelephone(); as m) {
+          <p class="message-erreur" id="erreur-telephone"><app-icone nom="alerte" [taille]="14" /> {{ m }}</p>
+        }
+      </div>
+    }
+    @case (3) {
+      <h1 #titre tabindex="-1" id="titre-etape">Vous êtes…</h1>
+      <p class="sous-titre">Cette réponse permet de vous proposer les trajets réservés aux femmes.</p>
+      <div class="choix" role="radiogroup" aria-labelledby="titre-etape">
+        <button type="button" role="radio" [attr.aria-checked]="sexe() === 'FEMME'" (click)="choisirSexe('FEMME')">
+          <app-icone nom="femme" [taille]="22" /> Une femme
+        </button>
+        <button type="button" role="radio" [attr.aria-checked]="sexe() === 'HOMME'" (click)="choisirSexe('HOMME')">
+          <app-icone nom="homme" [taille]="22" /> Un homme
+        </button>
+      </div>
+      @if (enErreur('sexe')) {
+        <p class="message-erreur"><app-icone nom="alerte" [taille]="14" /> Choisissez une réponse pour continuer</p>
+      }
+    }
+    @case (4) {
+      <h1 #titre tabindex="-1" id="titre-etape">Acceptez les conditions de YOBALEMAsn</h1>
+      <p class="sous-titre">Lisez-les avant de continuer : elles expliquent les règles des trajets, des paiements et
+        l'utilisation de vos données.</p>
+      <ul class="liens-conditions">
+        <li><a routerLink="/conditions" target="_blank">Conditions d'utilisation <app-icone nom="chevron-droite" [taille]="18" /></a></li>
+        <li><a routerLink="/confidentialite" target="_blank">Politique de confidentialité <app-icone nom="chevron-droite" [taille]="18" /></a></li>
+      </ul>
+      <label class="case" [class.case--erreur]="enErreur('cgu')">
+        <input type="checkbox" formControlName="cgu" />
+        <span>J'ai 18 ans ou plus, et j'accepte les conditions d'utilisation et la politique de confidentialité.</span>
+      </label>
+      @if (enErreur('cgu')) {
+        <p class="message-erreur"><app-icone nom="alerte" [taille]="14" /> Cochez la case pour créer votre compte</p>
+      }
+    }
+  }
+
+  @if (erreur(); as e) {
+    <app-alerte type="erreur">{{ e.message }}</app-alerte>
+  }
+
+  <button class="bouton bouton--primaire" type="submit" [disabled]="envoi()">
+    @if (envoi()) {
+      <span class="chargement" aria-hidden="true"></span> Envoi du code…
+    } @else if (etape() === 4) {
+      Recevoir le code par SMS
+    } @else {
+      Continuer
+    }
+  </button>
+</form>

@@ -1,4 +1,9 @@
-<app-entete-page titre="Vérification" />
+<div class="haut">
+  <a class="retour" [routerLink]="inscription() ? '/auth/inscription' : '/auth/connexion'">
+    <app-icone nom="fleche-gauche" [taille]="20" /> Retour
+  </a>
+  @if (inscription()) { <span class="etape">Étape 5 sur 5</span> }
+</div>
 
 <div class="ecran">
   <div class="illustration" aria-hidden="true">

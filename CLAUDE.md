@@ -42,17 +42,20 @@ chaque fonctionnalité ; ici, ne garder qu'une ligne par module.
   accueil public du site (branche `accueil-public` : visiteur sans compte sur `/accueil`, `/rechercher`, `/trajets/:id`
   via `canMatch: [visiteurMatch]` ; connexion demandée pour réserver, écrire, publier, avec `retour` conservé jusqu'au
   code de vérification ; backend inchangé), design épuré de la connexion inspiré d'Uber (branche `connexion-design` :
-  donnée de route `epure`, bandeau + colonne centrée ; fonctionnement inchangé).
+  donnée de route `epure`, bandeau + colonne centrée ; fonctionnement inchangé), inscription sur le site **avec
+  Google seulement**, en 5 étapes d'une question (branche `inscription-google` : Google, numéro, sexe, conditions, code SMS ;
+  formulaire e-mail + mot de passe retiré du site, gardé dans l'API et l'appli mobile).
 - **Appli mobile Flutter** (`mobile/`, voir `mobile/README.md`) : parcours passager et conducteur, messagerie, avis,
   guidage vocal et suivi en direct, notifications push (`google-services.json` non commité). Mot de passe oublié fait (branche `mobile-mot-de-passe-oublie`), historique des paiements et reçus (branche `mobile-paiements`), modification du profil — photo, prénom, nom, présentation (branche `mobile-profil`), icône + test sur téléphone Android (branche `mobile-test-telephone`, `docs/test-telephone-android.md`), connexion Google (branche `mobile-google`, ID client Web en `--dart-define=GOOGLE_SERVER_CLIENT_ID`, même endpoint `/api/auth/google`), escales à la publication (branche `mobile-escales` : ajout, ordre, suppression, jusqu'à 5 ; pas de prix par tronçon ni de réservation de segment, absents du site et de l'API). Reste : iOS (push APNs).
 - Version complète d'avant le 27/10/2026 : étiquette Git `archive/lot1-complet`.
-- **Tests** : `./mvnw test` (56), `npm test` (90) + `npx ng build`, `flutter test` dans `mobile` (79),
+- **Tests** : `./mvnw test` (56), `npm test` (100) + `npx ng build`, `flutter test` dans `mobile` (79),
   `python -m pytest` dans `ia-tarification` (20). Tests d'intégration : numéros de téléphone uniques (base partagée).
 - **Textes légaux** (`frontend/src/app/features/legal`) : à mettre à jour (texte + `VERSION_LEGALE`) à chaque
   fonctionnalité qui touche aux données ou aux règles. Version du 13/11/2026 : notifications push (jetons d'appareil,
   Firebase Cloud Messaging, possibilité de les couper) mentionnées (branche `push-notifications`) ; suppression de
   compte, délai de 30 jours et durées de conservation ajoutés le même jour (branche `suppression-compte`). Version du
-  18/11/2026 : messages vocaux (accès, conservation 6 mois, effacement) (branche `messages-vocaux`).
+  18/11/2026 : messages vocaux (accès, conservation 6 mois, effacement) (branche `messages-vocaux`) ; inscription
+  par Google et données reçues de Google (branche `inscription-google`).
 
 ## Répartition du travail (2 développeurs, depuis le 27/10/2026)
 
