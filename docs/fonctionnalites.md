@@ -32,6 +32,15 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   `web-rester-connecte`), inscription, vérification du code, mot de passe oublié (3 écrans successifs),
   téléphone après Google ; espace connecté (`features/espace`, barre de navigation + déconnexion) et page
   d'accueil simple (`/accueil`) ; l'administrateur arrive sur le back-office (`/admin`).
+- **Design de la connexion** (branche `connexion-design`, design seulement, inspiré de la page de connexion d'Uber) :
+  donnée de route `epure` sur `/auth/connexion` → `AuthLayout` affiche un bandeau vert foncé avec le logo (lien vers
+  `/accueil`) et une colonne blanche centrée de 410 px, sans le panneau de présentation (les autres écrans
+  d'authentification gardent leur cadre). Écran (`connexion.scss`, propre à la connexion) : titre-question « Indiquez
+  votre numéro de téléphone ou votre adresse e-mail », champs gris pleins de 56 px sans pictogramme (libellés pour
+  lecteurs d'écran, erreurs reliées par `aria-describedby`), « Rester connecté » et « Mot de passe oublié ? » sur
+  une ligne, bouton vert « Continuer », séparateur « ou », bouton Google rectangulaire (nouvelle entrée `forme` de
+  `BoutonGoogle` ; le bouton officiel de Google n'est pas restylable), bouton gris « Créer un compte », mention
+  en petit. Le fonctionnement ne change pas : identifiant + mot de passe, Google, `retour`, alertes.
 - **Textes légaux** (branche `pages-legales`) : pages publiques `/conditions` et `/confidentialite`
   (`features/legal`, cadre commun `page-legale.ts` : contact `CONTACT_LEGAL`, date `VERSION_LEGALE`), liens depuis
   l'inscription, le pied des écrans de connexion, le profil, et dans l'appli mobile (`LiensLegaux`, qui ouvre le
