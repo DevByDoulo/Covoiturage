@@ -11,9 +11,11 @@ import {
   Sexe,
   VerificationEnCours,
 } from './auth.models';
+import { retourSur } from './retour';
 import { stockage } from './stockage';
 
 const CLE_REFRESH = 'covoitia.refresh';
+const CLE_RETOUR = 'covoitia.retour';
 const CLE_VERIFICATION = 'covoitia.verification';
 
 /**
@@ -186,6 +188,23 @@ export class SessionService {
   /** Page d'arrivée selon le rôle. */
   pageAccueil(): string {
     return this.estAdmin() ? '/admin' : '/accueil';
+  }
+
+  /**
+   * Page à rejoindre une fois connecté (ex. le trajet d'où le visiteur est venu). Gardée en sessionStorage pour
+   * traverser les écrans de connexion, d'inscription et de code. Un appel sans adresse valide efface l'ancienne.
+   */
+  memoriserRetour(url: string | null | undefined): void {
+    const retour = retourSur(url);
+    if (retour) stockage.ecrire(CLE_RETOUR, retour, true);
+    else stockage.supprimer(CLE_RETOUR, true);
+  }
+
+  /** Destination après connexion : le retour mémorisé (utilisé une seule fois), sinon l'accueil du rôle. */
+  pageApresConnexion(): string {
+    const retour = retourSur(stockage.lire(CLE_RETOUR, true));
+    stockage.supprimer(CLE_RETOUR, true);
+    return retour ?? this.pageAccueil();
   }
 
   /** Session perdue (refresh refusé) : on revient à l'écran de connexion. */

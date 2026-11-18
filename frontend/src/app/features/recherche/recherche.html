@@ -5,93 +5,69 @@
 <div class="grille">
   <div class="colonne">
     <!-- Formulaire -->
-    <form class="carte bloc" [formGroup]="form" (ngSubmit)="rechercher()" novalidate aria-label="Critères de recherche">
-      <app-champ-lieu idChamp="r-depart" libelle="Départ" type="depart" etiquette="A" [lieu]="depart()" [maPosition]="true"
-                      [actif]="champActif() === 'depart'" (activation)="champActif.set('depart')"
-                      (lieuChoisi)="definirLieu('depart', $event)" />
-      <app-champ-lieu idChamp="r-arrivee" libelle="Arrivée" type="arrivee" etiquette="B" [lieu]="arrivee()"
-                      [actif]="champActif() === 'arrivee'" (activation)="champActif.set('arrivee')"
-                      (lieuChoisi)="definirLieu('arrivee', $event)" />
-      <button type="button" class="bouton-lien inverser" (click)="inverser()" [disabled]="!depart() && !arrivee()">
-        <app-icone nom="rafraichir" [taille]="16" /> Inverser départ et arrivée
-      </button>
-
-      <div class="ligne">
-        <div class="champ">
-          <label class="libelle" for="r-date">Date</label>
-          <div class="saisie"><input id="r-date" type="date" formControlName="date" [min]="aujourdhui" /></div>
-        </div>
-        <div class="champ">
-          <span class="libelle" id="r-places">Passagers</span>
-          <div class="compteur" role="group" aria-labelledby="r-places">
-            <button type="button" (click)="changerPlaces(-1)" aria-label="Un passager de moins">−</button>
-            <output>{{ form.controls.places.value }}</output>
-            <button type="button" (click)="changerPlaces(1)" aria-label="Un passager de plus">+</button>
-          </div>
-        </div>
-      </div>
-
-      <details class="filtres" [open]="filtresOuverts()" (toggle)="filtresOuverts.set($any($event.target).open)">
-        <summary>Filtres @if (nombreFiltres()) { <span class="compte">{{ nombreFiltres() }}</span> }</summary>
-        <div class="filtres__corps">
-          <div class="ligne">
-            <div class="champ">
-              <label class="libelle" for="r-hmin">Départ après</label>
-              <div class="saisie"><input id="r-hmin" type="time" formControlName="hmin" /></div>
-            </div>
-            <div class="champ">
-              <label class="libelle" for="r-hmax">Départ avant</label>
-              <div class="saisie"><input id="r-hmax" type="time" formControlName="hmax" /></div>
-            </div>
-          </div>
-          <div class="ligne">
-            <div class="champ">
-              <label class="libelle" for="r-prix">Prix maximum (FCFA)</label>
-              <div class="saisie"><input id="r-prix" type="number" min="0" step="50" inputmode="numeric" formControlName="prix" placeholder="Sans limite" /></div>
-            </div>
-            <div class="champ">
-              <label class="libelle" for="r-note">Note du conducteur</label>
-              <div class="saisie">
-                <select id="r-note" formControlName="note">
-                  <option value="">Toutes</option>
-                  <option value="3">3 ★ et plus</option>
-                  <option value="4">4 ★ et plus</option>
-                  <option value="4.5">4,5 ★ et plus</option>
-                </select>
+    <section class="carte bloc" aria-label="Critères de recherche">
+      <app-barre-recherche prefixe="r" [(depart)]="depart" [(arrivee)]="arrivee" [(champActif)]="champActif"
+                           [(date)]="dateRecherche" [(passagers)]="passagers" [erreur]="erreurFormulaire()"
+                           (lancer)="rechercher()">
+        <details class="filtres" [open]="filtresOuverts()" (toggle)="filtresOuverts.set($any($event.target).open)">
+          <summary>Filtres @if (nombreFiltres()) { <span class="compte">{{ nombreFiltres() }}</span> }</summary>
+          <div class="filtres__corps">
+            <div class="ligne">
+              <div class="champ">
+                <label class="libelle" for="r-hmin">Départ après</label>
+                <div class="saisie"><input id="r-hmin" type="time" [formControl]="form.controls.hmin" /></div>
+              </div>
+              <div class="champ">
+                <label class="libelle" for="r-hmax">Départ avant</label>
+                <div class="saisie"><input id="r-hmax" type="time" [formControl]="form.controls.hmax" /></div>
               </div>
             </div>
-          </div>
-          <div class="ligne">
-            <div class="champ">
-              <label class="libelle" for="r-rayon">Distance de marche max.</label>
-              <div class="saisie">
-                <select id="r-rayon" formControlName="rayon">
-                  <option value="2">2 km</option>
-                  <option value="5">5 km</option>
-                  <option value="10">10 km</option>
-                  <option value="20">20 km</option>
-                </select>
+            <div class="ligne">
+              <div class="champ">
+                <label class="libelle" for="r-prix">Prix maximum (FCFA)</label>
+                <div class="saisie"><input id="r-prix" type="number" min="0" step="50" inputmode="numeric" [formControl]="form.controls.prix" placeholder="Sans limite" /></div>
+              </div>
+              <div class="champ">
+                <label class="libelle" for="r-note">Note du conducteur</label>
+                <div class="saisie">
+                  <select id="r-note" [formControl]="form.controls.note">
+                    <option value="">Toutes</option>
+                    <option value="3">3 ★ et plus</option>
+                    <option value="4">4 ★ et plus</option>
+                    <option value="4.5">4,5 ★ et plus</option>
+                  </select>
+                </div>
               </div>
             </div>
-            <div class="champ">
-              <label class="libelle" for="r-conducteur">Conducteur</label>
-              <div class="saisie"><input id="r-conducteur" formControlName="conducteur" placeholder="Prénom ou nom" /></div>
+            <div class="ligne">
+              <div class="champ">
+                <label class="libelle" for="r-rayon">Distance de marche max.</label>
+                <div class="saisie">
+                  <select id="r-rayon" [formControl]="form.controls.rayon">
+                    <option value="2">2 km</option>
+                    <option value="5">5 km</option>
+                    <option value="10">10 km</option>
+                    <option value="20">20 km</option>
+                  </select>
+                </div>
+              </div>
+              <div class="champ">
+                <label class="libelle" for="r-conducteur">Conducteur</label>
+                <div class="saisie"><input id="r-conducteur" [formControl]="form.controls.conducteur" placeholder="Prénom ou nom" /></div>
+              </div>
             </div>
+            @if (estFemme()) {
+              <label class="case"><input type="checkbox" [formControl]="form.controls.femmes" /> <span>Trajets <strong>femmes uniquement</strong></span></label>
+            }
+            <button type="button" class="bouton-lien" (click)="reinitialiserFiltres()">Effacer les filtres</button>
           </div>
-          @if (estFemme()) {
-            <label class="case"><input type="checkbox" formControlName="femmes" /> <span>Trajets <strong>femmes uniquement</strong></span></label>
-          }
-          <button type="button" class="bouton-lien" (click)="reinitialiserFiltres()">Effacer les filtres</button>
-        </div>
-      </details>
+        </details>
+      </app-barre-recherche>
+    </section>
 
-      @if (erreurFormulaire(); as e) {
-        <p class="message-erreur">{{ e }}</p>
-      }
-      <button type="submit" class="bouton bouton--primaire"><app-icone nom="recherche" /> Rechercher</button>
-    </form>
-
-    <app-mes-alertes />
+    @if (session.estConnecte()) {
+      <app-mes-alertes />
+    }
   </div>
 
   <div class="colonne">
@@ -139,7 +115,13 @@
         }
 
         <div class="alerte-recherche">
-          @if (alerteExistante()) {
+          @if (!session.estConnecte()) {
+            <p>{{ liste.length ? 'Aucun ne vous convient ?' : 'Ne manquez pas le prochain :' }}
+              connectez-vous pour être prévenu dès qu'un conducteur publie ce trajet.</p>
+            <a class="bouton bouton--secondaire" routerLink="/auth/connexion" [queryParams]="{ retour: urlCourante() }">
+              <app-icone nom="cloche" [taille]="18" /> Se connecter pour créer une alerte
+            </a>
+          } @else if (alerteExistante()) {
             <p><app-icone nom="valide" [taille]="18" /> Alerte active : vous serez prévenu dès qu'un trajet correspondant
               sera publié.</p>
           } @else {

@@ -85,6 +85,41 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   `features/trajets` (publier avec carte Leaflet et détail du prix IA, détail, mes trajets) et
   `features/recherche` ; Leaflet ajouté (`package.json`, `angular.json`). Les **alertes de recherche** sont décrites
   plus bas (branche `alertes-recherche`).
+- **Accueil public** (branche `accueil-public`, site seulement, backend inchangé), façon BlaBlaCar : un visiteur sans
+  compte cherche des trajets et voit leur détail ; la connexion n'est demandée qu'au moment d'agir.
+  - **Routes** (`app.routes.ts`) : groupe public `PublicLayout` placé avant l'espace connecté, retenu par
+    `canMatch: [visiteurMatch]` (pas de session) : `/accueil` (`AccueilPublic`), `/rechercher` et `/trajets/:id`
+    (`idTrajetMatch` : identifiant numérique seulement, pour laisser `/trajets/publier` et `/trajets/mes-trajets`).
+    Un utilisateur connecté ne passe pas `visiteurMatch` et retrouve les mêmes chemins dans son espace ; `/` redirige
+    vers `/accueil` (donc vers l'accueil de l'espace une fois connecté, `/admin` pour l'administrateur). Toute autre
+    page (publier, guidage, messages…) passe par `connecteGuard` → `/auth/connexion?retour=…`.
+  - **Accueil** (`features/public`) : titre, grande barre de recherche, « Trajets populaires » (liste fixe Dakar →
+    Thiès, Mbour, Saint-Louis, Touba, Kaolack et Thiès → Dakar, **sans prix** : l'API n'a pas de statistiques et
+    l'estimation est réservée aux conducteurs car elle demande un véhicule ; un clic lance la recherche du jour),
+    panneau de confiance (conducteurs vérifiés, paiement Wave, messagerie interne, signalement), bloc « Vous avez une
+    voiture ? Partagez vos frais » → Publier. En-tête public : logo (pictogramme seul sous 430 px), Rechercher, Publier,
+    Se connecter / S'inscrire (avec `retour` vers la page en cours, sauf depuis l'accueil), « Mon espace » si connecté ;
+    pied de page avec les textes légaux, lien d'évitement « Aller au contenu ».
+  - **Barre de recherche commune** `features/recherche/barre-recherche.ts` (départ, arrivée, inverser, date,
+    passagers, bouton ; valeurs en liaison à double sens chez le parent, filtres projetés) : utilisée par
+    Rechercher (colonne) et par l'accueil (ligne à partir de 960 px). `parametres-recherche.ts` construit les
+    paramètres d'URL de la recherche. Les filtres de Rechercher passent de `formControlName` à `[formControl]`.
+  - **Version visiteur** : Rechercher masque « Mes alertes » et remplace « Créer une alerte » par « Se connecter pour
+    créer une alerte » (retour sur la même recherche) ; le détail remplace Réserver par une carte « Se connecter pour
+    réserver / S'inscrire », « Écrire à … » par « Se connecter pour écrire à … » (retour `/trajets/<id>`), masque le
+    guidage vocal ; carte, itinéraire, prix, véhicule, préférences et avis restent visibles.
+  - **Retour après connexion** : `SessionService.memoriserRetour()` (sessionStorage `covoitia.retour`, adresse
+    interne seulement via `core/auth/retour.ts`) sur les écrans Connexion et Inscription (une visite sans `retour`
+    l'efface), puis `pageApresConnexion()` (utilisé une seule fois) après connexion, code de vérification, Google et
+    « Votre numéro » Google. Les liens Connexion ⇄ Inscription gardent `retour` ; `invitesGuard` envoie un utilisateur
+    déjà connecté vers le retour prévu.
+  - **Intercepteur** : un 401 sans jeton envoyé (visiteur) ne déclenche plus « session expirée » ni la redirection
+    vers la connexion. Textes légaux : « Retour à l'accueil » pour un visiteur.
+  - **API vérifiée, sans changement** : `GET /api/trajets/recherche`, `/api/trajets/{id}`, `/api/utilisateurs/{id}`
+    et `/avis` étaient déjà publics (`SecurityConfig`). Un visiteur reçoit le conducteur en prénom + initiale, photo,
+    note et préférences, le véhicule en marque, modèle, année, énergie et photo : ni téléphone, ni email, ni
+    documents, ni immatriculation, ni tarification interne (réservée au conducteur du trajet). Remarque : le détail
+    par identifiant reste public pour tous les statuts (annulé, terminé), motif d'annulation compris.
 - **06 Notifications** (branche `06-notifications`, partie de `07-administration`) : module backend `notification`
   (repris de l'archive) — `NotificationService.notifier(destinataire, type, priorite, titre, contenu, lien)` :
   enregistrée dans `notification` (lien vers l'écran, migration V2026_10_28_0900), push FCM vers tous les appareils
@@ -282,7 +317,8 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   Reste : push.
 - Tests : `./mvnw test` → 56 tests (dont `MessagesVocauxParcoursTest`, `AnalyseAudioTest`, `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 74 tests ; `flutter test` dans `mobile` → 79 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 90 tests (dont guards, retour après connexion,
+  intercepteur visiteur, `BarreRecherche`, paramètres de recherche) ; `flutter test` dans `mobile` → 79 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 

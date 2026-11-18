@@ -1,0 +1,38 @@
+<section class="hero" aria-labelledby="titre-accueil">
+  <div class="hero__corps">
+    <h1 id="titre-accueil">Voyagez malin au Sénégal, <span>partagez la route</span></h1>
+    <p class="hero__sous-titre">Trouvez un trajet à prix juste, sans créer de compte. Connectez-vous seulement pour réserver.</p>
+    <div class="hero__recherche">
+      <app-barre-recherche prefixe="h" disposition="ligne" libelleAria="Rechercher un trajet"
+                           [(depart)]="depart" [(arrivee)]="arrivee" [(champActif)]="champActif"
+                           [(date)]="date" [(passagers)]="passagers" [erreur]="erreur()" (lancer)="rechercher()" />
+    </div>
+  </div>
+</section>
+
+<div class="page">
+  <app-trajets-populaires />
+
+  <section class="confiance" aria-labelledby="titre-confiance">
+    <h2 id="titre-confiance">Voyagez en confiance</h2>
+    <ul>
+      @for (g of garanties; track g.titre) {
+        <li>
+          <span class="confiance__icone"><app-icone [nom]="g.icone" [taille]="22" /></span>
+          <div>
+            <h3>{{ g.titre }}</h3>
+            <p>{{ g.texte }}</p>
+          </div>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <section class="conducteur" aria-labelledby="titre-conducteur">
+    <div>
+      <h2 id="titre-conducteur">Vous avez une voiture ? Partagez vos frais</h2>
+      <p>Publiez votre trajet en quelques minutes : le prix par place est calculé pour vous, carburant et péages compris.</p>
+    </div>
+    <a class="bouton bouton--primaire" routerLink="/trajets/publier"><app-icone nom="plus" /> Publier un trajet</a>
+  </section>
+</div>

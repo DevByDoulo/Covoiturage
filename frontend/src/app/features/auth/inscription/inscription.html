@@ -146,5 +146,5 @@
     </button>
   </form>
 
-  <p class="bas-de-page">Déjà un compte ? <a routerLink="/auth/connexion">Se connecter</a></p>
+  <p class="bas-de-page">Déjà un compte ? <a routerLink="/auth/connexion" [queryParams]="retourValide() ? { retour: retourValide() } : null">Se connecter</a></p>
 </div>

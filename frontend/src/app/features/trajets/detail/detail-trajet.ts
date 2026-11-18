@@ -43,7 +43,7 @@ type Panneau = 'aucun' | 'modifier' | 'annuler';
 })
 export class DetailTrajet implements OnInit {
   private readonly service = inject(TrajetsService);
-  private readonly session = inject(SessionService);
+  protected readonly session = inject(SessionService);
   private readonly fb = inject(FormBuilder);
 
   /** Paramètres de route (liés automatiquement). */
@@ -67,6 +67,10 @@ export class DetailTrajet implements OnInit {
   protected lienItineraire(t: Trajet): string {
     return `https://www.google.com/maps/dir/?api=1&destination=${t.depart.latitude},${t.depart.longitude}`;
   }
+
+  /** Visiteur sans compte : il consulte le trajet ; réserver ou écrire demande de se connecter (retour sur cette page). */
+  protected readonly visiteur = computed(() => !this.session.estConnecte());
+  protected readonly urlTrajet = computed(() => `/trajets/${this.id()}`);
 
   protected readonly estConducteur = computed(
     () => !!this.trajet() && this.trajet()!.conducteur.id === this.session.utilisateur()?.id,

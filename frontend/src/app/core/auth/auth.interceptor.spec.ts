@@ -1,7 +1,7 @@
 import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { authInterceptor } from './auth.interceptor';
 import { SessionService } from './session.service';
@@ -69,6 +69,19 @@ describe('authInterceptor', () => {
     backend.expectOne(`${api}/auth/refresh`).flush(null, { status: 401, statusText: 'Unauthorized' });
     expect(session.estConnecte()).toBe(false);
     expect(sessionStorage.getItem('covoitia.refresh')).toBeNull();
+  });
+
+  it("ne renvoie pas un visiteur vers la connexion sur un 401 (pas de session à fermer)", () => {
+    const router = TestBed.inject(Router);
+    const navigation = vi.spyOn(router, 'navigate');
+    let erreur: unknown;
+    http.get(`${api}/moi/alertes`).subscribe({ error: (e) => (erreur = e) });
+    const req = backend.expectOne(`${api}/moi/alertes`);
+    expect(req.request.headers.has('Authorization')).toBe(false);
+    req.flush(null, { status: 401, statusText: 'Unauthorized' });
+    backend.expectNone(`${api}/auth/refresh`);
+    expect((erreur as { status: number }).status).toBe(401);
+    expect(navigation).not.toHaveBeenCalled();
   });
 
   it('mémorise la vérification OTP en cours', () => {
