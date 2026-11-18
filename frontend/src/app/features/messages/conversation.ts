@@ -19,7 +19,9 @@ import { ErreurApi, lireErreur } from '../../core/api/erreur-api';
 import { Alerte } from '../../shared/ui/alerte';
 import { Icone } from '../../shared/ui/icone';
 import { initiales, urlFichier } from '../profil/profil.service';
+import { BulleVocale } from './bulle-vocale';
 import { ConversationDetail, MessageConversation, MessagesService } from './messages.service';
+import { EnregistreurVocal, extensionPour, formaterDuree, plateformeNavigateur } from './vocal';
 
 /** Nouveaux messages vérifiés toutes les 5 s tant que la conversation est affichée et l'onglet visible. */
 const INTERVALLE_MS = 5_000;
@@ -29,10 +31,13 @@ interface Ligne {
   message: MessageConversation;
 }
 
-/** 09 — Une conversation : fil des messages (les miens à droite) et zone de saisie. */
+/**
+ * 09 — Une conversation : fil des messages (les miens à droite) et zone de saisie. Champ vide : le bouton d'envoi
+ * devient un micro ; un clic démarre l'enregistrement (minuteur, Annuler, Envoyer).
+ */
 @Component({
   selector: 'app-conversation',
-  imports: [RouterLink, DatePipe, Icone, Alerte],
+  imports: [RouterLink, DatePipe, Icone, Alerte, BulleVocale],
   templateUrl: './conversation.html',
   styleUrl: './conversation.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,6 +55,10 @@ export class ConversationPage {
   protected readonly envoi = signal(false);
   protected readonly erreurEnvoi = signal<string | null>(null);
   protected readonly maxCaracteres = 1000;
+
+  /** Enregistrement d'un vocal ; à 5 minutes, il est envoyé automatiquement. */
+  protected readonly vocal = new EnregistreurVocal(plateformeNavigateur(), () => void this.envoyerVocal());
+  protected readonly minuteur = computed(() => formaterDuree(this.vocal.ecouleMs()));
 
   protected readonly photo = computed(() => urlFichier(this.conversation()?.interlocuteur.photoProfil ?? null));
   protected readonly initiales = computed(() => {
@@ -84,7 +93,43 @@ export class ConversationPage {
       const c = this.conversation();
       if (c && document.visibilityState === 'visible') this.charger(c.id, false);
     }, INTERVALLE_MS);
-    inject(DestroyRef).onDestroy(() => clearInterval(minuterie));
+    inject(DestroyRef).onDestroy(() => {
+      clearInterval(minuterie);
+      this.vocal.annuler();
+    });
+  }
+
+  protected async demarrerVocal(): Promise<void> {
+    this.erreurEnvoi.set(null);
+    await this.vocal.demarrer();
+  }
+
+  protected annulerVocal(): void {
+    this.vocal.annuler();
+  }
+
+  /** Arrête l'enregistrement et l'envoie (un enregistrement de moins d'une seconde est ignoré). */
+  protected async envoyerVocal(): Promise<void> {
+    const c = this.conversation();
+    const enregistre = await this.vocal.terminer();
+    if (!c || !enregistre) return;
+    this.envoi.set(true);
+    this.service.envoyerVocal(c.id, enregistre.blob, `vocal.${extensionPour(enregistre.type)}`, enregistre.niveaux).subscribe({
+      next: (m) => {
+        this.envoi.set(false);
+        this.conversation.update((x) => (x ? { ...x, messages: [...x.messages, m] } : x));
+        this.defiler();
+      },
+      error: (e) => {
+        this.envoi.set(false);
+        this.erreurEnvoi.set(lireErreur(e).message);
+      },
+    });
+  }
+
+  /** Le destinataire a écouté un vocal : la bulle est mise à jour sans attendre le prochain rafraîchissement. */
+  protected vocalEcoute(maj: MessageConversation): void {
+    this.conversation.update((x) => (x ? { ...x, messages: x.messages.map((m) => (m.id === maj.id ? maj : m)) } : x));
   }
 
   protected envoyer(): void {

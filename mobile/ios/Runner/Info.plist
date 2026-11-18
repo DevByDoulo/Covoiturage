@@ -8,6 +8,8 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>YOBALEMAsn</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Le micro sert à enregistrer les messages vocaux que vous envoyez dans la messagerie.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>La caméra sert à scanner le code d'embarquement des passagers et à prendre votre photo de profil.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

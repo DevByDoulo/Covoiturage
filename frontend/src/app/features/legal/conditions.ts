@@ -123,6 +123,9 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
       <ul>
         <li>La messagerie sert à organiser le trajet (point de rendez-vous, bagages, retard). N'y partagez pas de données
           sensibles (codes, mots de passe).</li>
+        <li>Les messages vocaux (5 minutes au plus) obéissent aux mêmes règles que les messages écrits. N'enregistrez pas
+          d'autres personnes sans leur accord. Un message, écrit ou vocal, peut être signalé : l'équipe peut alors le
+          lire ou l'écouter pour décider d'une sanction.</li>
         <li>Après un trajet, passager et conducteur peuvent se noter (1 à 5 étoiles) et laisser un commentaire. Les avis
           doivent être sincères et porter sur le trajet ; un avis injurieux ou mensonger peut être retiré.</li>
       </ul>

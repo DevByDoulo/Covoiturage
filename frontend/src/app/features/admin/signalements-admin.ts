@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, input, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ErreurApi, lireErreur } from '../../core/api/erreur-api';
@@ -13,6 +13,7 @@ import {
   estOuvert,
 } from '../signalements/signalements.models';
 import { SignalementAdmin, SignalementsService } from '../signalements/signalements.service';
+import { formaterDureeTotale } from '../messages/vocal';
 import { Page } from './admin.service';
 
 type DecisionFinale = Exclude<Decision, 'PRENDRE_EN_CHARGE'>;
@@ -58,6 +59,24 @@ type DecisionFinale = Exclude<Decision, 'PRENDRE_EN_CHARGE'>;
           </p>
           @if (s.description) {
             <p class="description">{{ s.description }}</p>
+          }
+          @if (s.message; as m) {
+            <div class="description">
+              <small>Message signalé, envoyé le {{ m.dateEnvoi | date: 'dd/MM/yyyy HH:mm' }}</small>
+              @if (m.type === 'VOCAL') {
+                @if (!m.audioDisponible) {
+                  <p>Message vocal plus disponible ({{ m.contenu ?? 'fichier expiré' }}).</p>
+                } @else if (audios()[s.id]; as url) {
+                  <audio controls autoplay [src]="url"></audio>
+                } @else {
+                  <button type="button" class="bouton-lien" (click)="ecouter(s.id)">
+                    Écouter le message vocal ({{ duree(m.dureeMs) }})
+                  </button>
+                }
+              } @else {
+                <p>« {{ m.contenu }} »</p>
+              }
+            </div>
           }
           <small>Reçu le {{ s.dateSignalement | date: 'dd/MM/yyyy HH:mm' }}</small>
 
@@ -139,6 +158,7 @@ type DecisionFinale = Exclude<Decision, 'PRENDRE_EN_CHARGE'>;
       display: grid;
       gap: 2px;
     }
+    audio { width: 100%; }
     .description,
     .decision {
       padding: 8px 10px;
@@ -189,6 +209,20 @@ export class SignalementsAdmin implements OnInit {
   protected readonly statuts = Object.entries(LIBELLES_STATUT_SIGNALEMENT);
   protected readonly decisions = Object.entries(LIBELLES_DECISION);
   protected readonly ouvert = estOuvert;
+  protected readonly duree = (ms: number | null) => formaterDureeTotale(ms ?? 0);
+  /** URL locale (« blob: ») des vocaux signalés déjà chargés, par signalement. */
+  protected readonly audios = signal<Record<number, string>>({});
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => Object.values(this.audios()).forEach((u) => URL.revokeObjectURL(u)));
+  }
+
+  protected ecouter(id: number): void {
+    this.service.audio(id).subscribe({
+      next: (blob) => this.audios.update((a) => ({ ...a, [id]: URL.createObjectURL(blob) })),
+      error: (e) => this.erreur.set(lireErreur(e)),
+    });
+  }
 
   protected readonly statut = new FormControl<StatutSignalement | ''>('EN_ATTENTE', { nonNullable: true });
   protected readonly decision = new FormControl<DecisionFinale>('CLASSER_SANS_SUITE', { nonNullable: true });

@@ -93,6 +93,8 @@ circulaire entre modules : passer par des événements Spring.
 | GET | `/api/moi/notifications?page&taille`, `/api/moi/notifications/non-lues` ; POST `/api/moi/notifications/{id}/lue`, `/lues` | connecté |
 | POST | `/api/trajets/{id}/conversation` — ouvrir (ou retrouver) la conversation d'un trajet ; le conducteur envoie `{"idPassager"}` | connecté |
 | GET | `/api/moi/conversations`, `/api/moi/conversations/non-lus`, `/api/moi/conversations/{id}` (marque les messages reçus comme lus) ; POST `/api/moi/conversations/{id}/messages` `{"contenu"}` | participant |
+| POST | `/api/moi/conversations/{id}/vocaux` (multipart `fichier`, `formeOnde` facultative) — message vocal ; GET `/api/moi/conversations/{id}/messages/{idMessage}/audio` (requêtes Range) ; POST `…/messages/{idMessage}/ecoute` | participant |
+| GET | `/api/admin/signalements/{id}/audio` — écouter le message vocal signalé | ADMIN |
 | POST, GET | `/api/moi/alertes` — créer (départ, arrivée, date, rayon, prix max) / lister ses alertes de recherche à venir ; DELETE `/api/moi/alertes/{id}` | passager |
 | GET | `/api/admin/statistiques` ; `/api/admin/documents?type&recherche&plusAnciensDabord&page` (file de validation) ; `/api/admin/utilisateurs?recherche&statut&page` ; `/api/admin/utilisateurs/{id}` (fiche) | admin |
 | POST | `/api/admin/documents/{id}/valider`, `/refuser` (`motif`) ; `/api/admin/utilisateurs/{id}/bloquer`, `/bannir` (`motif`), `/reactiver` | admin |
@@ -151,6 +153,10 @@ Les erreurs suivent le format ProblemDetail : `{"status":409,"detail":"Cet email
   à venir ou réservé ; le conducteur n'écrit qu'aux passagers qui ont réservé ; seuls les deux participants voient
   la conversation (404 sinon). Messages de 1 à 1 000 caractères, 30 au plus par 10 minutes ; écriture fermée
   7 jours après le départ. Notification `MESSAGE_RECU` : une seule non lue par conversation.
+  **Messages vocaux** : format reconnu aux octets (WebM, Ogg, MP4/M4A, AAC) et durée lue dans le fichier (1 s à
+  5 min), 3 Mo au plus (`app.messagerie.vocal.*`) ; fichiers dans `<app.stockage.repertoire>/vocaux`, servis aux deux
+  participants seulement ; effacés 180 jours après le départ du trajet, à l'anonymisation du compte de l'auteur, ou
+  s'ils sont orphelins (tâche `NettoyageVocaux`, 3 h 30).
 - **Avis** (module 05) : après un voyage effectué (réservation `TERMINEE`), le passager note son conducteur et le
   conducteur note ce passager (1 à 5, commentaire facultatif), une fois par sens, au plus 14 jours après le départ ;
   `utilisateur.note_moyenne` est recalculée à chaque avis.

@@ -204,6 +204,36 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   (une seule non lue par conversation). Écrans `features/messages` : icône Messages avec compteur dans l'en-tête,
   `/messages`, `/messages/:id` (rafraîchi toutes les 5 s), bouton « Écrire à … » (détail d'un trajet, Mes
   réservations, demandes reçues par le conducteur).
+- **Messages vocaux** (branche `messages-vocaux`, complète le module 09, site + mobile) : migration V2026_11_18_1000
+  (`message.type` TEXTE / VOCAL, `fichier_audio`, `type_mime_audio`, `duree_ms`, `forme_onde`, `date_ecoute` ;
+  `contenu` devient facultatif avec une contrainte CHECK ; `signalement.id_message`). **Contrôles serveur**
+  (`AnalyseAudio`, sans dépendance) : format reconnu aux octets (WebM, Ogg Opus/Vorbis, MP4/M4A, AAC ADTS ; piste vidéo
+  refusée) et **durée lue dans le fichier** (dernier horodatage WebM — MediaRecorder n'écrit pas la durée —, dernière
+  page Ogg, `mvhd` ou fragments MP4, trames AAC) ; refus sous 1 s ou au-delà de 5 min (+1 s de tolérance) ; taille
+  maximale `app.messagerie.vocal.taille-max` (3 Mo) ; forme d'onde facultative (64 niveaux 0-100 au plus). Fichiers dans
+  `<app.stockage.repertoire>/vocaux` (hors du dépôt, nom UUID), effacés si la transaction échoue. **API** :
+  `POST /api/moi/conversations/{id}/vocaux` (multipart `fichier`, `formeOnde`), `GET …/messages/{idMessage}/audio`
+  (deux participants seulement, 404 pour les autres ; requêtes Range → 206), `POST …/messages/{idMessage}/ecoute`
+  (destinataire : « écouté » + lu). `MessageDto` : `type`, `dureeMs`, `formeOnde`, `audioDisponible`, `ecoute`.
+  Aperçus (liste, notification, push) : « 🎤 Message vocal (0:23) » (`Message.apercu`). **Signalements** :
+  `idMessage` facultatif dans `POST /api/signalements` (message reçu de la personne visée, même sans réservation
+  commune) ; le back-office affiche le message et écoute le vocal par `GET /api/admin/signalements/{id}/audio`.
+  **Anonymisation** : fichiers audio effacés après validation, message « [message supprimé] ». **Tâche planifiée**
+  `NettoyageVocaux` (3 h 30, Dakar) : fichier effacé 180 jours après le départ du trajet (`conservation`, « vocal
+  expiré ») et fichiers orphelins de plus d'une heure supprimés. **Site** (`features/messages`) : `vocal.ts`
+  (`EnregistreurVocal` sur une `PlateformeAudio` simulable : MediaRecorder WebM Opus ou MP4 sous Safari, niveaux Web
+  Audio, minuteur, refus du micro / navigateur incompatible / HTTP expliqués, moins d'1 s ignoré, envoi automatique à
+  5 min), champ vide → bouton micro, clic → enregistrement avec Annuler / Envoyer ; `bulle-vocale.ts` (lecture du
+  fichier chargé en blob avec le jeton, forme d'onde cliquable et pilotable au clavier, 1x / 1,5x / 2x, micro bleu
+  « écouté », un seul vocal à la fois) ; drapeau « Signaler ce message » sur les messages reçus (`/signaler/:id?message=`).
+  **Mobile** : `lib/features/messages/vocal.dart` (`ControleurVocal` : maintenir pour enregistrer, glisser à gauche
+  pour annuler, vers le haut pour verrouiller avec Supprimer / Pause / Envoyer, relâcher pour envoyer),
+  `audio_plateforme.dart` (`record` : AAC/M4A 48 kbit/s mono ; `just_audio` : lecture d'une copie temporaire
+  téléchargée par `Api.telecharger`, effacée à la fermeture), `vocal_widgets.dart` (bulle, bandeaux) ; appui long sur
+  un message reçu → « Signaler ce message ». Permissions `RECORD_AUDIO` et `NSMicrophoneUsageDescription`.
+  **Textes légaux** du 18/11/2026 (messages vocaux, accès, 6 mois de conservation, effacement). Tests :
+  `MessagesVocauxParcoursTest`, `AnalyseAudioTest`, `vocal.spec.ts`, `messages.service.spec.ts`,
+  `test/vocal_test.dart`. Limite connue : un vocal WebM enregistré sur le site ne se lit pas sur iOS (AVPlayer).
 - **08 Géolocalisation** (fonctionnalité facultative, branche `08-geolocalisation`) : la carte, la recherche de lieu,
   le départ et l'arrivée posés sur la carte, le tracé et la distance existaient déjà (modules 03 et 12). Ajouts :
   service `core/carte/position-actuelle.ts` (API de géolocalisation du navigateur : HTTPS ou localhost, autorisation de
@@ -250,9 +280,9 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   **Connexion avec Google** (branche `mobile-google`, `lib/core/google.dart` + `lib/features/auth/google.dart`) : bouton « Continuer avec Google » (séparateur « ou ») sur la connexion et l'inscription. Le package `google_sign_in` (7.x, `authenticate()`, puis déconnexion de Google pour pouvoir choisir un autre compte la fois suivante) fournit l'idToken, envoyé à `POST /api/auth/google` (`Session.connexionGoogle`, **même endpoint que le site, backend inchangé**) qui renvoie la session habituelle. `serverClientId` = ID client **Web** (celui du site), donc l'audience de l'idToken est bien le `GOOGLE_CLIENT_ID` vérifié par `GoogleTokenVerifier` (tokeninfo) ; le client Android n'est reconnu que par le paquet `sn.isep.yobalema` + SHA-1. Les ID clients passent par `--dart-define=GOOGLE_SERVER_CLIENT_ID=…` (et `GOOGLE_IOS_CLIENT_ID` plus tard), jamais dans le dépôt ; `tool/lancer-telephone.ps1` reprend la variable d'environnement du même nom. Cas gérés par `continuerAvecGoogle` (testé sans le plugin via l'interface `ServiceGoogle`) : annulation (rien d'affiché), compte connu → connecté, compte inconnu → `TELEPHONE_REQUIS` → écran `/google/telephone` (numéro + sexe, idToken gardé en mémoire seulement, numéro déjà pris affiché sous le champ) → code de vérification comme à l'inscription, erreur réseau / jeton refusé / plugin mal configuré → message dans le bandeau. Non disponible dans la version navigateur ; iOS à configurer (client iOS + schéma d'URL). Étapes Google Cloud et `gradlew signingReport` : `mobile/README.md`.
   **Escales à la publication** (branche `mobile-escales`, `lib/core/escales.dart` + `lib/features/conducteur/publier.dart`) : « Ajouter une escale » (5 au maximum, comme `@Size(max = 5)` de l'API), chaque escale avec recherche de lieu, « Ma position » ou toucher de la carte (puces « La carte place : Départ / Escale n / Arrivée »), monter / descendre / supprimer ; les escales partent dans `escales` de `/trajets/estimation` et `/trajets` (mêmes endpoints que le site) et comptent dans l'estimation. Le détail d'un trajet et « Mon trajet » les affichaient déjà (carte + liste). **Non existant côté site et API, donc non fait** : prix par tronçon, recherche et réservation d'un segment (le site ne propose pas non plus de choisir l'escale de prise en charge, bien que `idEscaleRamassage` existe dans l'API de réservation).
   Reste : push.
-- Tests : `./mvnw test` → 47 tests (dont `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
+- Tests : `./mvnw test` → 56 tests (dont `MessagesVocauxParcoursTest`, `AnalyseAudioTest`, `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 59 tests ; `flutter test` dans `mobile` → 66 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 74 tests ; `flutter test` dans `mobile` → 79 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 

@@ -8,8 +8,9 @@ import { LIBELLES_MOTIF, MOTIFS, MotifSignalement, descriptionObligatoire } from
 import { SignalementsService } from './signalements.service';
 
 /**
- * 10 — Formulaire « Signaler » : motif et description, pour une personne rencontrée lors d'un trajet.
- * Paramètres : /signaler/:idUtilisateur?trajet=<id>&nom=<prénom>.
+ * 10 — Formulaire « Signaler » : motif et description, pour une personne rencontrée lors d'un trajet, ou pour un
+ * message précis (texte ou vocal) reçu dans la messagerie.
+ * Paramètres : /signaler/:idUtilisateur?trajet=<id>&nom=<prénom>&message=<id du message>.
  */
 @Component({
   selector: 'app-signaler',
@@ -24,7 +25,12 @@ import { SignalementsService } from './signalements.service';
         <a class="bouton bouton--primaire" routerLink="/signalements">Voir mes signalements</a>
       } @else {
         <p class="intro">
-          Un signalement est examiné par l'équipe. Il ne concerne que les personnes avec qui vous avez partagé un trajet.
+          @if (message()) {
+            Vous signalez un message reçu de {{ nom() || 'cette personne' }}. L'équipe pourra le lire (ou l'écouter
+            s'il s'agit d'un message vocal) pour l'examiner.
+          } @else {
+            Un signalement est examiné par l'équipe. Il ne concerne que les personnes avec qui vous avez partagé un trajet.
+          }
         </p>
         <form class="carte bloc" [formGroup]="form" (ngSubmit)="envoyer()">
           <div class="champ">
@@ -81,6 +87,7 @@ export class Signaler {
   readonly idUtilisateur = input.required<string>();
   readonly trajet = input<string>();
   readonly nom = input<string>();
+  readonly message = input<string>();
 
   protected readonly motifs = MOTIFS;
   protected readonly libelles = LIBELLES_MOTIF;
@@ -109,6 +116,7 @@ export class Signaler {
       .signaler({
         idUtilisateur: Number(this.idUtilisateur()),
         idTrajet: this.trajet() ? Number(this.trajet()) : null,
+        idMessage: this.message() ? Number(this.message()) : null,
         motif,
         description: texte || null,
       })

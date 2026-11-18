@@ -3,9 +3,14 @@ package sn.isep.Convoiturage.signalement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import sn.isep.Convoiturage.common.SecurityUtils;
+import sn.isep.Convoiturage.messagerie.MessagerieService;
 import sn.isep.Convoiturage.signalement.SignalementDtos.*;
 
 import java.util.List;
@@ -41,6 +46,14 @@ public class SignalementController {
     @GetMapping("/admin/signalements/{id}")
     public SignalementAdminDto detail(@PathVariable Long id) {
         return service.detail(id);
+    }
+
+    /** Écoute du message vocal signalé (requêtes Range prises en charge, comme pour les participants). */
+    @GetMapping("/admin/signalements/{id}/audio")
+    public ResponseEntity<Resource> audio(@PathVariable Long id) {
+        MessagerieService.FichierAudio f = service.audioSignale(id);
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType(f.typeMime()))
+                .cacheControl(CacheControl.noStore()).body(f.ressource());
     }
 
     @PatchMapping("/admin/signalements/{id}")

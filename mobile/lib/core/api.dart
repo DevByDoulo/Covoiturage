@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -83,23 +84,39 @@ class Api {
 
   /// Envoi d'un fichier en multipart/form-data (ex. photo de profil), avec le même renouvellement du jeton.
   /// Le serveur reconnaît le format aux premiers octets du fichier : pas besoin de type MIME.
+  /// [champs] : autres champs du formulaire (ex. forme d'onde d'un message vocal).
   Future<dynamic> envoyerFichier(String chemin, String champ, List<int> octets, String nomFichier,
-      {bool deuxiemeEssai = false}) async {
+      {Map<String, String>? champs, bool deuxiemeEssai = false}) async {
     final requete = http.MultipartRequest('POST', Uri.parse('$_base$chemin'))
       ..headers['Accept'] = 'application/json'
       ..headers['Accept-Language'] = 'fr'
       ..files.add(http.MultipartFile.fromBytes(champ, octets, filename: nomFichier));
+    if (champs != null) requete.fields.addAll(champs);
     if (accessToken != null) requete.headers['Authorization'] = 'Bearer $accessToken';
     final reponse = await http.Response.fromStream(await _client.send(requete).timeout(_delai));
     if (reponse.statusCode == 401 && !deuxiemeEssai && renouveler != null) {
       _renouvellementEnCours ??= renouveler!().whenComplete(() => _renouvellementEnCours = null);
       if (await _renouvellementEnCours != null) {
-        return envoyerFichier(chemin, champ, octets, nomFichier, deuxiemeEssai: true);
+        return envoyerFichier(chemin, champ, octets, nomFichier, champs: champs, deuxiemeEssai: true);
       }
     }
     if (reponse.statusCode >= 400) throw ErreurApi.depuisReponse(reponse);
     if (reponse.bodyBytes.isEmpty) return null;
     return jsonDecode(utf8.decode(reponse.bodyBytes));
+  }
+
+  /// Téléchargement d'un fichier protégé (ex. message vocal, servi seulement aux participants), avec le même
+  /// renouvellement du jeton. Renvoie les octets bruts.
+  Future<Uint8List> telecharger(String chemin, {bool deuxiemeEssai = false}) async {
+    final requete = http.Request('GET', Uri.parse('$_base$chemin'))..headers['Accept-Language'] = 'fr';
+    if (accessToken != null) requete.headers['Authorization'] = 'Bearer $accessToken';
+    final reponse = await http.Response.fromStream(await _client.send(requete).timeout(_delai));
+    if (reponse.statusCode == 401 && !deuxiemeEssai && renouveler != null) {
+      _renouvellementEnCours ??= renouveler!().whenComplete(() => _renouvellementEnCours = null);
+      if (await _renouvellementEnCours != null) return telecharger(chemin, deuxiemeEssai: true);
+    }
+    if (reponse.statusCode >= 400) throw ErreurApi.depuisReponse(reponse);
+    return reponse.bodyBytes;
   }
 
   /// Appel sans jeton et sans renouvellement (connexion, inscription, refresh).

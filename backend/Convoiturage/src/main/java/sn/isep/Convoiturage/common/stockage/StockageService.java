@@ -13,10 +13,13 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * Stockage local des fichiers téléversés. Le type est déterminé par les premiers octets
@@ -25,13 +28,14 @@ import java.util.regex.Pattern;
 @Service
 public class StockageService {
 
-    public enum Dossier { DOCUMENTS, PHOTOS }
+    /** VOCAUX : messages vocaux de la messagerie, servis seulement par une API authentifiée. */
+    public enum Dossier { DOCUMENTS, PHOTOS, VOCAUX }
 
     public record FichierStocke(String nom, String typeMime) {}
 
     private static final Set<String> TYPES_DOCUMENTS = Set.of("image/jpeg", "image/png", "application/pdf");
     private static final Set<String> TYPES_PHOTOS = Set.of("image/jpeg", "image/png", "image/webp");
-    private static final Pattern NOM_VALIDE = Pattern.compile("^[0-9a-f\\-]{36}\\.(jpg|png|pdf|webp)$");
+    private static final Pattern NOM_VALIDE = Pattern.compile("^[0-9a-f\\-]{36}\\.(jpg|png|pdf|webp|webm|ogg|m4a|aac)$");
 
     private final Path racine;
 
@@ -62,6 +66,42 @@ public class StockageService {
         }
     }
 
+    /**
+     * Enregistre des octets déjà vérifiés par l'appelant (ex. message vocal) sous un nom aléatoire.
+     *
+     * @param extension extension sans point, parmi celles acceptées par {@link #charger}
+     */
+    public String enregistrer(byte[] contenu, String extension, Dossier dossier) {
+        String nom = UUID.randomUUID() + "." + extension;
+        if (!NOM_VALIDE.matcher(nom).matches()) throw new IllegalArgumentException("Extension non prise en charge : " + extension);
+        try {
+            Files.write(repertoire(dossier).resolve(nom), contenu);
+            return nom;
+        } catch (IOException e) {
+            throw new UncheckedIOException("Échec de l'enregistrement du fichier", e);
+        }
+    }
+
+    /** Fichier stocké et date de sa dernière modification (pour le nettoyage des fichiers orphelins). */
+    public record FichierListe(String nom, Instant modifie) {}
+
+    /** Fichiers du dossier dont le nom a été généré par ce service (les autres sont ignorés). */
+    public List<FichierListe> lister(Dossier dossier) {
+        try (Stream<Path> fichiers = Files.list(repertoire(dossier))) {
+            return fichiers.filter(Files::isRegularFile)
+                    .filter(f -> NOM_VALIDE.matcher(f.getFileName().toString()).matches())
+                    .map(f -> {
+                        try {
+                            return new FichierListe(f.getFileName().toString(), Files.getLastModifiedTime(f).toInstant());
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    }).toList();
+        } catch (IOException e) {
+            throw new UncheckedIOException("Lecture du dossier " + dossier + " impossible", e);
+        }
+    }
+
     public Resource charger(String nom, Dossier dossier) {
         if (nom == null || !NOM_VALIDE.matcher(nom).matches()) throw ApiException.notFound("Fichier introuvable");
         Path chemin = repertoire(dossier).resolve(nom).normalize();
@@ -85,6 +125,10 @@ public class StockageService {
         if (nom.endsWith(".pdf")) return "application/pdf";
         if (nom.endsWith(".png")) return "image/png";
         if (nom.endsWith(".webp")) return "image/webp";
+        if (nom.endsWith(".webm")) return "audio/webm";
+        if (nom.endsWith(".ogg")) return "audio/ogg";
+        if (nom.endsWith(".m4a")) return "audio/mp4";
+        if (nom.endsWith(".aac")) return "audio/aac";
         return "image/jpeg";
     }
 

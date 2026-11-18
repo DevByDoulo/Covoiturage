@@ -32,4 +32,13 @@ interface MessageRepository extends JpaRepository<Message, Long> {
     long nonLus(@Param("u") Long utilisateurId);
 
     long countByExpediteurIdAndDateEnvoiAfter(Long expediteurId, LocalDateTime depuis);
+
+    /** Vocaux dont le fichier existe encore et dont le trajet est parti avant {@code limite}. */
+    @Query("""
+            select m from Message m join m.conversation c join c.trajet t
+            where m.fichierAudio is not null and t.dateHeureDepart < :limite""")
+    List<Message> vocauxEchus(@Param("limite") LocalDateTime limite);
+
+    @Query("select m.fichierAudio from Message m where m.fichierAudio in :noms")
+    List<String> fichiersAudioCites(@Param("noms") List<String> noms);
 }

@@ -54,6 +54,8 @@ export function descriptionObligatoire(motif: MotifSignalement | null): boolean 
 export interface SignalementRequete {
   idUtilisateur: number;
   idTrajet: number | null;
+  /** Message précis signalé (texte ou vocal), facultatif. */
+  idMessage?: number | null;
   motif: MotifSignalement;
   description: string | null;
 }

@@ -10,6 +10,9 @@ import '../../core/formats.dart';
 import '../../core/modeles.dart';
 import '../../core/theme.dart';
 import '../../shared/widgets.dart';
+import 'audio_plateforme.dart';
+import 'vocal.dart';
+import 'vocal_widgets.dart';
 
 /// Nombre de messages non lus (pastille de l'icône Messages), rafraîchi toutes les 30 s pendant la session.
 class CompteurMessages extends ChangeNotifier {
@@ -201,10 +204,14 @@ class _MessagesPageState extends State<MessagesPage> {
 }
 
 /// Une conversation : messages du plus ancien au plus récent, rafraîchis toutes les 5 s, et zone de saisie.
+/// Champ vide : le bouton d'envoi devient un micro (maintenir pour enregistrer un message vocal).
 class ConversationPage extends StatefulWidget {
-  const ConversationPage({super.key, required this.id});
+  const ConversationPage({super.key, required this.id, this.enregistreur});
 
   final int id;
+
+  /// Pour les tests ; par défaut, le package `record`.
+  final Enregistreur? enregistreur;
 
   @override
   State<ConversationPage> createState() => _ConversationPageState();
@@ -217,6 +224,12 @@ class _ConversationPageState extends State<ConversationPage> {
   Timer? _minuteur;
   final _texte = TextEditingController();
   final _defilement = ScrollController();
+  EnregistreurRecord? _enregistreurRecord;
+  late final ControleurVocal _vocal = ControleurVocal(
+    widget.enregistreur ?? (_enregistreurRecord = EnregistreurRecord()),
+    surEnvoi: _envoyerVocal,
+  );
+  Offset _origineAppui = Offset.zero;
 
   @override
   void initState() {
@@ -230,7 +243,55 @@ class _ConversationPageState extends State<ConversationPage> {
     _minuteur?.cancel();
     _texte.dispose();
     _defilement.dispose();
+    _vocal.dispose();
+    _enregistreurRecord?.liberer();
     super.dispose();
+  }
+
+  /// Envoi d'un message vocal : le serveur vérifie le format et lit la durée dans le fichier.
+  Future<void> _envoyerVocal(VocalEnregistre vocal) async {
+    final api = context.read<Api>();
+    setState(() => _envoi = true);
+    try {
+      final octets = await lireEnregistrement(vocal.chemin);
+      await api.envoyerFichier('/moi/conversations/${widget.id}/vocaux', 'fichier', octets, nomEnregistrement(),
+          champs: {if (vocal.niveaux.isNotEmpty) 'formeOnde': vocal.niveaux.join(',')});
+      await _charger();
+    } catch (e) {
+      if (mounted) afficherMessage(context, ErreurApi.messageDe(e), erreur: true);
+    } finally {
+      await effacerFichier(vocal.chemin);
+      if (mounted) setState(() => _envoi = false);
+    }
+  }
+
+  /// Le destinataire a écouté un vocal : la bulle est mise à jour sans attendre le prochain rafraîchissement.
+  void _vocalEcoute(MessageApp maj) {
+    final c = _conversation;
+    if (c == null || !mounted) return;
+    setState(() => _conversation = ConversationDetail(c.id, c.trajet, c.interlocuteur, c.jeSuisConducteur, c.fermeture,
+        [for (final m in c.messages) m.id == maj.id ? maj : m]));
+  }
+
+  /// Appui long sur un message reçu : le signaler (texte ou vocal).
+  Future<void> _optionsMessage(ConversationDetail c, MessageApp m) async {
+    final signaler = await showModalBottomSheet<bool>(
+      context: context,
+      builder: (contexte) => SafeArea(
+        child: ListTile(
+          leading: const Icon(Icons.flag_outlined),
+          title: const Text('Signaler ce message'),
+          onTap: () => Navigator.pop(contexte, true),
+        ),
+      ),
+    );
+    if (signaler == true && mounted) {
+      await context.push(Uri(path: '/signaler/${c.interlocuteur.id}', queryParameters: {
+        'message': '${m.id}',
+        'trajet': '${c.trajet.id}',
+        'nom': c.interlocuteur.prenom,
+      }).toString());
+    }
   }
 
   Future<void> _charger() async {
@@ -336,13 +397,15 @@ class _ConversationPageState extends State<ConversationPage> {
       reverse: true,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       itemCount: messages.length,
-      itemBuilder: (_, i) => _bulle(messages[i]),
+      itemBuilder: (_, i) => _bulle(c, messages[i]),
     );
   }
 
-  Widget _bulle(MessageApp m) => Align(
+  Widget _bulle(ConversationDetail c, MessageApp m) => Align(
         alignment: m.deMoi ? Alignment.centerRight : Alignment.centerLeft,
-        child: Container(
+        child: GestureDetector(
+          onLongPress: m.deMoi ? null : () => _optionsMessage(c, m),
+          child: Container(
           constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.78),
           margin: const EdgeInsets.symmetric(vertical: 3),
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
@@ -360,7 +423,9 @@ class _ConversationPageState extends State<ConversationPage> {
             Align(
               alignment: Alignment.centerLeft,
               widthFactor: 1,
-              child: Text(m.contenu, style: TextStyle(color: m.deMoi ? Colors.white : Couleurs.texte, fontSize: 15)),
+              child: m.vocal
+                  ? BulleVocale(idConversation: c.id, message: m, onEcoute: _vocalEcoute)
+                  : Text(m.contenu ?? '', style: TextStyle(color: m.deMoi ? Colors.white : Couleurs.texte, fontSize: 15)),
             ),
             const SizedBox(height: 2),
             Text(
@@ -368,6 +433,7 @@ class _ConversationPageState extends State<ConversationPage> {
               style: TextStyle(color: m.deMoi ? Colors.white70 : Couleurs.texte2, fontSize: 11),
             ),
           ]),
+          ),
         ),
       );
 
@@ -376,29 +442,76 @@ class _ConversationPageState extends State<ConversationPage> {
         child: Container(
           padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
           color: Colors.white,
-          child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Expanded(
-              child: TextField(
-                controller: _texte,
-                minLines: 1,
-                maxLines: 4,
-                maxLength: 1000,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(hintText: 'Message à ${c.interlocuteur.prenom}', counterText: ''),
-              ),
-            ),
-            const SizedBox(width: 6),
-            ListenableBuilder(
-              listenable: _texte,
-              builder: (_, _) => IconButton.filled(
-                tooltip: 'Envoyer',
-                onPressed: _envoi || _texte.text.trim().isEmpty ? null : _envoyer,
-                icon: _envoi
-                    ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                    : const Icon(Icons.send),
-              ),
-            ),
-          ]),
+          child: ListenableBuilder(
+            listenable: Listenable.merge([_texte, _vocal]),
+            builder: (_, _) {
+              final etat = _vocal.etat;
+              if (etat == EtatVocal.verrouille || etat == EtatVocal.pause) return BarreVerrouillee(controleur: _vocal);
+              final enregistre = etat == EtatVocal.enregistrement;
+              final texte = _texte.text.trim().isNotEmpty;
+              return Column(mainAxisSize: MainAxisSize.min, children: [
+                if (_vocal.info != null && !enregistre)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text(_vocal.info!, style: const TextStyle(fontSize: 12, color: Couleurs.texte2)),
+                  ),
+                Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                  Expanded(
+                    child: enregistre
+                        ? SizedBox(height: 48, child: BandeauEnregistrement(controleur: _vocal))
+                        : TextField(
+                            controller: _texte,
+                            minLines: 1,
+                            maxLines: 4,
+                            maxLength: 1000,
+                            textCapitalization: TextCapitalization.sentences,
+                            decoration: InputDecoration(hintText: 'Message à ${c.interlocuteur.prenom}', counterText: ''),
+                          ),
+                  ),
+                  const SizedBox(width: 6),
+                  if (texte && !enregistre)
+                    IconButton.filled(
+                      tooltip: 'Envoyer',
+                      onPressed: _envoi ? null : _envoyer,
+                      icon: _envoi
+                          ? const SizedBox.square(
+                              dimension: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+                          : const Icon(Icons.send),
+                    )
+                  else
+                    _boutonMicro(enregistre),
+                ]),
+              ]);
+            },
+          ),
+        ),
+      );
+
+  /// Micro « façon WhatsApp » : maintenir pour enregistrer, glisser à gauche pour annuler, vers le haut pour
+  /// verrouiller, relâcher pour envoyer. Le même widget reste sous le doigt pendant tout le geste.
+  Widget _boutonMicro(bool enregistre) => Semantics(
+        button: true,
+        label: 'Maintenir pour enregistrer un message vocal',
+        child: Listener(
+          onPointerDown: _envoi
+              ? null
+              : (e) {
+                  _origineAppui = e.position;
+                  _vocal.appuyer();
+                },
+          onPointerMove: (e) => _vocal.glisser(e.position - _origineAppui),
+          onPointerUp: (_) => _vocal.relacher(),
+          onPointerCancel: (_) => _vocal.interrompre(),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: enregistre ? 60 : 48,
+            height: enregistre ? 60 : 48,
+            decoration: BoxDecoration(color: _envoi ? Couleurs.texte2 : Couleurs.vert, shape: BoxShape.circle),
+            child: _envoi
+                ? const Padding(
+                    padding: EdgeInsets.all(14), child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+                : const Icon(Icons.mic, color: Colors.white),
+          ),
         ),
       );
 }

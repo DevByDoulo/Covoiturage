@@ -85,13 +85,15 @@ class BoutonSignaler extends StatelessWidget {
       );
 }
 
-/// Formulaire de signalement : motif et description.
+/// Formulaire de signalement : motif et description. [idMessage] : message précis signalé (texte ou vocal), depuis
+/// un appui long dans la messagerie.
 class SignalerPage extends StatefulWidget {
-  const SignalerPage({super.key, required this.idUtilisateur, this.idTrajet, this.prenom});
+  const SignalerPage({super.key, required this.idUtilisateur, this.idTrajet, this.prenom, this.idMessage});
 
   final int idUtilisateur;
   final int? idTrajet;
   final String? prenom;
+  final int? idMessage;
 
   @override
   State<SignalerPage> createState() => _SignalerPageState();
@@ -124,6 +126,7 @@ class _SignalerPageState extends State<SignalerPage> {
       await context.read<Api>().post('/signalements', {
         'idUtilisateur': widget.idUtilisateur,
         if (widget.idTrajet != null) 'idTrajet': widget.idTrajet,
+        if (widget.idMessage != null) 'idMessage': widget.idMessage,
         'motif': _motif,
         if (texte.isNotEmpty) 'description': texte,
       });
@@ -150,9 +153,13 @@ class _SignalerPageState extends State<SignalerPage> {
           const SizedBox(height: 16),
           FilledButton(onPressed: () => context.pushReplacement('/signalements'), child: const Text('Voir mes signalements')),
         ] else ...[
-          const Text(
-            'Un signalement est examiné par l\'équipe. Il ne concerne que les personnes avec qui vous avez partagé un trajet.',
-            style: TextStyle(color: Couleurs.texte2),
+          Text(
+            widget.idMessage != null
+                ? 'Vous signalez un message reçu de $nom. L\'équipe pourra le lire (ou l\'écouter s\'il s\'agit d\'un '
+                    'message vocal) pour l\'examiner.'
+                : 'Un signalement est examiné par l\'équipe. Il ne concerne que les personnes avec qui vous avez '
+                    'partagé un trajet.',
+            style: const TextStyle(color: Couleurs.texte2),
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(

@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import sn.isep.Convoiturage.admin.AdminService;
 import sn.isep.Convoiturage.admin.TypeActionAdmin;
 import sn.isep.Convoiturage.common.ApiException;
+import sn.isep.Convoiturage.messagerie.MessagerieDtos.MessageSignale;
+import sn.isep.Convoiturage.messagerie.MessagerieService;
 import sn.isep.Convoiturage.notification.NotificationService;
 import sn.isep.Convoiturage.notification.Priorite;
 import sn.isep.Convoiturage.notification.TypeNotification;
@@ -40,6 +42,7 @@ public class SignalementService {
     private final ReservationRepository reservations;
     private final AdminService admin;
     private final NotificationService notifications;
+    private final MessagerieService messagerie;
 
     // ------------------------------------------------------------------ Côté utilisateur
 
@@ -54,7 +57,12 @@ public class SignalementService {
         if (req.motif() == MotifSignalement.AUTRE && description.isEmpty()) {
             throw ApiException.badRequest("Décrivez la situation").surChamp("description");
         }
-        if (!reservations.ontPartageUnTrajet(signaleurId, signale.getId(), req.idTrajet())) {
+        // Signalement d'un message : il suffit d'avoir reçu ce message de la personne (même sans réservation commune).
+        MessageSignale message = req.idMessage() == null ? null : messagerie.messageASignaler(signaleurId, req.idMessage());
+        if (message != null && !message.idExpediteur().equals(signale.getId())) {
+            throw ApiException.badRequest("Ce message n'a pas été envoyé par cette personne");
+        }
+        if (message == null && !reservations.ontPartageUnTrajet(signaleurId, signale.getId(), req.idTrajet())) {
             throw ApiException.forbidden("Vous ne pouvez signaler que les personnes avec qui vous avez partagé un trajet");
         }
         if (signalements.existsBySignaleurIdAndSignaleIdAndStatutIn(signaleurId, signale.getId(),
@@ -69,7 +77,9 @@ public class SignalementService {
         Signalement s = new Signalement();
         s.setSignaleur(utilisateurs.getReferenceById(signaleurId));
         s.setSignale(signale);
-        s.setTrajet(req.idTrajet() == null ? null : trajets.getReferenceById(req.idTrajet()));
+        Long idTrajet = message != null ? message.idTrajet() : req.idTrajet();
+        s.setTrajet(idTrajet == null ? null : trajets.getReferenceById(idTrajet));
+        s.setIdMessage(message == null ? null : message.id());
         s.setMotif(req.motif());
         s.setDescription(description.isEmpty() ? null : description);
         signalements.save(s);
@@ -141,6 +151,14 @@ public class SignalementService {
         return vue(s);
     }
 
+    /** Vocal visé par un signalement, pour l'administrateur (et uniquement dans ce cadre). */
+    @Transactional(readOnly = true)
+    public MessagerieService.FichierAudio audioSignale(Long id) {
+        Signalement s = charger(id);
+        if (s.getIdMessage() == null) throw ApiException.notFound("Ce signalement ne vise pas un message vocal");
+        return messagerie.audioSignale(s.getIdMessage());
+    }
+
     // ------------------------------------------------------------------ Interne
 
     private Signalement charger(Long id) {
@@ -148,6 +166,7 @@ public class SignalementService {
     }
 
     private SignalementAdminDto vue(Signalement s) {
-        return SignalementAdminDto.de(s, signalements.countBySignaleId(s.getSignale().getId()));
+        MessageSignale message = s.getIdMessage() == null ? null : messagerie.messageSignale(s.getIdMessage()).orElse(null);
+        return SignalementAdminDto.de(s, signalements.countBySignaleId(s.getSignale().getId()), message);
     }
 }

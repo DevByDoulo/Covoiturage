@@ -74,8 +74,12 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
                 carte n'est enregistré par YOBALEMAsn.</td>
             </tr>
             <tr>
-              <td><strong>Messages et avis</strong></td>
-              <td>Permettre aux membres d'un trajet de s'organiser, et de se noter après le voyage.</td>
+              <td><strong>Messages et avis</strong> : messages écrits et <strong>messages vocaux</strong> (enregistrement
+                audio, durée, niveaux sonores pour l'affichage, date d'écoute)</td>
+              <td>Permettre aux membres d'un trajet de s'organiser, et de se noter après le voyage. Le micro n'est utilisé
+                que pendant que vous enregistrez un message vocal, après votre autorisation. Un message vocal n'est
+                accessible qu'aux deux participants de la conversation (aucun lien public) et, en cas de signalement de
+                ce message, à l'administrateur qui l'examine.</td>
             </tr>
             <tr>
               <td><strong>Notifications</strong> : historique des notifications ; pour les <strong>notifications
@@ -158,14 +162,18 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
 
       <h2 id="conservation">6. Durées de conservation</h2>
       <ul>
-        <li><strong>Compte, profil, trajets, réservations, messages, avis</strong> : tant que votre compte existe. Un compte
-          désactivé reste conservé (vous pouvez le réactiver en vous reconnectant).</li>
+        <li><strong>Compte, profil, trajets, réservations, messages écrits, avis</strong> : tant que votre compte existe.
+          Un compte désactivé reste conservé (vous pouvez le réactiver en vous reconnectant).</li>
+        <li><strong>Messages vocaux</strong> : le fichier audio est effacé <strong>6 mois après la date du trajet</strong>
+          (le message reste affiché comme « vocal expiré »), ou plus tôt si son auteur supprime son compte. Les fichiers
+          qui ne sont rattachés à aucun message sont supprimés chaque nuit.</li>
         <li><strong>Suppression de votre compte</strong> : vous pouvez la demander vous-même depuis « Mon profil » (site
           et application). Votre compte devient aussitôt invisible et vous êtes déconnecté ; pendant
           <strong>30 jours</strong>, vous pouvez annuler en vous reconnectant. Passé ce délai, vos données personnelles
           sont <strong>définitivement effacées</strong> : nom, email, téléphone, photo, présentation, documents (permis,
           carte grise, pièce d'identité), contacts d'urgence, alertes de recherche, jetons de notification, notifications,
-          position et numéros de téléphone de paiement ; le texte de vos messages est remplacé par « message supprimé ».
+          position et numéros de téléphone de paiement ; le texte de vos messages est remplacé par « message supprimé » et
+          les fichiers de vos messages vocaux sont effacés.
           Sont seulement conservés, sans lien avec votre identité (votre nom devient « Utilisateur supprimé »), ce que
           la loi ou l'intégrité du service exigent : <strong>paiements et réservations pendant 10 ans</strong>
           (obligations comptables), trajets passés, avis donnés ou reçus (note et commentaire) et signalements. Un email

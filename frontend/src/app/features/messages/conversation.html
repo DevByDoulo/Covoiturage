@@ -21,8 +21,18 @@
           <p class="jour">{{ l.jour | date: 'EEEE d MMMM' }}</p>
         }
         <div class="bulle" [class.bulle--moi]="l.message.deMoi">
-          <p>{{ l.message.contenu }}</p>
-          <small>{{ l.message.dateEnvoi | date: 'HH:mm' }}
+          @if (l.message.type === 'VOCAL') {
+            <app-bulle-vocale [idConversation]="c.id" [message]="l.message" (ecoute)="vocalEcoute($event)" />
+          } @else {
+            <p>{{ l.message.contenu }}</p>
+          }
+          <small>
+            @if (!l.message.deMoi) {
+              <a class="signaler" [routerLink]="['/signaler', c.interlocuteur.id]"
+                 [queryParams]="{ message: l.message.id, nom: c.interlocuteur.prenom }"
+                 aria-label="Signaler ce message"><app-icone nom="drapeau" [taille]="12" /></a>
+            }
+            {{ l.message.dateEnvoi | date: 'HH:mm' }}
             @if (l.message.deMoi && l.message.id === dernierEnvoyeId()) { · {{ l.message.lu ? 'Lu' : 'Envoyé' }} }</small>
         </div>
       } @empty {
@@ -32,18 +42,40 @@
 
     @if (c.fermeture) {
       <p class="ferme"><app-icone nom="cadenas" [taille]="16" /> {{ c.fermeture }}</p>
-    } @else {
+    } @else if (vocal.etat() === 'inactif') {
       <form class="saisie-message" (submit)="$event.preventDefault(); envoyer()">
         <label class="sr-only" for="message">Votre message</label>
         <textarea id="message" rows="1" [maxLength]="maxCaracteres" [value]="texte()" (input)="saisir($event)"
                   (keydown)="touche($event)" placeholder="Votre message…"></textarea>
-        <button type="submit" class="bouton bouton--primaire" [disabled]="envoi() || !texte().trim()" aria-label="Envoyer">
-          <app-icone nom="envoyer" [taille]="18" />
-        </button>
+        @if (texte().trim()) {
+          <button type="submit" class="bouton bouton--primaire" [disabled]="envoi()" aria-label="Envoyer">
+            <app-icone nom="envoyer" [taille]="18" />
+          </button>
+        } @else {
+          <button type="button" class="bouton bouton--primaire" [disabled]="envoi()" (click)="demarrerVocal()"
+                  aria-label="Enregistrer un message vocal" title="Enregistrer un message vocal">
+            <app-icone nom="micro" [taille]="18" />
+          </button>
+        }
       </form>
-      @if (erreurEnvoi(); as e) {
+      @if (erreurEnvoi() ?? vocal.erreur(); as e) {
         <p class="message-erreur">{{ e }}</p>
       }
+    } @else {
+      <div class="enregistrement" role="group" aria-label="Enregistrement d'un message vocal">
+        <button type="button" class="bouton bouton--secondaire" (click)="annulerVocal()">
+          <app-icone nom="poubelle" [taille]="16" /> Annuler
+        </button>
+        <span class="minuteur" aria-live="off">
+          @if (vocal.etat() === 'demande') { Autorisez le micro… } @else {
+            <span class="point" [style.transform]="'scale(' + (1 + vocal.niveau() / 100) + ')'"></span>{{ minuteur() }} / 5:00
+          }
+        </span>
+        <button type="button" class="bouton bouton--primaire" [disabled]="vocal.etat() !== 'enregistrement'"
+                (click)="envoyerVocal()" aria-label="Envoyer le message vocal">
+          <app-icone nom="envoyer" [taille]="18" />
+        </button>
+      </div>
     }
   </section>
 } @else {

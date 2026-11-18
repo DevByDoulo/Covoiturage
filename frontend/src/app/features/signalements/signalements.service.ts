@@ -5,6 +5,18 @@ import { environment } from '../../../environments/environment';
 import { Page, UtilisateurLigne } from '../admin/admin.service';
 import { Decision, MotifSignalement, Signalement, SignalementRequete, StatutSignalement } from './signalements.models';
 
+/** Message visé par un signalement (texte, ou vocal à écouter). */
+export interface MessageSignale {
+  id: number;
+  idExpediteur: number;
+  idTrajet: number;
+  type: 'TEXTE' | 'VOCAL';
+  contenu: string | null;
+  dureeMs: number | null;
+  audioDisponible: boolean;
+  dateEnvoi: string;
+}
+
 /** Vue du back-office d'un signalement. */
 export interface SignalementAdmin {
   id: number;
@@ -20,6 +32,7 @@ export interface SignalementAdmin {
   totalContreSignale: number;
   dateSignalement: string;
   dateTraitement: string | null;
+  message: MessageSignale | null;
 }
 
 /** API du module 10 : signaler une personne, suivre mes signalements, modérer (administrateur). */
@@ -41,6 +54,11 @@ export class SignalementsService {
     if (statut) params = params.set('statut', statut);
     if (idUtilisateur) params = params.set('utilisateur', idUtilisateur);
     return this.http.get<Page<SignalementAdmin>>(`${this.api}/admin/signalements`, { params });
+  }
+
+  /** Vocal signalé (administrateur), chargé avec le jeton de session. */
+  audio(id: number): Observable<Blob> {
+    return this.http.get(`${this.api}/admin/signalements/${id}/audio`, { responseType: 'blob' });
   }
 
   decider(id: number, decision: Decision, message: string | null): Observable<SignalementAdmin> {
