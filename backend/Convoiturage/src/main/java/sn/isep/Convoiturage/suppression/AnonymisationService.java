@@ -78,7 +78,7 @@ public class AnonymisationService {
         }
         em.createNativeQuery("""
                 update utilisateur set prenom = :prenom, nom = :nom, email = null, telephone = null,
-                    telephone_verifie = false, email_verifie = false, mot_de_passe = null, google_id = null,
+                    telephone_verifie = false, email_verifie = false, mot_de_passe = null, google_id = null, apple_id = null,
                     sexe = null, photo_profil = null, bio = null, note_moyenne = null, conducteur_valide = false,
                     derniere_connexion = null, push_active = false, statut = 'SUPPRIME', date_anonymisation = now()
                 where id_utilisateur = :id

@@ -47,7 +47,9 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
           <tbody>
             <tr>
               <td><strong>Compte</strong> : prénom, nom, email, téléphone, mot de passe (enregistré chiffré, jamais en
-                clair), identifiant Google si vous vous connectez avec Google</td>
+                clair), identifiant Google ou Apple si vous vous connectez avec Google ou Apple. Pour un compte créé sur le site,
+                l'inscription passe par Google ou Apple, qui nous transmet votre prénom, votre nom, votre adresse email
+                (avec Apple, éventuellement une adresse relais qui masque la vôtre) et l'identifiant de votre compte</td>
               <td>Créer et sécuriser votre compte, vous connecter, vérifier votre email ou téléphone par un code, vous
                 prévenir des événements importants.</td>
             </tr>
@@ -143,8 +145,12 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
             <tr><td>PayDunya, Wave, Orange Money</td><td>Paiement en ligne et remboursement</td>
               <td>Montant et référence de la réservation ; numéro de téléphone du passager en cas de remboursement
                 (le paiement lui-même se fait chez l'opérateur)</td></tr>
-            <tr><td>Google</td><td>Connexion avec un compte Google (si vous la choisissez)</td>
-              <td>Échange d'identification géré par Google</td></tr>
+            <tr><td>Apple</td><td>Inscription sur le site et connexion avec un compte Apple (si vous le choisissez)</td>
+              <td>Apple nous transmet l'identifiant de votre compte Apple, votre adresse email (réelle ou relais) et, la
+                première fois seulement, votre prénom et votre nom (fenêtre de connexion fournie par Apple)</td></tr>
+            <tr><td>Google</td><td>Inscription sur le site et connexion avec un compte Google (si vous le choisissez)</td>
+              <td>Google nous transmet votre prénom, votre nom, votre adresse email et l'identifiant de votre compte
+                Google (bouton de connexion fourni par Google)</td></tr>
             <tr><td>Service d'envoi d'emails et de SMS</td><td>Codes de vérification, notifications importantes</td>
               <td>Email ou téléphone, contenu du message</td></tr>
             <tr><td>OpenStreetMap (tuiles de carte, recherche d'adresses Nominatim)</td><td>Afficher la carte, trouver une

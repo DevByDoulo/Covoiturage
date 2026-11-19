@@ -1,25 +1,27 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ErreurApi, lireErreur } from '../../../core/api/erreur-api';
 import { SessionService } from '../../../core/auth/session.service';
 import { Alerte } from '../../../shared/ui/alerte';
 import { compteARebours, formatMinutes } from '../../../shared/ui/compte-a-rebours';
-import { EntetePage } from '../../../shared/ui/entete-page';
 import { Icone } from '../../../shared/ui/icone';
 import { PaveNumerique } from '../../../shared/ui/pave-numerique';
 import { SaisieCode } from '../../../shared/ui/saisie-code';
 
 @Component({
   selector: 'app-verification',
-  imports: [ReactiveFormsModule, EntetePage, Icone, Alerte, SaisieCode, PaveNumerique],
+  imports: [ReactiveFormsModule, RouterLink, Icone, Alerte, SaisieCode, PaveNumerique],
   templateUrl: './verification.html',
-  styleUrls: ['../auth-commun.scss', './verification.scss'],
+  styleUrls: ['../auth-commun.scss', '../auth-epure.scss', './verification.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Verification {
   private readonly session = inject(SessionService);
   private readonly router = inject(Router);
+
+  /** Paramètre d'URL `inscription` : dernière étape de l'inscription avec Google (« Étape 5 sur 5 »). */
+  readonly inscription = input<string>();
 
   protected readonly verification = this.session.verification;
   protected readonly code = new FormControl('', { nonNullable: true, validators: [Validators.pattern(/^\d{6}$/)] });

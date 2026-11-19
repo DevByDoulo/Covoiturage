@@ -1,119 +1,72 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { Observable } from 'rxjs';
 import { ErreurApi, lireErreur } from '../../../core/api/erreur-api';
-import { Sexe } from '../../../core/auth/auth.models';
+import { AuthReponse } from '../../../core/auth/auth.models';
 import { SessionService } from '../../../core/auth/session.service';
 import { Alerte } from '../../../shared/ui/alerte';
+import { BoutonApple, ReponseApple } from '../../../shared/ui/bouton-apple';
 import { BoutonGoogle } from '../../../shared/ui/bouton-google';
-import { ChampMotDePasse } from '../../../shared/ui/champ-mot-de-passe';
-import { DrapeauSenegal } from '../../../shared/ui/drapeau-senegal';
-import { Icone } from '../../../shared/ui/icone';
-import { Logo } from '../../../shared/ui/logo';
-import {
-  REGLE_MOT_DE_PASSE,
-  appliquerErreurServeur,
-  champsIdentiques,
-  chiffresTelephone,
-  enErreur,
-  retourSur,
-  telephoneSenegalValidator,
-} from '../formulaire';
+import { retourSur } from '../formulaire';
 
+/**
+ * Inscription sur le site, uniquement avec Google ou Apple, en plusieurs étapes comme Uber :
+ * 1. Google ou Apple (prénom, nom et e-mail repris du compte), puis sur /auth/telephone
+ * 2. numéro de téléphone (obligatoire), 3. sexe, 4. conditions, et enfin 5. code de vérification (/auth/verification).
+ * Un compte déjà inscrit est simplement connecté.
+ */
 @Component({
   selector: 'app-inscription',
-  imports: [ReactiveFormsModule, RouterLink, Logo, Icone, Alerte, ChampMotDePasse, BoutonGoogle, DrapeauSenegal],
+  imports: [RouterLink, Alerte, BoutonGoogle, BoutonApple],
   templateUrl: './inscription.html',
-  styleUrl: '../auth-commun.scss',
+  styleUrls: ['../auth-epure.scss', './inscription.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Inscription implements OnInit {
   private readonly session = inject(SessionService);
   private readonly router = inject(Router);
-  private readonly fb = inject(FormBuilder);
-
-  protected readonly form = this.fb.nonNullable.group(
-    {
-      prenom: ['', [Validators.required, Validators.maxLength(80)]],
-      nom: ['', [Validators.required, Validators.maxLength(80)]],
-      email: ['', [Validators.required, Validators.email, Validators.maxLength(160)]],
-      telephone: ['', [Validators.required, telephoneSenegalValidator]],
-      sexe: this.fb.control<Sexe | null>(null, Validators.required),
-      motDePasse: ['', [Validators.required, Validators.pattern(REGLE_MOT_DE_PASSE)]],
-      confirmation: ['', Validators.required],
-      cgu: [false, Validators.requiredTrue],
-    },
-    { validators: champsIdentiques('motDePasse', 'confirmation') },
-  );
-
-  protected readonly sexe = toSignal(this.form.controls.sexe.valueChanges, { initialValue: null });
-  protected readonly envoi = signal(false);
-  protected readonly erreur = signal<ErreurApi | null>(null);
-  protected readonly googleIndisponible = signal(false);
-  protected readonly enErreur = (nom: string) => enErreur(this.form, nom);
 
   /** Paramètre d'URL (lié par le routeur) : page à rejoindre après l'inscription. */
   readonly retour = input<string>();
   protected readonly retourValide = computed(() => retourSur(this.retour()));
 
+  protected readonly envoi = signal(false);
+  protected readonly erreur = signal<ErreurApi | null>(null);
+  protected readonly googleIndisponible = signal(false);
+  /** Message après un clic sur Apple : non activé, ou échec de la fenêtre Apple. */
+  protected readonly messageApple = signal<string | null>(null);
+  protected readonly messagesApple = {
+    indisponible: "L'inscription avec Apple n'est pas encore activée sur ce site.",
+    echec: "L'inscription avec Apple a échoué. Réessayez.",
+  };
+
   ngOnInit(): void {
     this.session.memoriserRetour(this.retour());
   }
 
-  protected confirmationDifferente(): boolean {
-    const c = this.form.controls.confirmation;
-    return this.form.hasError('differents') && (c.touched || c.dirty);
+  protected google(idToken: string): void {
+    this.suivre(this.session.connexionGoogle(idToken, undefined, undefined, false));
   }
 
-  protected choisirSexe(s: Sexe): void {
-    this.form.controls.sexe.setValue(s);
-    this.form.controls.sexe.markAsTouched();
+  protected apple(r: ReponseApple): void {
+    this.suivre(this.session.connexionApple(r, undefined, undefined, false));
   }
 
-  protected soumettre(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
-    const v = this.form.getRawValue();
+  private suivre(appel: Observable<AuthReponse>): void {
     this.envoi.set(true);
     this.erreur.set(null);
-    this.session
-      .inscription({
-        prenom: v.prenom.trim(),
-        nom: v.nom.trim(),
-        email: v.email.trim(),
-        telephone: '+221' + chiffresTelephone(v.telephone),
-        motDePasse: v.motDePasse,
-        sexe: v.sexe,
-      })
-      .subscribe({
-        next: () => this.router.navigateByUrl('/auth/verification'),
-        error: (e) => {
-          const err = lireErreur(e);
-          if (!appliquerErreurServeur(this.form, err)) this.erreur.set(err);
-          this.envoi.set(false);
-        },
-      });
-  }
-
-  protected google(idToken: string): void {
-    this.session.connexionGoogle(idToken, undefined, undefined, false).subscribe({
-      next: (r) =>
-        this.router.navigateByUrl(
-          r.etape === 'TELEPHONE_REQUIS'
-            ? '/auth/google/telephone'
-            : r.etape === 'OTP_ENVOYE'
-              ? '/auth/verification'
-              : this.session.pageApresConnexion(),
-        ),
-      error: (e) => this.erreur.set(lireErreur(e)),
+    appel.subscribe({
+      next: (r) => this.suite(r),
+      error: (e) => {
+        this.erreur.set(lireErreur(e));
+        this.envoi.set(false);
+      },
     });
   }
 
-  /** Message d'erreur du serveur (ex. « Cet email est déjà utilisé ») s'il y en a un sur ce champ. */
-  protected erreurServeur(nom: string): string | null {
-    return (this.form.get(nom)?.errors?.['serveur'] as string | undefined) ?? null;
+  private suite(r: AuthReponse): void {
+    if (r.etape === 'TELEPHONE_REQUIS') this.router.navigateByUrl('/auth/telephone');
+    else if (r.etape === 'OTP_ENVOYE') this.router.navigateByUrl('/auth/verification');
+    else this.router.navigateByUrl(this.session.pageApresConnexion());
   }
 }

@@ -1,0 +1,44 @@
+/* Propre à la première étape de l'inscription (le reste : ../auth-epure.scss). */
+
+.etapes {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+  counter-reset: etape;
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--texte-2);
+    counter-increment: etape;
+    &::before {
+      content: counter(etape);
+      display: grid;
+      flex: none;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #f3f3f3;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--texte);
+    }
+    &:first-child::before {
+      background: var(--vert);
+      color: #fff;
+    }
+  }
+}
+
+.attente {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 56px;
+  margin: 0;
+  color: var(--texte-2);
+}

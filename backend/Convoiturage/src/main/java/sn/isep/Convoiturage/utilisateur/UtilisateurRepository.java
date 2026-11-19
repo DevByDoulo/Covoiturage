@@ -18,6 +18,8 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
 
     Optional<Utilisateur> findByGoogleId(String googleId);
 
+    Optional<Utilisateur> findByAppleId(String appleId);
+
     boolean existsByRole(Role role);
 
     long countByStatut(StatutCompte statut);

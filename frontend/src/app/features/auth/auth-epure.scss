@@ -1,0 +1,125 @@
+/* Écrans d'authentification épurés (inspirés d'Uber) : connexion et inscription avec Google en plusieurs étapes.
+   Titre-question, champs gris pleins, gros bouton, « ou », Google. */
+
+.ecran {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+h1 {
+  margin-bottom: 6px;
+  font-size: clamp(24px, 6vw, 28px);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Champs : fond gris uni, sans ombre ; bord vert au focus. Le mot de passe (composant enfant) suit le même style. */
+.saisie,
+:host ::ng-deep app-champ-mot-de-passe .saisie {
+  min-height: 56px;
+  padding: 0 16px;
+  border: 2px solid transparent;
+  border-radius: var(--rayon-petit);
+  background: #f3f3f3;
+  box-shadow: none;
+  &:focus-within {
+    border-color: var(--vert);
+    background: var(--surface);
+    box-shadow: none;
+  }
+  input::placeholder {
+    color: #6b6b6b;
+  }
+}
+
+/* Pas de pictogramme devant le mot de passe (l'œil afficher / masquer reste). */
+:host ::ng-deep app-champ-mot-de-passe .saisie > app-icone {
+  display: none;
+}
+
+.champ--erreur .saisie,
+:host ::ng-deep .champ--erreur app-champ-mot-de-passe .saisie {
+  border-color: rgba(192, 38, 45, 0.5);
+  background: var(--erreur-fond);
+}
+
+/* Boutons rectangulaires, hauteur 56 px, sans ombre. */
+.bouton,
+:host ::ng-deep app-bouton-google .bouton,
+:host ::ng-deep app-bouton-apple .bouton {
+  min-height: 56px;
+  border-radius: var(--rayon-petit);
+  box-shadow: none;
+  font-weight: 600;
+}
+
+.bouton--secondaire,
+:host ::ng-deep app-bouton-google .bouton,
+:host ::ng-deep app-bouton-apple .bouton {
+  background: #ededed;
+  color: var(--texte);
+  &:hover:not(:disabled) {
+    background: #e2e2e2;
+    text-decoration: none;
+  }
+}
+
+.separateur {
+  margin: 4px 0;
+  text-transform: none;
+  font-size: 14px;
+  &::before,
+  &::after {
+    background: #9a9a9a;
+  }
+}
+
+.mention {
+  margin: 18px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--texte-2);
+}
+
+/* Inscription en étapes : retour, numéro d'étape, sous-titre, choix à gros boutons. */
+.haut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 36px;
+  font-size: 13.5px;
+  color: var(--texte-2);
+}
+
+.retour {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: -6px;
+  padding: 6px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--texte);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none !important;
+  &:hover { background: #f3f3f3; }
+}
+
+.etape { margin-left: auto; font-weight: 600; }
+
+.sous-titre {
+  margin: -6px 0 4px;
+  color: var(--texte-2);
+}
+
+h1:focus { outline: 0; }
