@@ -11,6 +11,14 @@ import {
   Sexe,
   VerificationEnCours,
 } from './auth.models';
+
+/** Inscription commencée avec Google ou Apple, en attente du numéro de téléphone. */
+export interface CompteExterneEnCours {
+  fournisseur: 'google' | 'apple';
+  idToken: string;
+  prenom?: string;
+  nom?: string;
+}
 import { retourSur } from './retour';
 import { stockage } from './stockage';
 
@@ -44,8 +52,11 @@ export class SessionService {
   /** Vérification OTP en attente (après inscription, connexion d'un compte non vérifié ou Google). */
   readonly verification = signal<VerificationEnCours | null>(lireVerification());
 
-  /** idToken Google conservé en mémoire le temps de demander le numéro de téléphone. */
-  idTokenGoogle: string | null = null;
+  /**
+   * Compte Google ou Apple en cours d'inscription, gardé en mémoire seulement le temps de demander le numéro de
+   * téléphone (après un rechargement, il faut recommencer).
+   */
+  compteExterne: CompteExterneEnCours | null = null;
 
   get accessToken(): string | null {
     return this.jetonAcces();
@@ -93,10 +104,32 @@ export class SessionService {
   /** [resterConnecte] absent : on garde le choix fait sur l'écran de connexion (étape « téléphone » après Google). */
   connexionGoogle(idToken: string, telephone?: string, sexe?: Sexe | null, resterConnecte?: boolean): Observable<AuthReponse> {
     if (resterConnecte !== undefined) this.persistant = resterConnecte;
-    this.idTokenGoogle = idToken;
+    this.compteExterne = { fournisseur: 'google', idToken };
     return this.http
       .post<AuthReponse>(`${this.api}/google`, { idToken, telephone, sexe })
       .pipe(tap((r) => this.traiter(r, telephone ?? '')));
+  }
+
+  /**
+   * « Se connecter avec Apple ». Apple ne donne le prénom et le nom qu'au premier accès : ils sont gardés avec le
+   * jeton et renvoyés tant que l'inscription n'est pas terminée. [resterConnecte] absent : choix précédent conservé.
+   */
+  connexionApple(compte: { idToken: string; prenom?: string; nom?: string }, telephone?: string, sexe?: Sexe | null,
+                 resterConnecte?: boolean): Observable<AuthReponse> {
+    if (resterConnecte !== undefined) this.persistant = resterConnecte;
+    this.compteExterne = { fournisseur: 'apple', ...compte };
+    return this.http
+      .post<AuthReponse>(`${this.api}/apple`, { ...compte, telephone, sexe })
+      .pipe(tap((r) => this.traiter(r, telephone ?? '')));
+  }
+
+  /** Dernière étape de l'inscription Google ou Apple : numéro de téléphone (+221…) et sexe. */
+  terminerInscriptionExterne(telephone: string, sexe: Sexe | null): Observable<AuthReponse> {
+    const c = this.compteExterne;
+    if (!c) throw new Error('Aucune inscription Google ou Apple en cours');
+    return c.fournisseur === 'apple'
+      ? this.connexionApple({ idToken: c.idToken, prenom: c.prenom, nom: c.nom }, telephone, sexe)
+      : this.connexionGoogle(c.idToken, telephone, sexe);
   }
 
   motDePasseOublie(identifiant: string): Observable<AuthReponse> {
@@ -220,7 +253,7 @@ export class SessionService {
       this.ouvrirSession(r);
       if (r.suppressionAnnulee) this.suppressionAnnulee.set(true);
       this.definirVerification(null);
-      this.idTokenGoogle = null;
+      this.compteExterne = null;
     } else if (r.etape === 'OTP_ENVOYE') {
       const maintenant = Date.now();
       this.definirVerification({

@@ -8,7 +8,7 @@ import java.util.List;
 /** Propriétés applicatives (préfixe {@code app} dans application.yaml). */
 @ConfigurationProperties("app")
 public record AppProperties(Jwt jwt, Otp otp, Cors cors, Stockage stockage, Google google, Admin admin, Ia ia,
-                            Firebase firebase) {
+                            Firebase firebase, Apple apple) {
 
     public record Jwt(String secret, String issuer, long accessTokenMinutes, long refreshTokenDays) {}
 
@@ -21,6 +21,12 @@ public record AppProperties(Jwt jwt, Otp otp, Cors cors, Stockage stockage, Goog
 
     /** clientId : « Se connecter avec Google » ; mapsApiKey : Routes API (vide => distances à vol d'oiseau). */
     public record Google(String clientId, String mapsApiKey) {}
+
+    /**
+     * « Se connecter avec Apple » : identifiants acceptés comme audience de l'identityToken (Services ID du site,
+     * bundle ID de l'appli iOS). Liste vide : connexion Apple désactivée (503).
+     */
+    public record Apple(List<String> clientIds) {}
 
     public record Admin(String email, String motDePasse, String telephone) {}
 

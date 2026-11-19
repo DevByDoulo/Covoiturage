@@ -58,6 +58,35 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
      un lien « Retour ».
   Textes légaux (version du 18/11/2026, même jour) : conditions (inscription sur le site avec un compte Google) et
   confidentialité (données transmises par Google : prénom, nom, e-mail, identifiant).
+- **Connexion et inscription avec Apple** (branche `connexion-apple`, partie de `inscription-google`, site + API) :
+  - **Backend** : migration `V2026_11_19_2130__connexion_apple.sql` (colonne `utilisateur.apple_id`, unique, effacée à
+    l'anonymisation) ; `AppleTokenVerifier` vérifie l'identityToken (RS256, clés publiques
+    `https://appleid.apple.com/auth/keys` via `NimbusJwtDecoder`, émetteur `https://appleid.apple.com`, expiration,
+    audience ∈ `app.apple.client-ids` = variable `APPLE_CLIENT_ID`, liste séparée par des virgules ; vide → 503
+    « La connexion Apple n'est pas configurée »). `POST /api/auth/apple` (`AppleRequete` : idToken, prénom et nom
+    facultatifs — Apple ne les donne qu'au premier accès et pas dans le jeton —, téléphone, sexe).
+  - **Règles communes Google / Apple** (`AuthService.connecterAvecCompteExterne`) : compte retrouvé par
+    `google_id` / `apple_id`, sinon par email vérifié (liaison avec un compte existant, qui a déjà son numéro → connecté
+    directement), sinon créé. **Pas de session tant que le compte n'a pas de numéro** : réponse `TELEPHONE_REQUIS`, puis
+    le numéro fourni déclenche l'envoi d'un code, la session ne s'ouvre qu'après ce code ; numéro d'un autre compte →
+    409 sur `telephone`. Apple sans nom transmis : « Utilisateur Apple » (comme « Utilisateur Google »).
+  - **Site** : `shared/ui/bouton-apple.ts` (« Continuer / S'inscrire avec Apple », bibliothèque officielle « Sign in
+    with Apple JS » chargée au premier clic, fenêtre popup, `scope: 'name email'` ; fenêtre fermée → rien ; non
+    configuré → message « pas encore activée »), sur la connexion et l'inscription (style gris épuré).
+    `environment.apple = { clientId, redirectUri }` (vides). `SessionService.compteExterne` (Google ou Apple, en
+    mémoire) remplace `idTokenGoogle` ; `connexionApple()` ; `terminerInscriptionExterne(telephone, sexe)`. Les étapes
+    2 à 4 passent de `/auth/google/telephone` à **`/auth/telephone`** (ancienne adresse redirigée) ; « Bienvenue Fatou ! »
+    avec le prénom donné par Apple. Textes « par SMS » retirés des étapes : voir la remarque ci-dessous.
+  - **À configurer (compte Apple Developer payant)** : un Services ID (= `APPLE_CLIENT_ID` et
+    `environment.apple.clientId`), le domaine du site et l'adresse de retour (HTTPS, `environment.apple.redirectUri`) ;
+    Apple refuse `localhost` : la connexion Apple ne se teste que sur le site déployé. Pour écrire aux adresses relais
+    `@privaterelay.appleid.com`, déclarer le domaine d'envoi des emails chez Apple. Appli mobile : pas encore (iOS :
+    connexion native, bundle ID à ajouter à `APPLE_CLIENT_ID`).
+  - **Remarque (code de vérification)** : `OtpService.canalPour` envoie le code **par email** dès que le compte a un
+    email et que l'envoi d'emails est configuré. Pour une inscription Google ou Apple, le code part donc à l'adresse
+    du compte : le numéro est obligatoire mais pas vérifié par SMS tant que le fournisseur SMS n'est pas choisi.
+  - Textes légaux (version du **19/11/2026**) : inscription avec Google ou Apple, données transmises par Apple
+    (identifiant, email réel ou relais, prénom et nom au premier accès).
 - **Textes légaux** (branche `pages-legales`) : pages publiques `/conditions` et `/confidentialite`
   (`features/legal`, cadre commun `page-legale.ts` : contact `CONTACT_LEGAL`, date `VERSION_LEGALE`), liens depuis
   l'inscription, le pied des écrans de connexion, le profil, et dans l'appli mobile (`LiensLegaux`, qui ouvre le
@@ -341,9 +370,9 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   **Connexion avec Google** (branche `mobile-google`, `lib/core/google.dart` + `lib/features/auth/google.dart`) : bouton « Continuer avec Google » (séparateur « ou ») sur la connexion et l'inscription. Le package `google_sign_in` (7.x, `authenticate()`, puis déconnexion de Google pour pouvoir choisir un autre compte la fois suivante) fournit l'idToken, envoyé à `POST /api/auth/google` (`Session.connexionGoogle`, **même endpoint que le site, backend inchangé**) qui renvoie la session habituelle. `serverClientId` = ID client **Web** (celui du site), donc l'audience de l'idToken est bien le `GOOGLE_CLIENT_ID` vérifié par `GoogleTokenVerifier` (tokeninfo) ; le client Android n'est reconnu que par le paquet `sn.isep.yobalema` + SHA-1. Les ID clients passent par `--dart-define=GOOGLE_SERVER_CLIENT_ID=…` (et `GOOGLE_IOS_CLIENT_ID` plus tard), jamais dans le dépôt ; `tool/lancer-telephone.ps1` reprend la variable d'environnement du même nom. Cas gérés par `continuerAvecGoogle` (testé sans le plugin via l'interface `ServiceGoogle`) : annulation (rien d'affiché), compte connu → connecté, compte inconnu → `TELEPHONE_REQUIS` → écran `/google/telephone` (numéro + sexe, idToken gardé en mémoire seulement, numéro déjà pris affiché sous le champ) → code de vérification comme à l'inscription, erreur réseau / jeton refusé / plugin mal configuré → message dans le bandeau. Non disponible dans la version navigateur ; iOS à configurer (client iOS + schéma d'URL). Étapes Google Cloud et `gradlew signingReport` : `mobile/README.md`.
   **Escales à la publication** (branche `mobile-escales`, `lib/core/escales.dart` + `lib/features/conducteur/publier.dart`) : « Ajouter une escale » (5 au maximum, comme `@Size(max = 5)` de l'API), chaque escale avec recherche de lieu, « Ma position » ou toucher de la carte (puces « La carte place : Départ / Escale n / Arrivée »), monter / descendre / supprimer ; les escales partent dans `escales` de `/trajets/estimation` et `/trajets` (mêmes endpoints que le site) et comptent dans l'estimation. Le détail d'un trajet et « Mon trajet » les affichaient déjà (carte + liste). **Non existant côté site et API, donc non fait** : prix par tronçon, recherche et réservation d'un segment (le site ne propose pas non plus de choisir l'escale de prise en charge, bien que `idEscaleRamassage` existe dans l'API de réservation).
   Reste : push.
-- Tests : `./mvnw test` → 56 tests (dont `MessagesVocauxParcoursTest`, `AnalyseAudioTest`, `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
+- Tests : `./mvnw test` → 62 tests (dont `ConnexionExterneParcoursTest`, `AppleTokenVerifierTest`, `MessagesVocauxParcoursTest`, `AnalyseAudioTest`, `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 100 tests (dont guards, retour après connexion,
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 104 tests (dont guards, retour après connexion,
   intercepteur visiteur, `BarreRecherche`, paramètres de recherche, inscription Google en étapes) ; `flutter test` dans `mobile` → 79 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.

@@ -53,7 +53,8 @@ h1 {
 
 /* Boutons rectangulaires, hauteur 56 px, sans ombre. */
 .bouton,
-:host ::ng-deep app-bouton-google .bouton {
+:host ::ng-deep app-bouton-google .bouton,
+:host ::ng-deep app-bouton-apple .bouton {
   min-height: 56px;
   border-radius: var(--rayon-petit);
   box-shadow: none;
@@ -61,7 +62,8 @@ h1 {
 }
 
 .bouton--secondaire,
-:host ::ng-deep app-bouton-google .bouton {
+:host ::ng-deep app-bouton-google .bouton,
+:host ::ng-deep app-bouton-apple .bouton {
   background: #ededed;
   color: var(--texte);
   &:hover:not(:disabled) {

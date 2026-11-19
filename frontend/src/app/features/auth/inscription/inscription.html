@@ -1,15 +1,15 @@
 <div class="ecran">
   <div class="haut"><span class="etape">Étape 1 sur 5</span></div>
-  <h1>Créez votre compte avec Google</h1>
-  <p class="sous-titre">Votre prénom, votre nom et votre adresse e-mail sont repris de votre compte Google. Il ne restera
-    que votre numéro de téléphone à confirmer.</p>
+  <h1>Créez votre compte avec Google ou Apple</h1>
+  <p class="sous-titre">Votre prénom, votre nom et votre adresse e-mail sont repris de votre compte. Vous devrez ensuite
+    indiquer votre numéro de téléphone avant de continuer.</p>
 
   <ol class="etapes" aria-label="Les étapes de l'inscription">
-    <li>Compte Google</li>
+    <li>Compte Google ou Apple</li>
     <li>Numéro de téléphone</li>
     <li>Vous êtes…</li>
     <li>Conditions d'utilisation</li>
-    <li>Code reçu par SMS</li>
+    <li>Code de vérification</li>
   </ol>
 
   @if (erreur(); as e) {
@@ -17,13 +17,20 @@
   }
 
   @if (envoi()) {
-    <p class="attente" aria-live="polite"><span class="chargement chargement--sombre" aria-hidden="true"></span> Connexion à Google…</p>
+    <p class="attente" aria-live="polite"><span class="chargement chargement--sombre" aria-hidden="true"></span> Connexion en cours…</p>
   } @else {
     <app-bouton-google forme="rectangular" texte="signup_with" libelle="S'inscrire avec Google"
                        (jeton)="google($event)" (indisponible)="googleIndisponible.set(true)" />
   }
   @if (googleIndisponible()) {
     <app-alerte type="info">L'inscription avec Google n'est pas encore activée sur ce site.</app-alerte>
+  }
+  @if (!envoi()) {
+    <app-bouton-apple libelle="S'inscrire avec Apple" (reponse)="apple($event)"
+                      (indisponible)="messageApple.set(messagesApple.indisponible)" (echec)="messageApple.set(messagesApple.echec)" />
+  }
+  @if (messageApple(); as m) {
+    <app-alerte type="info">{{ m }}</app-alerte>
   }
 
   <div class="separateur">ou</div>
@@ -33,6 +40,7 @@
 
   <p class="mention">
     Pas encore de compte Google ? Vous pouvez en créer un gratuitement sur
-    <a href="https://accounts.google.com/signup" target="_blank" rel="noopener">accounts.google.com</a>.
+    <a href="https://accounts.google.com/signup" target="_blank" rel="noopener">accounts.google.com</a>. Avec Apple, vous
+    pouvez masquer votre adresse e-mail : Apple nous transmet alors une adresse relais.
   </p>
 </div>

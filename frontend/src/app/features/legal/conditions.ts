@@ -57,9 +57,9 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
         <li>La plateforme est réservée aux personnes <strong>majeures (18 ans et plus)</strong>.</li>
         <li>Vous devez donner des informations exactes (nom, prénom, téléphone, email) et les tenir à jour. Votre numéro
           ou votre adresse email est vérifié par un code à usage unique.</li>
-        <li>Sur le site, l'inscription se fait avec un <strong>compte Google</strong> : votre prénom, votre nom et votre
-          adresse email sont repris de ce compte ; vous indiquez ensuite votre numéro de téléphone, vérifié par SMS, et
-          acceptez les présentes conditions.</li>
+        <li>Sur le site, l'inscription se fait avec un <strong>compte Google ou Apple</strong> : votre prénom, votre nom
+          et votre adresse email sont repris de ce compte ; vous devez ensuite indiquer votre numéro de téléphone avant de
+          continuer, accepter les présentes conditions et saisir le code de vérification reçu par SMS ou par email.</li>
         <li>Votre compte est personnel. Gardez votre mot de passe secret ; toute action faite avec votre compte est
           réputée faite par vous. Prévenez-nous sans attendre si vous pensez qu'il a été utilisé par quelqu'un d'autre.</li>
         <li>Sur un appareil partagé, ne cochez pas « Rester connecté » et déconnectez-vous après usage.</li>

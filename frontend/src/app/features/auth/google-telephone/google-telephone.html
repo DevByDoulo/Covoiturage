@@ -10,7 +10,7 @@
         @if (prenom) { Bienvenue {{ prenom }} ! }
         Quel est votre numéro de téléphone ?
       </h1>
-      <p class="sous-titre">Il est vérifié par SMS pour la sécurité des trajets, et n'est jamais montré aux autres membres.</p>
+      <p class="sous-titre">Il est obligatoire pour continuer : il sert à la sécurité des trajets et n'est jamais montré aux autres membres.</p>
       <div class="champ" [class.champ--erreur]="messageTelephone()">
         <label class="sr-only" for="telephone">Numéro de téléphone (+221)</label>
         <div class="saisie">
@@ -65,7 +65,7 @@
     @if (envoi()) {
       <span class="chargement" aria-hidden="true"></span> Envoi du code…
     } @else if (etape() === 4) {
-      Recevoir le code par SMS
+      Recevoir le code
     } @else {
       Continuer
     }

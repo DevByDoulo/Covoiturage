@@ -21,13 +21,13 @@ import { Icone } from '../../../shared/ui/icone';
 import { chiffresTelephone, enErreur, telephoneSenegalValidator } from '../formulaire';
 import { prenomDuJeton } from '../google-jeton';
 
-/** Étapes de cet écran (la 1re, Google, est sur /auth/inscription ; la 5e, le code, sur /auth/verification). */
+/** Étapes de cet écran (la 1re, Google ou Apple, est sur /auth/inscription ; la 5e, le code, sur /auth/verification). */
 export type EtapeGoogle = 2 | 3 | 4;
 
 /**
- * Suite de l'inscription avec Google, une question par écran comme Uber : numéro de téléphone (obligatoire, vérifié
- * par SMS), sexe, acceptation des conditions ; puis envoi du code et passage à l'écran de vérification.
- * Sert aussi à un compte Google déjà créé mais jamais terminé (connexion Google → TELEPHONE_REQUIS).
+ * Suite de l'inscription avec Google ou Apple, une question par écran comme Uber : numéro de téléphone (obligatoire :
+ * pas de session sans lui), sexe, acceptation des conditions ; puis envoi du code et passage à l'écran de vérification.
+ * Sert aussi à un compte Google ou Apple créé mais jamais terminé (connexion → TELEPHONE_REQUIS).
  */
 @Component({
   selector: 'app-google-telephone',
@@ -49,7 +49,8 @@ export class GoogleTelephone implements OnInit {
   });
   protected readonly sexe = toSignal(this.form.controls.sexe.valueChanges, { initialValue: null });
   protected readonly etape = signal<EtapeGoogle>(2);
-  protected readonly prenom = prenomDuJeton(this.session.idTokenGoogle);
+  /** Apple : prénom transmis par Apple ; Google : lu dans l'idToken. */
+  protected readonly prenom = this.session.compteExterne?.prenom ?? prenomDuJeton(this.session.compteExterne?.idToken);
   protected readonly envoi = signal(false);
   protected readonly erreur = signal<ErreurApi | null>(null);
   protected readonly enErreur = (nom: string) => enErreur(this.form, nom);
@@ -69,8 +70,8 @@ export class GoogleTelephone implements OnInit {
   }
 
   ngOnInit(): void {
-    // L'idToken Google n'est gardé qu'en mémoire : après un rechargement, il faut recommencer.
-    if (!this.session.idTokenGoogle) this.router.navigateByUrl('/auth/inscription');
+    // Le jeton Google ou Apple n'est gardé qu'en mémoire : après un rechargement, il faut recommencer.
+    if (!this.session.compteExterne) this.router.navigateByUrl('/auth/inscription');
   }
 
   /** Bouton « Continuer » : passe à l'étape suivante si la réponse est valable, ou envoie le code à la dernière. */
@@ -101,12 +102,11 @@ export class GoogleTelephone implements OnInit {
   }
 
   private envoyer(): void {
-    const idToken = this.session.idTokenGoogle;
-    if (!idToken) return;
+    if (!this.session.compteExterne) return;
     const { telephone, sexe } = this.form.getRawValue();
     this.envoi.set(true);
     this.erreur.set(null);
-    this.session.connexionGoogle(idToken, '+221' + chiffresTelephone(telephone), sexe).subscribe({
+    this.session.terminerInscriptionExterne('+221' + chiffresTelephone(telephone), sexe).subscribe({
       next: (r) =>
         r.etape === 'CONNECTE'
           ? this.router.navigateByUrl(this.session.pageApresConnexion())

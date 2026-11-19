@@ -72,6 +72,11 @@
   @if (googleIndisponible()) {
     <app-alerte type="info">La connexion Google n'est pas encore activée. Utilisez votre e-mail ou votre téléphone.</app-alerte>
   }
+  <app-bouton-apple (reponse)="apple($event)"
+                    (indisponible)="messageApple.set(messagesApple.indisponible)" (echec)="messageApple.set(messagesApple.echec)" />
+  @if (messageApple(); as m) {
+    <app-alerte type="info">{{ m }}</app-alerte>
+  }
   <a class="bouton bouton--secondaire" routerLink="/auth/inscription"
      [queryParams]="retourValide() ? { retour: retourValide() } : null">Créer un compte</a>
 

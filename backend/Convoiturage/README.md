@@ -42,6 +42,7 @@ leurs responsables ; l'ancienne version reste sous l'étiquette Git `archive/lot
 | `COVOITIA_JWT_SECRET` | Clé HMAC Base64 ≥ 32 octets (`openssl rand -base64 48`) |
 | `CORS_ALLOWED_ORIGINS` | Origines autorisées, séparées par des virgules |
 | `GOOGLE_CLIENT_ID` | Vérification du « Se connecter avec Google » |
+| `APPLE_CLIENT_ID` | « Se connecter avec Apple » : Services ID du site (et bundle ID iOS), séparés par des virgules ; vide = désactivé |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_TELEPHONE` | Premier administrateur |
 | `FIREBASE_CREDENTIALS_PATH` | JSON du compte de service Firebase, hors du dépôt (ou `app.firebase.credentials-path` dans `application-local.yml`) ; vide : push seulement journalisés |
 | `GOOGLE_MAPS_API_KEY` | Itinéraires Google Routes (sinon distance à vol d'oiseau × 1,25) |

@@ -5,6 +5,7 @@ import { ErreurApi, lireErreur } from '../../../core/api/erreur-api';
 import { AuthReponse } from '../../../core/auth/auth.models';
 import { SessionService } from '../../../core/auth/session.service';
 import { Alerte } from '../../../shared/ui/alerte';
+import { BoutonApple, ReponseApple } from '../../../shared/ui/bouton-apple';
 import { BoutonGoogle } from '../../../shared/ui/bouton-google';
 import { ChampMotDePasse } from '../../../shared/ui/champ-mot-de-passe';
 import { Icone } from '../../../shared/ui/icone';
@@ -12,7 +13,7 @@ import { enErreur, retourSur } from '../formulaire';
 
 @Component({
   selector: 'app-connexion',
-  imports: [ReactiveFormsModule, RouterLink, Icone, Alerte, ChampMotDePasse, BoutonGoogle],
+  imports: [ReactiveFormsModule, RouterLink, Icone, Alerte, ChampMotDePasse, BoutonGoogle, BoutonApple],
   templateUrl: './connexion.html',
   styleUrls: ['../auth-epure.scss', './connexion.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,6 +38,12 @@ export class Connexion implements OnInit {
   protected readonly envoi = signal(false);
   protected readonly erreur = signal<ErreurApi | null>(null);
   protected readonly googleIndisponible = signal(false);
+  /** Message après un clic sur Apple : non activé, ou échec de la fenêtre Apple. */
+  protected readonly messageApple = signal<string | null>(null);
+  protected readonly messagesApple = {
+    indisponible: "La connexion Apple n'est pas encore activée. Utilisez Google, votre e-mail ou votre téléphone.",
+    echec: 'La connexion avec Apple a échoué. Réessayez.',
+  };
   protected readonly bloque = computed(() => this.erreur()?.status === 429);
   protected readonly enErreur = (nom: string) => enErreur(this.form, nom);
   /** Retour prévu, repris dans le lien vers l'inscription. */
@@ -76,9 +83,21 @@ export class Connexion implements OnInit {
     });
   }
 
+  protected apple(r: ReponseApple): void {
+    this.envoi.set(true);
+    this.erreur.set(null);
+    this.session.connexionApple(r, undefined, undefined, this.form.controls.resterConnecte.value).subscribe({
+      next: (rep) => this.suite(rep),
+      error: (e) => {
+        this.erreur.set(lireErreur(e));
+        this.envoi.set(false);
+      },
+    });
+  }
+
   private suite(r: AuthReponse): void {
     if (r.etape === 'OTP_ENVOYE') this.router.navigateByUrl('/auth/verification');
-    else if (r.etape === 'TELEPHONE_REQUIS') this.router.navigateByUrl('/auth/google/telephone');
+    else if (r.etape === 'TELEPHONE_REQUIS') this.router.navigateByUrl('/auth/telephone');
     else this.router.navigateByUrl(this.session.pageApresConnexion());
   }
 }

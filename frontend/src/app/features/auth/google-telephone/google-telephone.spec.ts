@@ -33,14 +33,14 @@ describe('Inscription Google en étapes (GoogleTelephone)', () => {
   let session: SessionService;
   let router: Router;
 
-  function creer() {
+  function creer(compte?: SessionService['compteExterne']) {
     TestBed.configureTestingModule({
       providers: [provideRouter([{ path: '**', children: [] }]), provideHttpClient(), provideHttpClientTesting()],
     });
     backend = TestBed.inject(HttpTestingController);
     session = TestBed.inject(SessionService);
     router = TestBed.inject(Router);
-    session.idTokenGoogle = jeton('Awa');
+    session.compteExterne = compte ?? { fournisseur: 'google', idToken: jeton('Awa') };
     const fixture = TestBed.createComponent(GoogleTelephone);
     fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
@@ -109,7 +109,7 @@ describe('Inscription Google en étapes (GoogleTelephone)', () => {
     el.querySelector<HTMLInputElement>('input[type=checkbox]')!.click();
     continuer();
     const req = backend.expectOne(`${api}/auth/google`);
-    expect(req.request.body).toEqual({ idToken: session.idTokenGoogle, telephone: '+221771234567', sexe: 'HOMME' });
+    expect(req.request.body).toEqual({ idToken: session.compteExterne!.idToken, telephone: '+221771234567', sexe: 'HOMME' });
     req.flush({ etape: 'OTP_ENVOYE', telephoneMasque: '+22177 ** *** 67', otpValiditeSecondes: 300, renvoiPossibleDansSecondes: 60 });
     expect(navigation).toHaveBeenCalledWith(['/auth/verification'], { queryParams: { inscription: 1 } });
   });
@@ -136,5 +136,29 @@ describe('Inscription Google en étapes (GoogleTelephone)', () => {
     expect(el.querySelector('#erreur-telephone')).toBeNull();
     continuer();
     expect(etape()).toBe('Étape 3 sur 5');
+  });
+
+  it('Apple : salue avec le prénom transmis par Apple et renvoie prénom et nom avec le numéro', () => {
+    const { el, continuer, saisir, bouton } = creer({ fournisseur: 'apple', idToken: 'jeton-apple', prenom: 'Fatou', nom: 'Sow' });
+    expect(el.querySelector('h1')?.textContent).toContain('Bienvenue Fatou');
+    saisir('77 123 45 67');
+    continuer();
+    bouton('Une femme').click();
+    continuer();
+    el.querySelector<HTMLInputElement>('input[type=checkbox]')!.click();
+    continuer();
+    const req = backend.expectOne(`${api}/auth/apple`);
+    expect(req.request.body).toEqual({ idToken: 'jeton-apple', prenom: 'Fatou', nom: 'Sow', telephone: '+221771234567', sexe: 'FEMME' });
+    req.flush({ etape: 'OTP_ENVOYE', canal: 'EMAIL', emailMasque: 'f***@privaterelay.appleid.com', otpValiditeSecondes: 300, renvoiPossibleDansSecondes: 60 });
+  });
+
+  it("sans inscription Google ou Apple en cours, renvoie à l'inscription", () => {
+    TestBed.configureTestingModule({
+      providers: [provideRouter([{ path: '**', children: [] }]), provideHttpClient(), provideHttpClientTesting()],
+    });
+    backend = TestBed.inject(HttpTestingController);
+    const navigation = vi.spyOn(TestBed.inject(Router), 'navigateByUrl');
+    TestBed.createComponent(GoogleTelephone).detectChanges();
+    expect(navigation).toHaveBeenCalledWith('/auth/inscription');
   });
 });

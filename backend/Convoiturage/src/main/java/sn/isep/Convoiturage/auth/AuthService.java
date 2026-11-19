@@ -5,11 +5,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sn.isep.Convoiturage.auth.AuthDtos.*;
+import sn.isep.Convoiturage.auth.AppleTokenVerifier.CompteApple;
 import sn.isep.Convoiturage.auth.GoogleTokenVerifier.CompteGoogle;
 import sn.isep.Convoiturage.common.ApiException;
 import sn.isep.Convoiturage.common.AppProperties;
 import sn.isep.Convoiturage.common.Telephones;
 import sn.isep.Convoiturage.utilisateur.Role;
+import sn.isep.Convoiturage.utilisateur.Sexe;
 import sn.isep.Convoiturage.utilisateur.StatutCompte;
 import sn.isep.Convoiturage.utilisateur.Utilisateur;
 import sn.isep.Convoiturage.utilisateur.UtilisateurDtos.ProfilDto;
@@ -26,6 +28,7 @@ public class AuthService {
     private final OtpService otp;
     private final TokenService tokens;
     private final GoogleTokenVerifier google;
+    private final AppleTokenVerifier apple;
     private final LimiteurConnexion limiteur;
     private final JetonReinitialisation jetonsReinitialisation;
     private final AlertesSecurite alertes;
@@ -116,21 +119,49 @@ public class AuthService {
     @Transactional
     public AuthReponse connecterAvecGoogle(GoogleRequete req) {
         CompteGoogle g = google.verifier(req.idToken());
-        Optional<Utilisateur> existant = utilisateurs.findByGoogleId(g.sub());
-        if (existant.isEmpty() && g.email() != null && g.emailVerifie()) {
-            existant = utilisateurs.findByEmailIgnoreCase(g.email());
+        return connecterAvecCompteExterne(new CompteExterne(Fournisseur.GOOGLE, g.sub(), g.email(), g.emailVerifie(),
+                g.prenom(), g.nom()), req.telephone(), req.sexe());
+    }
+
+    /** Connexion Apple : mêmes règles que Google (compte créé ou lié, puis numéro obligatoire et code). */
+    @Transactional
+    public AuthReponse connecterAvecApple(AppleRequete req) {
+        CompteApple a = apple.verifier(req.idToken());
+        String prenom = req.prenom() != null && !req.prenom().isBlank() ? req.prenom().trim() : "Utilisateur";
+        String nom = req.nom() != null && !req.nom().isBlank() ? req.nom().trim() : "Apple";
+        return connecterAvecCompteExterne(new CompteExterne(Fournisseur.APPLE, a.sub(), a.email(), a.emailVerifie(),
+                prenom, nom), req.telephone(), req.sexe());
+    }
+
+    enum Fournisseur { GOOGLE, APPLE }
+
+    /** Compte vérifié par Google ou Apple ; prénom et nom ne servent qu'à la création du compte. */
+    record CompteExterne(Fournisseur fournisseur, String id, String email, boolean emailVerifie, String prenom, String nom) {}
+
+    /**
+     * Règles communes Google / Apple. Le compte est retrouvé par son identifiant chez le fournisseur, sinon par son
+     * email vérifié (liaison avec un compte existant), sinon créé. **Le numéro de téléphone est obligatoire** : tant
+     * que le compte n'en a pas (ou n'est pas vérifié), on répond TELEPHONE_REQUIS sans ouvrir de session, puis le
+     * numéro fourni déclenche l'envoi d'un code ; la session ne s'ouvre qu'après ce code.
+     */
+    private AuthReponse connecterAvecCompteExterne(CompteExterne c, String telephoneDemande, Sexe sexe) {
+        Optional<Utilisateur> existant = c.fournisseur() == Fournisseur.GOOGLE
+                ? utilisateurs.findByGoogleId(c.id()) : utilisateurs.findByAppleId(c.id());
+        if (existant.isEmpty() && c.email() != null && c.emailVerifie()) {
+            existant = utilisateurs.findByEmailIgnoreCase(c.email());
         }
         Utilisateur u = existant.orElseGet(() -> {
             Utilisateur nouveau = new Utilisateur();
-            nouveau.setPrenom(g.prenom());
-            nouveau.setNom(g.nom());
-            nouveau.setEmail(g.emailVerifie() ? g.email() : null);
+            nouveau.setPrenom(c.prenom());
+            nouveau.setNom(c.nom());
+            nouveau.setEmail(c.emailVerifie() ? c.email() : null);
             nouveau.setRole(Role.PASSAGER);
             nouveau.setStatut(StatutCompte.EN_ATTENTE_OTP);
             return nouveau;
         });
-        u.setGoogleId(g.sub());
-        if (u.getSexe() == null && req.sexe() != null) u.setSexe(req.sexe());
+        if (c.fournisseur() == Fournisseur.GOOGLE) u.setGoogleId(c.id());
+        else u.setAppleId(c.id());
+        if (u.getSexe() == null && sexe != null) u.setSexe(sexe);
 
         if (u.estVerifie() && u.getTelephone() != null) {
             boolean suppressionAnnulee = reactiverSiDesactive(u);
@@ -138,11 +169,11 @@ public class AuthService {
             verifierPeutSeConnecter(u);
             return AuthReponse.connecte(tokens.emettre(u), ProfilDto.de(u), suppressionAnnulee);
         }
-        if (req.telephone() == null || req.telephone().isBlank()) {
+        if (telephoneDemande == null || telephoneDemande.isBlank()) {
             utilisateurs.save(u);
             return AuthReponse.telephoneRequis();
         }
-        String telephone = normaliserTelephone(req.telephone());
+        String telephone = normaliserTelephone(telephoneDemande);
         utilisateurs.findByTelephone(telephone)
                 .filter(autre -> !autre.getId().equals(u.getId()))
                 .ifPresent(autre -> { throw ApiException.conflict("Ce numéro est déjà associé à un compte").surChamp("telephone"); });

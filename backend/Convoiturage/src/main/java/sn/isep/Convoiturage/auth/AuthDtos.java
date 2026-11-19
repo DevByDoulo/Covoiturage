@@ -33,6 +33,13 @@ public final class AuthDtos {
     /** Le téléphone est demandé au premier passage (comptes Google sans numéro vérifié). */
     public record GoogleRequete(@NotBlank String idToken, String telephone, Sexe sexe) {}
 
+    /**
+     * Apple ne met pas le nom dans le jeton : le site transmet prénom et nom reçus d'Apple au premier accès
+     * (ensuite absents). Le téléphone est demandé au premier passage, comme pour Google.
+     */
+    public record AppleRequete(@NotBlank String idToken, @Size(max = 80) String prenom, @Size(max = 80) String nom,
+                               String telephone, Sexe sexe) {}
+
     public record RefreshRequete(@NotBlank String refreshToken) {}
 
     /** Email ou numéro de téléphone. */

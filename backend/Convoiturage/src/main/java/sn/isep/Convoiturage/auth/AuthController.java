@@ -42,6 +42,11 @@ public class AuthController {
         return auth.connecterAvecGoogle(req);
     }
 
+    @PostMapping("/apple")
+    public AuthReponse apple(@Valid @RequestBody AppleRequete req) {
+        return auth.connecterAvecApple(req);
+    }
+
     @PostMapping("/refresh")
     public AuthReponse rafraichir(@Valid @RequestBody RefreshRequete req) {
         return auth.rafraichir(req);

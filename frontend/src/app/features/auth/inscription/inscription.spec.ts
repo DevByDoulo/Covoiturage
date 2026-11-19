@@ -44,6 +44,6 @@ describe('Inscription (Google seulement, étape 1)', () => {
     const navigation = vi.spyOn(TestBed.inject(Router), 'navigateByUrl');
     (fixture.componentInstance as unknown as { google(j: string): void }).google('jeton-google');
     backend.expectOne(`${api}/auth/google`).flush({ etape: 'TELEPHONE_REQUIS' });
-    expect(navigation).toHaveBeenCalledWith('/auth/google/telephone');
+    expect(navigation).toHaveBeenCalledWith('/auth/telephone');
   });
 });

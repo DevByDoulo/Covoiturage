@@ -43,12 +43,14 @@ export const routes: Routes = [
           import('./features/auth/mot-de-passe-oublie/mot-de-passe-oublie').then((m) => m.MotDePasseOublie),
       },
       {
-        path: 'google/telephone',
+        path: 'telephone',
         title: 'Inscription · YOBALEMAsn',
         data: { epure: true },
         loadComponent: () =>
           import('./features/auth/google-telephone/google-telephone').then((m) => m.GoogleTelephone),
       },
+      // Ancienne adresse (avant la connexion Apple).
+      { path: 'google/telephone', redirectTo: 'telephone' },
     ],
   },
   {

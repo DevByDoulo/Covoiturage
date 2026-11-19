@@ -5,6 +5,12 @@ export const environment = {
   /** ID client OAuth Google (console Google Cloud). Vide : bouton Google désactivé. */
   googleClientId: '520088419510-nu738k1cpi6s20k5fkqupu0nfbsgautv.apps.googleusercontent.com',
   /**
+   * « Se connecter avec Apple » (Apple Developer → Identifiers → Services IDs). clientId : le Services ID ;
+   * redirectUri : l'adresse de retour déclarée pour ce Services ID (HTTPS, domaine vérifié ; localhost refusé par
+   * Apple). Vide : le bouton Apple indique que la connexion Apple n'est pas activée.
+   */
+  apple: { clientId: '', redirectUri: '' },
+  /**
    * Notifications push du navigateur (Firebase Cloud Messaging, projet yobalemasn-9a0a4). Valeurs publiques de
    * l'application Web de la console Firebase (Paramètres du projet → Vos applications) ; clé VAPID : Cloud Messaging
    * → Certificats push Web. Une valeur vide : le bloc « Notifications push » indique qu'elles ne sont pas configurées.

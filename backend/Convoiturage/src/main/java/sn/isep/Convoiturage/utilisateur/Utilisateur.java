@@ -48,6 +48,10 @@ public class Utilisateur {
     @Column(name = "google_id", unique = true, length = 64)
     private String googleId;
 
+    /** Identifiant du compte Apple (« Se connecter avec Apple »). */
+    @Column(name = "apple_id", unique = true, length = 100)
+    private String appleId;
+
     @Enumerated(EnumType.STRING)
     @Column(length = 10)
     private Sexe sexe;
