@@ -87,6 +87,41 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
     du compte : le numéro est obligatoire mais pas vérifié par SMS tant que le fournisseur SMS n'est pas choisi.
   - Textes légaux (version du **19/11/2026**) : inscription avec Google ou Apple, données transmises par Apple
     (identifiant, email réel ou relais, prénom et nom au premier accès).
+- **Inscription et connexion par téléphone, au même niveau que Google et e-mail** (branche `inscription-telephone`,
+  site + API + mobile). Aucune méthode n'est imposée ; le numéro reste obligatoire pour les comptes Google, Apple et
+  e-mail (décision du 19/11/2026 : codes OTP rattachés au numéro, contact entre membres, SMS).
+  - **Backend** (aucune migration) : `POST /api/auth/telephone/code` (`{telephone}`, numéros +221 seulement, code
+    **toujours par SMS** même si le compte a un email, réponse identique que le numéro ait un compte ou non),
+    `POST /api/auth/telephone/verifier` (`{telephone, code}` → `CONNECTE` pour un numéro déjà connu, sans doublon,
+    numéro marqué vérifié, suppression en cours annulée ; sinon nouvelle étape **`PROFIL_REQUIS`** avec
+    `jetonInscription`), `POST /api/auth/telephone/terminer` (`{jeton, prenom, nom, sexe, motDePasse?}` → compte
+    `ACTIF`, `telephone_verifie`, mot de passe facultatif, 201 + `CONNECTE`). `JetonInscription` : jeton opaque signé
+    HMAC (clé des JWT) contenant le numéro, 15 minutes, rien en base ; rejoué → 409 (le compte existe déjà).
+    Réutilise `OtpService` (table `otp_code`, objet `VERIFICATION_TELEPHONE`, 6 chiffres, 5 min, 5 essais, renvoi
+    après 60 s, 5 codes/heure et 10/jour par numéro) et `LimiteurParIp` (20 demandes et 30 vérifications par heure
+    et par IP). Une **inscription abandonnée** avec ce numéro (compte `EN_ATTENTE_OTP` jamais vérifié) est reprise par
+    celui qui prouve posséder le numéro, sans rien garder (email, mot de passe, Google/Apple effacés) : empêche de
+    réserver le numéro de quelqu'un d'autre. `SmsSender` : le code n'est écrit dans les journaux (`[SMS simulé]`)
+    qu'en profils `dev` et `test` ; ailleurs, tant qu'aucun fournisseur n'est branché, `SmsNonConfigure` journalise
+    l'envoi sans le contenu.
+  - **Site** : `/auth/connexion` et `/auth/inscription` affichent le même **écran de départ** (`features/auth/entree`) :
+    champ +221 et « Continuer », « Rester connecté », « ou », Google, **Apple seulement si `environment.apple` est
+    renseigné** (`appleConfigure()`, sinon le bouton est masqué ; code Apple conservé), lien « Autres options (e-mail
+    et mot de passe) ». Puis `/auth/verification` (mode `telephone` dans `VerificationEnCours`, renvoi par
+    `/telephone/code`) ; numéro inconnu → **`/auth/profil`** (`Inscription`, parcours `telephone`, « Étape 3 à 6
+    sur 6 » : prénom et nom, sexe, mot de passe facultatif avec « Passer », conditions → compte créé et connecté ;
+    jeton en sessionStorage `covoitia.inscription`). **« Autres options »** = `/auth/autres-options` (ancien
+    formulaire de connexion identifiant + mot de passe, retour de « mot de passe oublié ») et
+    **`/auth/inscription-email`** (parcours `email` : e-mail et mot de passe, prénom et nom, numéro, sexe, conditions,
+    puis code « Étape 6 sur 6 » via `POST /api/auth/inscription` inchangé ; champ refusé → retour à son étape).
+    `?inscription=` de `/auth/verification` porte désormais le nombre d'étapes (5 Google, 6 e-mail).
+  - **Mobile** : `ConnexionPage` devient l'écran de départ (numéro + « Continuer », « ou », Google, « Autres options »),
+    `AutresOptionsPage` (`/autres-options` : e-mail + mot de passe, mot de passe oublié, « Créer un compte avec une
+    adresse e-mail » → ancienne `InscriptionPage`, sans bouton Google), `ProfilTelephonePage` (`/inscription/profil`,
+    jeton en mémoire : prénom, nom, sexe, mot de passe facultatif, conditions), `DemandeVerification.parTelephone`.
+    Pas de bouton Apple dans l'appli, rien à masquer.
+  - Textes légaux (version du **20/11/2026**) : numéro de téléphone comme identifiant de connexion, code par SMS
+    (empreinte seule conservée, limites), email et mot de passe facultatifs pour un compte créé par numéro.
 - **Textes légaux** (branche `pages-legales`) : pages publiques `/conditions` et `/confidentialite`
   (`features/legal`, cadre commun `page-legale.ts` : contact `CONTACT_LEGAL`, date `VERSION_LEGALE`), liens depuis
   l'inscription, le pied des écrans de connexion, le profil, et dans l'appli mobile (`LiensLegaux`, qui ouvre le
@@ -370,10 +405,11 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   **Connexion avec Google** (branche `mobile-google`, `lib/core/google.dart` + `lib/features/auth/google.dart`) : bouton « Continuer avec Google » (séparateur « ou ») sur la connexion et l'inscription. Le package `google_sign_in` (7.x, `authenticate()`, puis déconnexion de Google pour pouvoir choisir un autre compte la fois suivante) fournit l'idToken, envoyé à `POST /api/auth/google` (`Session.connexionGoogle`, **même endpoint que le site, backend inchangé**) qui renvoie la session habituelle. `serverClientId` = ID client **Web** (celui du site), donc l'audience de l'idToken est bien le `GOOGLE_CLIENT_ID` vérifié par `GoogleTokenVerifier` (tokeninfo) ; le client Android n'est reconnu que par le paquet `sn.isep.yobalema` + SHA-1. Les ID clients passent par `--dart-define=GOOGLE_SERVER_CLIENT_ID=…` (et `GOOGLE_IOS_CLIENT_ID` plus tard), jamais dans le dépôt ; `tool/lancer-telephone.ps1` reprend la variable d'environnement du même nom. Cas gérés par `continuerAvecGoogle` (testé sans le plugin via l'interface `ServiceGoogle`) : annulation (rien d'affiché), compte connu → connecté, compte inconnu → `TELEPHONE_REQUIS` → écran `/google/telephone` (numéro + sexe, idToken gardé en mémoire seulement, numéro déjà pris affiché sous le champ) → code de vérification comme à l'inscription, erreur réseau / jeton refusé / plugin mal configuré → message dans le bandeau. Non disponible dans la version navigateur ; iOS à configurer (client iOS + schéma d'URL). Étapes Google Cloud et `gradlew signingReport` : `mobile/README.md`.
   **Escales à la publication** (branche `mobile-escales`, `lib/core/escales.dart` + `lib/features/conducteur/publier.dart`) : « Ajouter une escale » (5 au maximum, comme `@Size(max = 5)` de l'API), chaque escale avec recherche de lieu, « Ma position » ou toucher de la carte (puces « La carte place : Départ / Escale n / Arrivée »), monter / descendre / supprimer ; les escales partent dans `escales` de `/trajets/estimation` et `/trajets` (mêmes endpoints que le site) et comptent dans l'estimation. Le détail d'un trajet et « Mon trajet » les affichaient déjà (carte + liste). **Non existant côté site et API, donc non fait** : prix par tronçon, recherche et réservation d'un segment (le site ne propose pas non plus de choisir l'escale de prise en charge, bien que `idEscaleRamassage` existe dans l'API de réservation).
   Reste : push.
-- Tests : `./mvnw test` → 62 tests (dont `ConnexionExterneParcoursTest`, `AppleTokenVerifierTest`, `MessagesVocauxParcoursTest`, `AnalyseAudioTest`, `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
+- Tests : `./mvnw test` → 68 tests (dont `InscriptionTelephoneParcoursTest`, `ConnexionExterneParcoursTest`, `AppleTokenVerifierTest`, `MessagesVocauxParcoursTest`, `AnalyseAudioTest`, `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 104 tests (dont guards, retour après connexion,
-  intercepteur visiteur, `BarreRecherche`, paramètres de recherche, inscription Google en étapes) ; `flutter test` dans `mobile` → 79 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 114 tests (dont guards, retour après connexion,
+  intercepteur visiteur, `BarreRecherche`, paramètres de recherche, inscription Google en étapes, écran de départ par
+  numéro et bouton Apple masqué, étapes du profil) ; `flutter test` dans `mobile` → 84 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 

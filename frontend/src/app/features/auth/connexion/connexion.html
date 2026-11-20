@@ -1,28 +1,25 @@
 <div class="ecran">
-  <h1 id="titre-connexion">Indiquez votre numéro de téléphone ou votre adresse e-mail</h1>
+  <div class="haut">
+    <a class="retour" routerLink="/auth/connexion" [queryParams]="retourValide() ? { retour: retourValide() } : null">
+      <app-icone nom="fleche-gauche" [taille]="20" /> Retour
+    </a>
+  </div>
+  <h1 id="titre-connexion">Connectez-vous avec votre e-mail et votre mot de passe</h1>
 
   @if (reinitialise()) {
     <app-alerte type="succes" titre="Mot de passe modifié">Connectez-vous avec votre nouveau mot de passe.</app-alerte>
-  } @else if (suppression()) {
-    <app-alerte type="info" titre="Suppression demandée">
-      Votre compte sera supprimé dans 30 jours. Reconnectez-vous avant cette date pour annuler la suppression.
-    </app-alerte>
-  } @else if (desactive()) {
-    <app-alerte type="info" titre="Compte désactivé">Reconnectez-vous à tout moment pour le réactiver.</app-alerte>
-  } @else if (expiree()) {
-    <app-alerte type="info">Votre session a expiré. Reconnectez-vous pour continuer.</app-alerte>
   }
 
   <form class="formulaire" [formGroup]="form" (ngSubmit)="soumettre()" novalidate>
     <div class="champ" [class.champ--erreur]="enErreur('identifiant')">
-      <label class="sr-only" for="identifiant">Téléphone (+221) ou e-mail</label>
+      <label class="sr-only" for="identifiant">E-mail ou téléphone (+221)</label>
       <div class="saisie">
         <input
           id="identifiant"
           formControlName="identifiant"
           autocomplete="username"
           inputmode="email"
-          placeholder="Saisir n° de tél. ou e-mail"
+          placeholder="Adresse e-mail (ou n° de tél.)"
           [attr.aria-invalid]="enErreur('identifiant')"
           [attr.aria-describedby]="enErreur('identifiant') ? 'erreur-identifiant' : null"
         />
@@ -61,27 +58,17 @@
       @if (envoi()) {
         <span class="chargement" aria-hidden="true"></span> Connexion…
       } @else {
-        Continuer
+        Se connecter
       }
     </button>
   </form>
 
   <div class="separateur">ou</div>
 
-  <app-bouton-google forme="rectangular" (jeton)="google($event)" (indisponible)="googleIndisponible.set(true)" />
-  @if (googleIndisponible()) {
-    <app-alerte type="info">La connexion Google n'est pas encore activée. Utilisez votre e-mail ou votre téléphone.</app-alerte>
-  }
-  <app-bouton-apple (reponse)="apple($event)"
-                    (indisponible)="messageApple.set(messagesApple.indisponible)" (echec)="messageApple.set(messagesApple.echec)" />
-  @if (messageApple(); as m) {
-    <app-alerte type="info">{{ m }}</app-alerte>
-  }
-  <a class="bouton bouton--secondaire" routerLink="/auth/inscription"
-     [queryParams]="retourValide() ? { retour: retourValide() } : null">Créer un compte</a>
+  <a class="bouton bouton--secondaire" routerLink="/auth/inscription-email"
+     [queryParams]="retourValide() ? { retour: retourValide() } : null">Créer un compte avec une adresse e-mail</a>
 
   <p class="mention">
-    « Rester connecté » garde la session 30 jours : à ne pas cocher sur un appareil partagé. Si votre compte n'est pas
-    encore vérifié, un code vous sera envoyé par SMS ou par e-mail.
+    Pas de mot de passe ? Revenez en arrière et continuez avec votre numéro : un code vous sera envoyé par SMS.
   </p>
 </div>

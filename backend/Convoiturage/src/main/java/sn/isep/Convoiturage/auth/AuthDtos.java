@@ -42,6 +42,20 @@ public final class AuthDtos {
 
     public record RefreshRequete(@NotBlank String refreshToken) {}
 
+    /** Connexion ou inscription par téléphone : numéro auquel envoyer le code par SMS. */
+    public record TelephoneRequete(@NotBlank String telephone) {}
+
+    public record VerificationTelephoneRequete(@NotBlank String telephone,
+                                               @NotBlank @Pattern(regexp = "\\d{4,8}") String code) {}
+
+    /** Fin de l'inscription par téléphone : jeton remis après le code, informations manquantes, mot de passe facultatif. */
+    public record FinInscriptionTelephoneRequete(
+            @NotBlank String jeton,
+            @NotBlank @Size(max = 80) String prenom,
+            @NotBlank @Size(max = 80) String nom,
+            Sexe sexe,
+            @Pattern(regexp = REGLE_MDP, message = MESSAGE_MDP) String motDePasse) {}
+
     /** Email ou numéro de téléphone. */
     public record IdentifiantRequete(@NotBlank String identifiant) {}
 
@@ -66,7 +80,9 @@ public final class AuthDtos {
         /** Un code a été envoyé (par email ou SMS, voir canal) : appeler /api/auth/otp/verifier. */
         OTP_ENVOYE,
         /** Compte Google sans téléphone : renvoyer la requête avec le champ telephone. */
-        TELEPHONE_REQUIS
+        TELEPHONE_REQUIS,
+        /** Numéro inconnu dont le code est bon : demander prénom, nom, sexe, puis /api/auth/telephone/terminer avec le jeton. */
+        PROFIL_REQUIS
     }
 
     /**
@@ -78,7 +94,7 @@ public final class AuthDtos {
     public record AuthReponse(EtapeAuth etape, String accessToken, String refreshToken, Long expiresIn,
                               CanalOtp canal, String telephoneMasque, String emailMasque,
                               Integer otpValiditeSecondes, Integer renvoiPossibleDansSecondes,
-                              ProfilDto utilisateur, Boolean suppressionAnnulee) {
+                              ProfilDto utilisateur, Boolean suppressionAnnulee, String jetonInscription) {
 
         static AuthReponse connecte(TokenService.Jetons j, ProfilDto u) {
             return connecte(j, u, false);
@@ -87,16 +103,21 @@ public final class AuthDtos {
         /** suppressionAnnulee : la connexion a annulé une suppression de compte en cours (délai de grâce). */
         static AuthReponse connecte(TokenService.Jetons j, ProfilDto u, boolean suppressionAnnulee) {
             return new AuthReponse(EtapeAuth.CONNECTE, j.accessToken(), j.refreshToken(), j.expiresIn(),
-                    null, null, null, null, null, u, suppressionAnnulee ? Boolean.TRUE : null);
+                    null, null, null, null, null, u, suppressionAnnulee ? Boolean.TRUE : null, null);
         }
 
         static AuthReponse otpEnvoye(CanalOtp canal, String telephoneMasque, String emailMasque, AppProperties.Otp conf) {
             return new AuthReponse(EtapeAuth.OTP_ENVOYE, null, null, null, canal, telephoneMasque, emailMasque,
-                    conf.validiteMinutes() * 60, conf.delaiRenvoiSecondes(), null, null);
+                    conf.validiteMinutes() * 60, conf.delaiRenvoiSecondes(), null, null, null);
         }
 
         static AuthReponse telephoneRequis() {
-            return new AuthReponse(EtapeAuth.TELEPHONE_REQUIS, null, null, null, null, null, null, null, null, null, null);
+            return new AuthReponse(EtapeAuth.TELEPHONE_REQUIS, null, null, null, null, null, null, null, null, null, null, null);
+        }
+
+        static AuthReponse profilRequis(String jetonInscription) {
+            return new AuthReponse(EtapeAuth.PROFIL_REQUIS, null, null, null, null, null, null, null, null, null, null,
+                    jetonInscription);
         }
     }
 }

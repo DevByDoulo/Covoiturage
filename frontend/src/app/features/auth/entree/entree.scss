@@ -1,0 +1,24 @@
+/* Propre à l'écran de départ (le reste : ../auth-epure.scss et ../google-telephone/google-telephone.scss). */
+
+.aide {
+  margin: 6px 2px 0;
+  font-size: 13px;
+  color: var(--texte-2);
+}
+
+.autres-options {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 4px;
+  color: var(--texte);
+  font-weight: 600;
+  &:hover { text-decoration: none; background: #f6f6f6; }
+  .detail {
+    font-weight: 400;
+    font-size: 14px;
+    color: var(--texte-2);
+  }
+  app-icone:last-child { margin-left: auto; }
+}

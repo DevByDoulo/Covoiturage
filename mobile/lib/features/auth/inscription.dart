@@ -6,10 +6,10 @@ import '../../core/api.dart';
 import '../../core/formats.dart';
 import '../../core/session.dart';
 import '../../shared/widgets.dart';
-import 'google.dart';
 import 'verification.dart';
 
-/// Inscription : un code est ensuite envoyé par email (ou SMS) pour vérifier le compte.
+/// Inscription avec une adresse e-mail et un mot de passe (« Autres options ») : un code est ensuite envoyé par email
+/// (ou SMS) pour vérifier le compte. Le numéro de téléphone reste demandé.
 class InscriptionPage extends StatefulWidget {
   const InscriptionPage({super.key});
 
@@ -84,7 +84,7 @@ class _InscriptionPageState extends State<InscriptionPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Créer un compte')),
+        appBar: AppBar(title: const Text('Créer un compte avec un e-mail')),
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
@@ -92,8 +92,6 @@ class _InscriptionPageState extends State<InscriptionPage> {
               key: _formulaire,
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 if (_erreur != null) ...[Bandeau(_erreur!), const SizedBox(height: 12)],
-                BoutonGoogle(surErreur: (m) => setState(() => _erreur = m)),
-                const SeparateurOu(),
                 Row(children: [
                   Expanded(
                     child: TextFormField(

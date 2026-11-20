@@ -31,6 +31,7 @@ public class AuthService {
     private final AppleTokenVerifier apple;
     private final LimiteurConnexion limiteur;
     private final JetonReinitialisation jetonsReinitialisation;
+    private final JetonInscription jetonsInscription;
     private final AlertesSecurite alertes;
     private final AppProperties props;
 
@@ -180,6 +181,84 @@ public class AuthService {
         u.setTelephone(telephone);
         utilisateurs.save(u);
         return envoyerCodeVerification(u);
+    }
+
+    // ------------------------------------------------------------------ Connexion ou inscription par téléphone
+
+    /**
+     * Envoie le code par SMS au numéro saisi (toujours par SMS, même si le compte a un email : c'est la possession du
+     * numéro qui est prouvée). Réponse identique que le numéro ait un compte ou non. Délais, quotas et essais : ceux
+     * de {@link OtpService}. Numéros sénégalais seulement (pas d'envoi de SMS payants vers l'étranger).
+     */
+    @Transactional
+    public AuthReponse envoyerCodeTelephone(TelephoneRequete req) {
+        String telephone = telephoneSenegal(req.telephone());
+        otp.envoyer(telephone, null, ObjetOtp.VERIFICATION_TELEPHONE);
+        return AuthReponse.otpEnvoye(CanalOtp.SMS, Telephones.masquer(telephone), null, props.otp());
+    }
+
+    /**
+     * Vérifie le code. Numéro d'un compte existant : ce compte est connecté (aucun doublon). Numéro inconnu : PROFIL_REQUIS
+     * et un jeton qui autorise la création du compte avec ce numéro.
+     */
+    @Transactional
+    public AuthReponse verifierCodeTelephone(VerificationTelephoneRequete req) {
+        String telephone = telephoneSenegal(req.telephone());
+        otp.verifier(telephone, ObjetOtp.VERIFICATION_TELEPHONE, req.code());
+        Optional<Utilisateur> existant = utilisateurs.findByTelephone(telephone).filter(u -> !estInscriptionAbandonnee(u));
+        if (existant.isEmpty()) return AuthReponse.profilRequis(jetonsInscription.emettre(telephone));
+
+        Utilisateur u = existant.get();
+        u.setTelephoneVerifie(true);
+        if (u.getStatut() == StatutCompte.EN_ATTENTE_OTP) u.setStatut(StatutCompte.ACTIF);
+        boolean suppressionAnnulee = reactiverSiDesactive(u);
+        verifierPeutSeConnecter(u);
+        limiteur.reinitialiser(telephone);
+        return AuthReponse.connecte(tokens.emettre(u), ProfilDto.de(u), suppressionAnnulee);
+    }
+
+    /** Crée le compte du numéro vérifié (jeton remis après le code), actif, puis le connecte. */
+    @Transactional
+    public AuthReponse terminerInscriptionTelephone(FinInscriptionTelephoneRequete req) {
+        String telephone = jetonsInscription.lireTelephone(req.jeton())
+                .orElseThrow(() -> ApiException.badRequest("Votre vérification a expiré. Recommencez avec votre numéro."));
+        Utilisateur u = utilisateurs.findByTelephone(telephone)
+                .map(existant -> {
+                    if (!estInscriptionAbandonnee(existant)) {
+                        throw ApiException.conflict("Ce numéro a déjà un compte. Connectez-vous avec ce numéro.");
+                    }
+                    return existant;
+                })
+                .orElseGet(Utilisateur::new);
+        // Inscription abandonnée avant tout code avec ce numéro : reprise par celui qui prouve posséder le numéro, sans
+        // rien garder de ce qu'un autre aurait saisi (email, mot de passe, compte Google ou Apple).
+        u.setEmail(null);
+        u.setEmailVerifie(false);
+        u.setGoogleId(null);
+        u.setAppleId(null);
+        u.setPrenom(req.prenom().trim());
+        u.setNom(req.nom().trim());
+        u.setSexe(req.sexe());
+        u.setTelephone(telephone);
+        u.setTelephoneVerifie(true);
+        u.setMotDePasse(req.motDePasse() == null ? null : encoder.encode(req.motDePasse()));
+        u.setRole(Role.PASSAGER);
+        u.setStatut(StatutCompte.ACTIF);
+        utilisateurs.save(u);
+        return AuthReponse.connecte(tokens.emettre(u), ProfilDto.de(u));
+    }
+
+    /** Compte créé mais jamais vérifié (aucun code saisi) : il n'appartient encore à personne. */
+    private static boolean estInscriptionAbandonnee(Utilisateur u) {
+        return u.getStatut() == StatutCompte.EN_ATTENTE_OTP && !u.estVerifie();
+    }
+
+    private static String telephoneSenegal(String brut) {
+        String telephone = normaliserTelephone(brut);
+        if (!telephone.startsWith("+221")) {
+            throw ApiException.badRequest("Seuls les numéros sénégalais (+221) sont acceptés").surChamp("telephone");
+        }
+        return telephone;
     }
 
     @Transactional

@@ -46,12 +46,16 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
           </thead>
           <tbody>
             <tr>
-              <td><strong>Compte</strong> : prénom, nom, email, téléphone, mot de passe (enregistré chiffré, jamais en
-                clair), identifiant Google ou Apple si vous vous connectez avec Google ou Apple. Pour un compte créé sur le site,
-                l'inscription passe par Google ou Apple, qui nous transmet votre prénom, votre nom, votre adresse email
-                (avec Apple, éventuellement une adresse relais qui masque la vôtre) et l'identifiant de votre compte</td>
+              <td><strong>Compte</strong> : prénom, nom, téléphone, email (facultatif si vous vous inscrivez avec votre
+                numéro), mot de passe (facultatif, enregistré chiffré, jamais en clair), identifiant Google ou Apple si vous
+                vous connectez avec Google ou Apple. Avec Google ou Apple, ce service nous transmet votre prénom, votre nom,
+                votre adresse email (avec Apple, éventuellement une adresse relais qui masque la vôtre) et l'identifiant de
+                votre compte</td>
               <td>Créer et sécuriser votre compte, vous connecter, vérifier votre email ou téléphone par un code, vous
-                prévenir des événements importants.</td>
+                prévenir des événements importants. <strong>Votre numéro de téléphone est un identifiant de
+                connexion</strong> : pour vous connecter ou vous inscrire avec lui, un code à usage unique vous est envoyé
+                par SMS. Seule une empreinte chiffrée du code est conservée ; le nombre de codes et d'essais est limité
+                (par numéro et par connexion internet) pour empêcher les abus.</td>
             </tr>
             <tr>
               <td><strong>Profil</strong> (facultatif) : photo, présentation, sexe, préférences de trajet (musique, tabac,
@@ -151,8 +155,9 @@ import { CONTACT_LEGAL, PageLegale } from './page-legale';
             <tr><td>Google</td><td>Inscription sur le site et connexion avec un compte Google (si vous le choisissez)</td>
               <td>Google nous transmet votre prénom, votre nom, votre adresse email et l'identifiant de votre compte
                 Google (bouton de connexion fourni par Google)</td></tr>
-            <tr><td>Service d'envoi d'emails et de SMS</td><td>Codes de vérification, notifications importantes</td>
-              <td>Email ou téléphone, contenu du message</td></tr>
+            <tr><td>Service d'envoi d'emails et de SMS</td><td>Codes de vérification (dont la connexion par numéro de
+              téléphone), notifications importantes</td>
+              <td>Email ou numéro de téléphone, contenu du message (dont le code)</td></tr>
             <tr><td>OpenStreetMap (tuiles de carte, recherche d'adresses Nominatim)</td><td>Afficher la carte, trouver une
               adresse</td><td>Adresse tapée ou coordonnées du point cherché, adresse IP de l'appareil</td></tr>
             <tr><td>Serveurs d'itinéraires OSRM de l'association FOSSGIS</td><td>Guidage vocal</td>

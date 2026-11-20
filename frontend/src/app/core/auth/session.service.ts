@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 import {
   AuthReponse,
   CodeVerifie,
+  FinInscriptionTelephone,
   InscriptionRequete,
   Profil,
   Sexe,
@@ -25,6 +26,7 @@ import { stockage } from './stockage';
 const CLE_REFRESH = 'covoitia.refresh';
 const CLE_RETOUR = 'covoitia.retour';
 const CLE_VERIFICATION = 'covoitia.verification';
+const CLE_INSCRIPTION = 'covoitia.inscription';
 
 /**
  * Session de l'utilisateur : jeton d'accès en mémoire uniquement. Le jeton de rafraîchissement est gardé :
@@ -87,18 +89,56 @@ export class SessionService {
       .pipe(tap((r) => this.traiter(r, requete.telephone)));
   }
 
-  verifierOtp(code: string): Observable<AuthReponse> {
-    const identifiant = this.verification()?.identifiant ?? '';
+  /**
+   * Connexion ou inscription par téléphone : envoie le code par SMS au numéro (+221…). Après le code, un numéro
+   * déjà connu est connecté ; un numéro inconnu répond PROFIL_REQUIS (voir {@link terminerInscriptionTelephone}).
+   */
+  codeTelephone(telephone: string, resterConnecte = false): Observable<AuthReponse> {
+    this.persistant = resterConnecte;
+    this.definirJetonInscription(null);
     return this.http
-      .post<AuthReponse>(`${this.api}/otp/verifier`, { identifiant, code })
-      .pipe(tap((r) => this.traiter(r, identifiant)));
+      .post<AuthReponse>(`${this.api}/telephone/code`, { telephone })
+      .pipe(tap((r) => this.traiter(r, telephone, 'telephone')));
+  }
+
+  verifierOtp(code: string): Observable<AuthReponse> {
+    const v = this.verification();
+    const identifiant = v?.identifiant ?? '';
+    const appel =
+      v?.mode === 'telephone'
+        ? this.http.post<AuthReponse>(`${this.api}/telephone/verifier`, { telephone: identifiant, code })
+        : this.http.post<AuthReponse>(`${this.api}/otp/verifier`, { identifiant, code });
+    return appel.pipe(tap((r) => this.traiter(r, identifiant, v?.mode)));
   }
 
   renvoyerOtp(): Observable<AuthReponse> {
-    const identifiant = this.verification()?.identifiant ?? '';
+    const v = this.verification();
+    const identifiant = v?.identifiant ?? '';
+    const appel =
+      v?.mode === 'telephone'
+        ? this.http.post<AuthReponse>(`${this.api}/telephone/code`, { telephone: identifiant })
+        : this.http.post<AuthReponse>(`${this.api}/otp/renvoyer`, { identifiant });
+    return appel.pipe(tap((r) => this.traiter(r, identifiant, v?.mode)));
+  }
+
+  /**
+   * Numéro vérifié mais sans compte : jeton remis par le serveur (15 minutes), gardé dans l'onglet le temps de
+   * demander prénom, nom, sexe et mot de passe facultatif.
+   */
+  get jetonInscription(): string | null {
+    return stockage.lire(CLE_INSCRIPTION, true);
+  }
+
+  private definirJetonInscription(jeton: string | null): void {
+    if (jeton) stockage.ecrire(CLE_INSCRIPTION, jeton, true);
+    else stockage.supprimer(CLE_INSCRIPTION, true);
+  }
+
+  /** Dernière étape de l'inscription par téléphone : crée le compte du numéro vérifié et ouvre la session. */
+  terminerInscriptionTelephone(infos: FinInscriptionTelephone): Observable<AuthReponse> {
     return this.http
-      .post<AuthReponse>(`${this.api}/otp/renvoyer`, { identifiant })
-      .pipe(tap((r) => this.traiter(r, identifiant)));
+      .post<AuthReponse>(`${this.api}/telephone/terminer`, { jeton: this.jetonInscription, ...infos })
+      .pipe(tap((r) => this.traiter(r, '')));
   }
 
   /** [resterConnecte] absent : on garde le choix fait sur l'écran de connexion (étape « téléphone » après Google). */
@@ -248,16 +288,22 @@ export class SessionService {
 
   // ------------------------------------------------------------------ Interne
 
-  private traiter(r: AuthReponse, identifiant: string): void {
+  private traiter(r: AuthReponse, identifiant: string, mode?: 'telephone'): void {
     if (r.etape === 'CONNECTE') {
       this.ouvrirSession(r);
       if (r.suppressionAnnulee) this.suppressionAnnulee.set(true);
       this.definirVerification(null);
       this.compteExterne = null;
+      this.definirJetonInscription(null);
+    } else if (r.etape === 'PROFIL_REQUIS') {
+      // Code consommé : la vérification est terminée, il reste à créer le compte.
+      this.definirVerification(null);
+      this.definirJetonInscription(r.jetonInscription ?? null);
     } else if (r.etape === 'OTP_ENVOYE') {
       const maintenant = Date.now();
       this.definirVerification({
         identifiant,
+        ...(mode ? { mode } : {}),
         canal: r.canal ?? 'SMS',
         telephoneMasque: r.telephoneMasque ?? null,
         emailMasque: r.emailMasque ?? null,

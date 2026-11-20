@@ -2,7 +2,7 @@
   <a class="retour" [routerLink]="inscription() ? '/auth/inscription' : '/auth/connexion'">
     <app-icone nom="fleche-gauche" [taille]="20" /> Retour
   </a>
-  @if (inscription()) { <span class="etape">Étape 5 sur 5</span> }
+  @if (etapeFinale(); as n) { <span class="etape">Étape {{ n }} sur {{ n }}</span> }
 </div>
 
 <div class="ecran">

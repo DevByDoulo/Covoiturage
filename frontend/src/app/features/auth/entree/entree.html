@@ -1,0 +1,74 @@
+<div class="ecran">
+  <h1 id="titre-entree">
+    @if (inscription()) { Créez votre compte : quel est votre numéro ? } @else { Quel est votre numéro de téléphone ? }
+  </h1>
+
+  @if (suppression()) {
+    <app-alerte type="info" titre="Suppression demandée">
+      Votre compte sera supprimé dans 30 jours. Reconnectez-vous avant cette date pour annuler la suppression.
+    </app-alerte>
+  } @else if (desactive()) {
+    <app-alerte type="info" titre="Compte désactivé">Reconnectez-vous à tout moment pour le réactiver.</app-alerte>
+  } @else if (expiree()) {
+    <app-alerte type="info">Votre session a expiré. Reconnectez-vous pour continuer.</app-alerte>
+  }
+
+  <form class="formulaire" [formGroup]="form" (ngSubmit)="continuer()" novalidate>
+    <div class="champ" [class.champ--erreur]="messageTelephone()">
+      <label class="sr-only" for="telephone">Numéro de téléphone (+221)</label>
+      <div class="saisie">
+        <span class="indicatif"><app-drapeau-senegal /> +221</span>
+        <input id="telephone" type="tel" formControlName="telephone" autocomplete="tel-national" inputmode="tel"
+               placeholder="77 123 45 67" [attr.aria-invalid]="!!messageTelephone()"
+               [attr.aria-describedby]="messageTelephone() ? 'erreur-telephone' : 'aide-telephone'" />
+      </div>
+      @if (messageTelephone(); as m) {
+        <p class="message-erreur" id="erreur-telephone"><app-icone nom="alerte" [taille]="14" /> {{ m }}</p>
+      } @else {
+        <p class="aide" id="aide-telephone">Vous recevrez un code par SMS. Nouveau numéro : votre compte est créé ensuite.</p>
+      }
+    </div>
+
+    <label class="case">
+      <input type="checkbox" formControlName="resterConnecte" />
+      <span>Rester connecté</span>
+    </label>
+
+    @if (erreur(); as e) {
+      <app-alerte [type]="e.status === 429 ? 'avertissement' : 'erreur'">{{ e.message }}</app-alerte>
+    }
+
+    <button class="bouton bouton--primaire" type="submit" [disabled]="envoi()">
+      @if (envoi()) {
+        <span class="chargement" aria-hidden="true"></span> Un instant…
+      } @else {
+        Continuer
+      }
+    </button>
+  </form>
+
+  <div class="separateur">ou</div>
+
+  <app-bouton-google forme="rectangular" (jeton)="google($event)" (indisponible)="googleIndisponible.set(true)" />
+  @if (googleIndisponible()) {
+    <app-alerte type="info">La connexion Google n'est pas disponible pour le moment. Utilisez votre numéro.</app-alerte>
+  }
+  @if (apple) {
+    <app-bouton-apple (reponse)="connexionApple($event)"
+                      (indisponible)="messageApple.set(messagesApple.indisponible)" (echec)="messageApple.set(messagesApple.echec)" />
+    @if (messageApple(); as m) {
+      <app-alerte type="info">{{ m }}</app-alerte>
+    }
+  }
+
+  <a class="autres-options" routerLink="/auth/autres-options"
+     [queryParams]="retourValide() ? { retour: retourValide() } : null">
+    <app-icone nom="mail" [taille]="18" /> Autres options <span class="detail">e-mail et mot de passe</span>
+    <app-icone nom="chevron-droite" [taille]="18" />
+  </a>
+
+  <p class="mention">
+    En continuant, vous acceptez de recevoir un SMS de YOBALEMAsn contenant votre code. « Rester connecté » garde la
+    session 30 jours : à ne pas cocher sur un appareil partagé.
+  </p>
+</div>

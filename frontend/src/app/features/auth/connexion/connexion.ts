@@ -5,15 +5,17 @@ import { ErreurApi, lireErreur } from '../../../core/api/erreur-api';
 import { AuthReponse } from '../../../core/auth/auth.models';
 import { SessionService } from '../../../core/auth/session.service';
 import { Alerte } from '../../../shared/ui/alerte';
-import { BoutonApple, ReponseApple } from '../../../shared/ui/bouton-apple';
-import { BoutonGoogle } from '../../../shared/ui/bouton-google';
 import { ChampMotDePasse } from '../../../shared/ui/champ-mot-de-passe';
 import { Icone } from '../../../shared/ui/icone';
 import { enErreur, retourSur } from '../formulaire';
 
+/**
+ * « Autres options » (/auth/autres-options) : connexion par e-mail (ou numéro) et mot de passe, et lien vers la
+ * création d'un compte avec une adresse e-mail. L'écran de départ (numéro, Google) est /auth/connexion.
+ */
 @Component({
   selector: 'app-connexion',
-  imports: [ReactiveFormsModule, RouterLink, Icone, Alerte, ChampMotDePasse, BoutonGoogle, BoutonApple],
+  imports: [ReactiveFormsModule, RouterLink, Icone, Alerte, ChampMotDePasse],
   templateUrl: './connexion.html',
   styleUrls: ['../auth-epure.scss', './connexion.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,10 +26,7 @@ export class Connexion implements OnInit {
 
   /** Paramètres d'URL (liés automatiquement par le routeur). */
   readonly retour = input<string>();
-  readonly expiree = input<string>();
   readonly reinitialise = input<string>();
-  readonly desactive = input<string>();
-  readonly suppression = input<string>();
 
   protected readonly form = inject(FormBuilder).nonNullable.group({
     identifiant: ['', Validators.required],
@@ -37,16 +36,9 @@ export class Connexion implements OnInit {
   });
   protected readonly envoi = signal(false);
   protected readonly erreur = signal<ErreurApi | null>(null);
-  protected readonly googleIndisponible = signal(false);
-  /** Message après un clic sur Apple : non activé, ou échec de la fenêtre Apple. */
-  protected readonly messageApple = signal<string | null>(null);
-  protected readonly messagesApple = {
-    indisponible: "La connexion Apple n'est pas encore activée. Utilisez Google, votre e-mail ou votre téléphone.",
-    echec: 'La connexion avec Apple a échoué. Réessayez.',
-  };
   protected readonly bloque = computed(() => this.erreur()?.status === 429);
   protected readonly enErreur = (nom: string) => enErreur(this.form, nom);
-  /** Retour prévu, repris dans le lien vers l'inscription. */
+  /** Retour prévu, repris dans les liens vers les autres écrans. */
   protected readonly retourValide = computed(() => retourSur(this.retour()));
 
   ngOnInit(): void {
@@ -64,30 +56,6 @@ export class Connexion implements OnInit {
     this.erreur.set(null);
     this.session.connexion(identifiant.trim(), motDePasse, resterConnecte).subscribe({
       next: (r) => this.suite(r),
-      error: (e) => {
-        this.erreur.set(lireErreur(e));
-        this.envoi.set(false);
-      },
-    });
-  }
-
-  protected google(idToken: string): void {
-    this.envoi.set(true);
-    this.erreur.set(null);
-    this.session.connexionGoogle(idToken, undefined, undefined, this.form.controls.resterConnecte.value).subscribe({
-      next: (r) => this.suite(r),
-      error: (e) => {
-        this.erreur.set(lireErreur(e));
-        this.envoi.set(false);
-      },
-    });
-  }
-
-  protected apple(r: ReponseApple): void {
-    this.envoi.set(true);
-    this.erreur.set(null);
-    this.session.connexionApple(r, undefined, undefined, this.form.controls.resterConnecte.value).subscribe({
-      next: (rep) => this.suite(rep),
       error: (e) => {
         this.erreur.set(lireErreur(e));
         this.envoi.set(false);

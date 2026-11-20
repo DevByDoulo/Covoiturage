@@ -110,7 +110,7 @@ export class GoogleTelephone implements OnInit {
       next: (r) =>
         r.etape === 'CONNECTE'
           ? this.router.navigateByUrl(this.session.pageApresConnexion())
-          : this.router.navigate(['/auth/verification'], { queryParams: { inscription: 1 } }),
+          : this.router.navigate(['/auth/verification'], { queryParams: { inscription: 5 } }),
       error: (e) => {
         const err = lireErreur(e);
         this.envoi.set(false);

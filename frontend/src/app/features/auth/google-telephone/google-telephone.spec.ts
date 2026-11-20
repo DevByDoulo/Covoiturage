@@ -111,7 +111,7 @@ describe('Inscription Google en étapes (GoogleTelephone)', () => {
     const req = backend.expectOne(`${api}/auth/google`);
     expect(req.request.body).toEqual({ idToken: session.compteExterne!.idToken, telephone: '+221771234567', sexe: 'HOMME' });
     req.flush({ etape: 'OTP_ENVOYE', telephoneMasque: '+22177 ** *** 67', otpValiditeSecondes: 300, renvoiPossibleDansSecondes: 60 });
-    expect(navigation).toHaveBeenCalledWith(['/auth/verification'], { queryParams: { inscription: 1 } });
+    expect(navigation).toHaveBeenCalledWith(['/auth/verification'], { queryParams: { inscription: 5 } });
   });
 
   it("numéro déjà utilisé : retour à l'étape du numéro avec l'erreur sous le champ", () => {

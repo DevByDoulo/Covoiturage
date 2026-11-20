@@ -20,8 +20,16 @@ export class Verification {
   private readonly session = inject(SessionService);
   private readonly router = inject(Router);
 
-  /** Paramètre d'URL `inscription` : dernière étape de l'inscription avec Google (« Étape 5 sur 5 »). */
+  /**
+   * Paramètre d'URL `inscription` : nombre d'étapes de l'inscription dont le code est la dernière (5 avec Google,
+   * 6 avec une adresse e-mail), affiché « Étape 5 sur 5 ». Absent : connexion, ou parcours par numéro.
+   */
   readonly inscription = input<string>();
+  /** Dernière étape affichable : « 1 » (ancienne adresse) compte pour l'inscription Google en 5 étapes. */
+  protected readonly etapeFinale = computed(() => {
+    const n = Number(this.inscription());
+    return !this.inscription() ? null : n > 1 ? n : 5;
+  });
 
   protected readonly verification = this.session.verification;
   protected readonly code = new FormControl('', { nonNullable: true, validators: [Validators.pattern(/^\d{6}$/)] });
@@ -43,7 +51,8 @@ export class Verification {
     this.envoi.set(true);
     this.erreur.set(null);
     this.session.verifierOtp(code).subscribe({
-      next: () => this.router.navigateByUrl(this.session.pageApresConnexion()),
+      // Numéro inconnu (parcours par téléphone) : il reste à créer le compte.
+      next: (r) => this.router.navigateByUrl(r.etape === 'PROFIL_REQUIS' ? '/auth/profil' : this.session.pageApresConnexion()),
       error: (e) => {
         this.erreur.set(lireErreur(e));
         this.envoi.set(false);

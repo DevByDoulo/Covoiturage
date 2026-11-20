@@ -4,10 +4,12 @@ import 'package:provider/provider.dart';
 
 import 'core/session.dart';
 import 'core/theme.dart';
+import 'features/auth/autres_options.dart';
 import 'features/auth/connexion.dart';
 import 'features/auth/google.dart';
 import 'features/auth/inscription.dart';
 import 'features/auth/mot_de_passe_oublie.dart';
+import 'features/auth/profil_telephone.dart';
 import 'features/auth/verification.dart';
 import 'features/conducteur/mes_trajets.dart';
 import 'features/conducteur/publier.dart';
@@ -26,7 +28,15 @@ import 'features/suivi/suivi_conducteur.dart';
 import 'features/trajet/detail_trajet.dart';
 
 /// Écrans accessibles sans être connecté.
-const _publics = {'/connexion', '/inscription', '/verification', '/mot-de-passe-oublie', '/google/telephone'};
+const _publics = {
+  '/connexion',
+  '/autres-options',
+  '/inscription',
+  '/inscription/profil',
+  '/verification',
+  '/mot-de-passe-oublie',
+  '/google/telephone',
+};
 
 GoRouter creerRouteur(Session session) => GoRouter(
   initialLocation: '/rechercher',
@@ -60,7 +70,14 @@ GoRouter creerRouteur(Session session) => GoRouter(
       builder: (_, etat) => ConnexionPage(reinitialise: etat.uri.queryParameters['reinitialise'] == '1'),
     ),
     GoRoute(path: '/mot-de-passe-oublie', builder: (_, _) => const MotDePasseOubliePage()),
+    GoRoute(path: '/autres-options', builder: (_, _) => const AutresOptionsPage()),
     GoRoute(path: '/inscription', builder: (_, _) => const InscriptionPage()),
+    // Nouveau numéro vérifié par code : jeton d'inscription en mémoire seulement, comme l'idToken Google.
+    GoRoute(
+      path: '/inscription/profil',
+      redirect: (_, etat) => etat.extra is String ? null : '/connexion',
+      builder: (_, etat) => ProfilTelephonePage(jeton: etat.extra as String),
+    ),
     // Premier passage par Google : numéro de téléphone (l'idToken n'est gardé qu'en mémoire, comme sur le site).
     GoRoute(
       path: '/google/telephone',

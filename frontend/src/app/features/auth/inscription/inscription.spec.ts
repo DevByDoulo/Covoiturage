@@ -4,46 +4,117 @@ import { ComponentRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { environment } from '../../../../environments/environment';
-import { Inscription } from './inscription';
+import { Inscription, Parcours } from './inscription';
 
-describe('Inscription (Google seulement, étape 1)', () => {
+describe('Création du compte en étapes (Inscription)', () => {
   const api = environment.apiUrl;
   let backend: HttpTestingController;
+  let router: Router;
 
-  function creer(retour?: string) {
+  function creer(parcours: Parcours, jeton: string | null = 'jeton-inscription') {
     sessionStorage.clear();
+    if (jeton) sessionStorage.setItem('covoitia.inscription', jeton);
     TestBed.configureTestingModule({
       providers: [provideRouter([{ path: '**', children: [] }]), provideHttpClient(), provideHttpClientTesting()],
     });
     backend = TestBed.inject(HttpTestingController);
+    router = TestBed.inject(Router);
+    const navigation = vi.spyOn(router, 'navigateByUrl');
+    const navigationAvecParametres = vi.spyOn(router, 'navigate');
     const fixture = TestBed.createComponent(Inscription);
-    if (retour) (fixture.componentRef as ComponentRef<Inscription>).setInput('retour', retour);
+    (fixture.componentRef as ComponentRef<Inscription>).setInput('parcours', parcours);
     fixture.detectChanges();
-    return { fixture, el: fixture.nativeElement as HTMLElement };
+    const el = fixture.nativeElement as HTMLElement;
+    const saisir = (id: string, valeur: string) => {
+      const input = el.querySelector<HTMLInputElement>(`#${id}`)!;
+      input.value = valeur;
+      input.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+    };
+    const continuer = () => {
+      el.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+      fixture.detectChanges();
+    };
+    const cliquer = (texte: string) => {
+      [...el.querySelectorAll('button')].find((b) => b.textContent!.includes(texte))!.click();
+      fixture.detectChanges();
+    };
+    const etape = () => el.querySelector('.etape')?.textContent?.trim();
+    const titre = () => el.querySelector('h1')?.textContent?.trim();
+    return { fixture, el, saisir, continuer, cliquer, etape, titre, navigation, navigationAvecParametres };
   }
 
   afterEach(() => backend.verify());
 
-  it("ne propose plus le formulaire e-mail + mot de passe, seulement Google et « J'ai déjà un compte »", () => {
-    const { el } = creer();
-    expect(el.querySelector('#email, #motDePasse, input[formcontrolname]')).toBeNull();
-    expect(el.querySelector('app-bouton-google')).not.toBeNull();
-    expect(el.querySelector('.etape')?.textContent).toContain('Étape 1 sur 5');
-    expect(el.querySelectorAll('.etapes li').length).toBe(5);
+  it('parcours téléphone sans jeton : retour au numéro', () => {
+    const { navigation } = creer('telephone', null);
+    expect(navigation).toHaveBeenCalledWith('/auth/inscription');
   });
 
-  it("garde le retour prévu vers la connexion et le mémorise pour après l'inscription", () => {
-    const { el } = creer('/trajets/11');
-    const lien = [...el.querySelectorAll('a')].find((a) => a.textContent!.includes("J'ai déjà un compte"))!;
-    expect(lien.getAttribute('href')).toBe('/auth/connexion?retour=%2Ftrajets%2F11');
-    expect(sessionStorage.getItem('covoitia.retour')).toBe('/trajets/11');
+  it('parcours téléphone : nom, sexe, mot de passe passé, conditions, puis compte créé et connecté', () => {
+    const { el, saisir, continuer, cliquer, etape, titre } = creer('telephone');
+    expect(etape()).toBe('Étape 3 sur 6');
+    continuer();
+    expect(etape()).toBe('Étape 3 sur 6');
+    saisir('prenom', 'Awa');
+    saisir('nom', 'Diop');
+    continuer();
+    expect(titre()).toBe('Vous êtes…');
+    cliquer('Une femme');
+    continuer();
+    expect(titre()).toContain('mot de passe');
+    saisir('motDePasse', 'court');
+    continuer();
+    expect(titre()).toContain('mot de passe');
+    cliquer('Passer');
+    expect(etape()).toBe('Étape 6 sur 6');
+    // Conditions non acceptées : rien n'est envoyé.
+    continuer();
+    expect(etape()).toBe('Étape 6 sur 6');
+    expect(el.querySelector('.message-erreur')?.textContent).toContain('Cochez la case');
   });
 
-  it('un nouveau compte Google passe aux étapes suivantes (numéro de téléphone)', () => {
-    const { fixture } = creer();
-    const navigation = vi.spyOn(TestBed.inject(Router), 'navigateByUrl');
-    (fixture.componentInstance as unknown as { google(j: string): void }).google('jeton-google');
-    backend.expectOne(`${api}/auth/google`).flush({ etape: 'TELEPHONE_REQUIS' });
-    expect(navigation).toHaveBeenCalledWith('/auth/telephone');
+  it('parcours téléphone : envoie le jeton et les informations (sans mot de passe si passé)', () => {
+    const { el, saisir, continuer, cliquer, navigation, fixture } = creer('telephone');
+    saisir('prenom', ' Awa ');
+    saisir('nom', 'Diop');
+    continuer();
+    cliquer('Une femme');
+    continuer();
+    cliquer('Passer');
+    el.querySelector<HTMLInputElement>('input[type=checkbox]')!.click();
+    fixture.detectChanges();
+    continuer();
+    const req = backend.expectOne(`${api}/auth/telephone/terminer`);
+    expect(req.request.body).toEqual({ jeton: 'jeton-inscription', prenom: 'Awa', nom: 'Diop', sexe: 'FEMME' });
+    req.flush({ etape: 'CONNECTE', accessToken: 'a', refreshToken: 'r', utilisateur: { id: 1, role: 'PASSAGER' } });
+    expect(navigation).toHaveBeenCalledWith('/accueil');
+  });
+
+  it("parcours e-mail : un e-mail déjà utilisé ramène à sa première étape avec le message", () => {
+    const { el, saisir, continuer, cliquer, etape, navigationAvecParametres, fixture } = creer('email', null);
+    expect(etape()).toBe('Étape 1 sur 6');
+    saisir('email', 'awa@test.sn');
+    continuer();
+    expect(etape()).toBe('Étape 1 sur 6');
+    saisir('motDePasse', 'Teranga2026');
+    continuer();
+    saisir('prenom', 'Awa');
+    saisir('nom', 'Diop');
+    continuer();
+    saisir('telephone', '77 123 45 67');
+    continuer();
+    cliquer('Une femme');
+    continuer();
+    el.querySelector<HTMLInputElement>('input[type=checkbox]')!.click();
+    fixture.detectChanges();
+    continuer();
+    const req = backend.expectOne(`${api}/auth/inscription`);
+    expect(req.request.body).toMatchObject({ email: 'awa@test.sn', telephone: '+221771234567', motDePasse: 'Teranga2026' });
+    req.flush({ detail: 'Cet email est déjà utilisé', champ: 'email' }, { status: 409, statusText: 'Conflict' });
+    fixture.detectChanges();
+    expect(etape()).toBe('Étape 1 sur 6');
+    expect(el.querySelector('.message-erreur')?.textContent).toContain('déjà utilisé');
+    expect(navigationAvecParametres).not.toHaveBeenCalled();
   });
 });
