@@ -63,7 +63,7 @@
     <app-alerte type="info">{{ m }}</app-alerte>
   }
 
-  <a class="autres-options" [routerLink]="inscription() ? '/auth/autres-options' : '/auth/connexion'"
+  <a class="autres-options" [routerLink]="inscription() ? '/auth/inscription' : '/auth/connexion'"
      [queryParams]="retourValide() ? { retour: retourValide() } : null">
     <app-icone nom="mail" [taille]="18" /> Autres options <span class="detail">e-mail et mot de passe</span>
     <app-icone nom="chevron-droite" [taille]="18" />

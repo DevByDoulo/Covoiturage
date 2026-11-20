@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api.dart';
+import '../../core/formats.dart';
 import '../../core/session.dart';
 import '../../shared/widgets.dart';
 
@@ -80,16 +81,18 @@ class _ProfilTelephonePageState extends State<ProfilTelephonePage> {
                   key: const Key('prenom'),
                   controller: _prenom,
                   textCapitalization: TextCapitalization.words,
+                  inputFormatters: [formatNom],
                   decoration: const InputDecoration(labelText: 'Prénom', prefixIcon: Icon(Icons.badge_outlined)),
-                  validator: (v) => (v ?? '').trim().isEmpty ? 'Obligatoire' : null,
+                  validator: erreurNom,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   key: const Key('nom'),
                   controller: _nom,
                   textCapitalization: TextCapitalization.words,
+                  inputFormatters: [formatNom],
                   decoration: const InputDecoration(labelText: 'Nom', prefixIcon: Icon(Icons.badge_outlined)),
-                  validator: (v) => (v ?? '').trim().isEmpty ? 'Obligatoire' : null,
+                  validator: erreurNom,
                 ),
                 const SizedBox(height: 16),
                 const Text('Vous êtes… (pour les trajets « femmes uniquement »)'),

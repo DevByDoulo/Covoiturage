@@ -1,5 +1,5 @@
 <div class="haut">
-  <a class="retour" [routerLink]="inscription() ? '/auth/inscription' : verification()?.mode === 'telephone' ? '/auth/connexion-telephone' : '/auth/connexion'">
+  <a class="retour" [routerLink]="retourVers()">
     <app-icone nom="fleche-gauche" [taille]="20" /> Retour
   </a>
   @if (etapeFinale(); as n) { <span class="etape">Étape {{ n }} sur {{ n }}</span> }

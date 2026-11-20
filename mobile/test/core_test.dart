@@ -15,6 +15,29 @@ http.Response _json(Object corps, [int status = 200]) =>
 void main() {
   setUpAll(() => initializeDateFormatting('fr_FR'));
 
+  group('prénom et nom', () {
+    test('acceptés : lettres, accents, espaces, tirets et apostrophes', () {
+      for (final nom in ['Awa', 'Éloïse', 'Marie-Claire', "N'Diaye", 'N’Diaye', 'Ba Fall', 'Çelik', ' Aminata ']) {
+        expect(erreurNom(nom), isNull, reason: nom);
+      }
+    });
+
+    test('refusés : chiffres, symboles, vide', () {
+      for (final nom in ['Awa2', '123', 'Awa!', '@Diop', 'Awa_Diop', '-Awa', '---', 'Awa.D']) {
+        expect(erreurNom(nom), contains('Lettres uniquement'), reason: nom);
+      }
+      expect(erreurNom(''), 'Obligatoire');
+      expect(erreurNom(null), 'Obligatoire');
+      expect(erreurNom('A' * 81), '80 caractères au plus.');
+    });
+
+    test("la saisie retire ce qui n'est pas une lettre", () {
+      expect(lettresSeulement('Awa123'), 'Awa');
+      expect(lettresSeulement('@Diop!#'), 'Diop');
+      expect(lettresSeulement("Marie-Claire N'Diaye"), "Marie-Claire N'Diaye");
+    });
+  });
+
   group('formats', () {
     test('montants, durées et distances', () {
       expect(fcfa(1650).replaceAll(RegExp(r'\s'), ' '), '1 650 FCFA');

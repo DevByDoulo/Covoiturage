@@ -1,5 +1,13 @@
 import { FormControl, FormGroup } from '@angular/forms';
-import { appliquerErreurServeur, champsIdentiques, chiffresTelephone, retourSur, telephoneSenegalValidator } from './formulaire';
+import {
+  REGLE_NOM_PROPRE,
+  appliquerErreurServeur,
+  champsIdentiques,
+  chiffresTelephone,
+  lettresSeulement,
+  retourSur,
+  telephoneSenegalValidator,
+} from './formulaire';
 import { forceMotDePasse } from '../../shared/ui/force-mot-de-passe';
 
 describe('formulaire', () => {
@@ -40,5 +48,19 @@ describe('formulaire', () => {
     expect(forceMotDePasse('abcdefgh')).toBe(1);
     expect(forceMotDePasse('abcdefg1')).toBe(2);
     expect(forceMotDePasse('Abcdefgh12!x')).toBe(3);
+  });
+
+  it('prénom et nom : lettres (accents compris), espaces, tirets et apostrophes seulement', () => {
+    for (const ok of ['Awa', 'Éloïse', 'Marie-Claire', "N'Diaye", 'N’Diaye', 'Ba Fall', 'Çelik', ' Awa '])
+      expect(REGLE_NOM_PROPRE.test(ok), ok).toBe(true);
+    for (const ko of ['Awa2', '123', 'Awa!', '@Diop', '-Awa', '  ', 'Awa_Diop', 'Awa.D', ''])
+      expect(REGLE_NOM_PROPRE.test(ko), ko).toBe(false);
+  });
+
+  it("retire à la saisie ce qui n'est pas une lettre", () => {
+    expect(lettresSeulement('Awa123')).toBe('Awa');
+    expect(lettresSeulement('@Diop!#')).toBe('Diop');
+    expect(lettresSeulement("Marie-Claire N'Diaye")).toBe("Marie-Claire N'Diaye");
+    expect(lettresSeulement('Éloïse_7')).toBe('Éloïse');
   });
 });

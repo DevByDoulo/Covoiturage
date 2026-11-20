@@ -32,6 +32,12 @@ export class Verification {
   });
 
   protected readonly verification = this.session.verification;
+  /** « Retour » : l'écran d'où vient la demande de code (inscription ou connexion, par numéro ou par e-mail). */
+  protected readonly retourVers = computed(() => {
+    if (this.inscription()) return '/auth/inscription';
+    if (this.verification()?.mode !== 'telephone') return '/auth/connexion';
+    return this.verification()?.inscription ? '/auth/inscription-telephone' : '/auth/connexion-telephone';
+  });
   protected readonly code = new FormControl('', { nonNullable: true, validators: [Validators.pattern(/^\d{6}$/)] });
   protected readonly envoi = signal(false);
   protected readonly renvoiEnCours = signal(false);

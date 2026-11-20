@@ -48,7 +48,94 @@ describe('Création du compte en étapes (Inscription)', () => {
 
   it('parcours téléphone sans jeton : retour au numéro', () => {
     const { navigation } = creer('telephone', null);
-    expect(navigation).toHaveBeenCalledWith('/auth/inscription');
+    expect(navigation).toHaveBeenCalledWith('/auth/inscription-telephone');
+  });
+
+  it('parcours e-mail : la 1re étape propose Google puis « Autres options » vers le numéro', () => {
+    const { el, titre, etape } = creer('email');
+    expect(etape()).toBe('Étape 1 sur 6');
+    expect(titre()).toContain('adresse e-mail');
+    const ordre = [...el.querySelectorAll('#email, #motDePasse, .separateur, app-bouton-google, .autres-options')].map(
+      (n) => n.id || n.className || n.tagName.toLowerCase(),
+    );
+    expect(ordre).toEqual(['email', 'motDePasse', 'separateur', 'app-bouton-google', 'autres-options']);
+    expect(el.querySelector('.autres-options')?.getAttribute('href')).toBe('/auth/inscription-telephone');
+    expect(el.querySelector('.autres-options')?.textContent).toContain('numéro + code SMS');
+  });
+
+  it('parcours e-mail : la confirmation doit être identique au mot de passe', () => {
+    const { el, saisir, continuer, etape } = creer('email');
+    saisir('email', 'awa@test.sn');
+    saisir('motDePasse', 'Teranga2026');
+    continuer();
+    // Confirmation vide : on reste sur l'étape, avec le message.
+    expect(etape()).toBe('Étape 1 sur 6');
+    expect(el.querySelector('#erreur-confirmation')?.textContent).toContain('ne correspondent pas');
+    saisir('confirmation', 'Teranga2027');
+    continuer();
+    expect(etape()).toBe('Étape 1 sur 6');
+    expect(el.querySelector('#erreur-confirmation')).not.toBeNull();
+    saisir('confirmation', 'Teranga2026');
+    expect(el.querySelector('#erreur-confirmation')).toBeNull();
+    continuer();
+    expect(etape()).toBe('Étape 2 sur 6');
+  });
+
+  it('prénom et nom : les caractères qui ne sont pas des lettres sont retirés à la saisie', () => {
+    const { el, saisir, continuer, etape } = creer('telephone');
+    saisir('prenom', 'Awa123');
+    saisir('nom', '@Diop!');
+    expect(el.querySelector<HTMLInputElement>('#prenom')!.value).toBe('Awa');
+    expect(el.querySelector<HTMLInputElement>('#nom')!.value).toBe('Diop');
+    saisir('prenom', "Marie-Claire");
+    saisir('nom', "N'Diaye");
+    expect(el.querySelector<HTMLInputElement>('#prenom')!.value).toBe('Marie-Claire');
+    expect(el.querySelector<HTMLInputElement>('#nom')!.value).toBe("N'Diaye");
+    continuer();
+    expect(etape()).toBe('Étape 4 sur 6');
+  });
+
+  it('prénom : une valeur sans lettre (espaces, tirets) est refusée avec un message', () => {
+    const { el, saisir, continuer, etape } = creer('telephone');
+    saisir('prenom', '---');
+    saisir('nom', 'Diop');
+    continuer();
+    expect(etape()).toBe('Étape 3 sur 6');
+    expect(el.querySelector('.message-erreur')?.textContent).toContain('Lettres uniquement');
+  });
+
+  it('parcours téléphone : un mot de passe saisi doit être confirmé ; « Passer » reste possible', () => {
+    const { el, saisir, continuer, cliquer, etape, titre } = creer('telephone');
+    saisir('prenom', 'Awa');
+    saisir('nom', 'Diop');
+    continuer();
+    cliquer('Une femme');
+    continuer();
+    expect(titre()).toContain('mot de passe');
+    // Champs vides : le mot de passe est facultatif, on peut continuer sans confirmation.
+    saisir('motDePasse', 'Teranga2026');
+    continuer();
+    expect(titre()).toContain('mot de passe');
+    expect(el.querySelector('#erreur-confirmation')).not.toBeNull();
+    saisir('confirmation', 'Teranga2026');
+    continuer();
+    expect(etape()).toBe('Étape 6 sur 6');
+  });
+
+  it("parcours e-mail : Google et « Autres options » disparaissent après la 1re étape", () => {
+    const { el, saisir, continuer } = creer('email');
+    saisir('email', 'awa@exemple.sn');
+    saisir('motDePasse', 'Motdepasse1');
+    saisir('confirmation', 'Motdepasse1');
+    continuer();
+    expect(el.querySelector('app-connexion-sociale')).toBeNull();
+    expect(el.querySelector('.autres-options')).toBeNull();
+  });
+
+  it("parcours téléphone : pas de Google ni d'« Autres options » (le numéro est déjà vérifié)", () => {
+    const { el } = creer('telephone');
+    expect(el.querySelector('app-connexion-sociale')).toBeNull();
+    expect(el.querySelector('.autres-options')).toBeNull();
   });
 
   it('parcours téléphone : nom, sexe, mot de passe passé, conditions, puis compte créé et connecté', () => {
@@ -98,6 +185,7 @@ describe('Création du compte en étapes (Inscription)', () => {
     continuer();
     expect(etape()).toBe('Étape 1 sur 6');
     saisir('motDePasse', 'Teranga2026');
+    saisir('confirmation', 'Teranga2026');
     continuer();
     saisir('prenom', 'Awa');
     saisir('nom', 'Diop');

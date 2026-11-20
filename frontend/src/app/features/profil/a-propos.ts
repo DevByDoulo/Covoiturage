@@ -5,6 +5,7 @@ import { ErreurApi, lireErreur } from '../../core/api/erreur-api';
 import { Profil } from '../../core/auth/auth.models';
 import { Alerte } from '../../shared/ui/alerte';
 import { Icone } from '../../shared/ui/icone';
+import { REGLE_NOM_PROPRE, lettresSeulement } from '../auth/formulaire';
 import { ProfilService } from './profil.service';
 
 /** Bloc « À propos » : présentation libre, et modification du prénom, du nom et de la présentation. */
@@ -33,13 +34,20 @@ import { ProfilService } from './profil.service';
           <div class="deux">
             <div class="champ" [class.champ--erreur]="form.controls.prenom.invalid && form.controls.prenom.touched">
               <label class="libelle" for="prenom">Prénom</label>
-              <div class="saisie"><input id="prenom" formControlName="prenom" autocomplete="given-name" /></div>
+              <div class="saisie">
+                <input id="prenom" formControlName="prenom" autocomplete="given-name" (input)="filtrerNom('prenom', $event)" />
+              </div>
             </div>
             <div class="champ" [class.champ--erreur]="form.controls.nom.invalid && form.controls.nom.touched">
               <label class="libelle" for="nom">Nom</label>
-              <div class="saisie"><input id="nom" formControlName="nom" autocomplete="family-name" /></div>
+              <div class="saisie">
+                <input id="nom" formControlName="nom" autocomplete="family-name" (input)="filtrerNom('nom', $event)" />
+              </div>
             </div>
           </div>
+          @if (nomRefuse()) {
+            <p class="message-erreur"><app-icone nom="alerte" [taille]="14" /> {{ nomRefuse() }}</p>
+          }
           <div class="champ">
             <label class="libelle" for="bio">Présentation</label>
             <div class="saisie saisie--texte">
@@ -114,12 +122,28 @@ export class APropos {
   protected readonly envoi = signal(false);
   protected readonly erreur = signal<ErreurApi | null>(null);
   protected readonly form = this.fb.nonNullable.group({
-    prenom: ['', [Validators.required, Validators.maxLength(80)]],
-    nom: ['', [Validators.required, Validators.maxLength(80)]],
+    prenom: ['', [Validators.required, Validators.maxLength(80), Validators.pattern(REGLE_NOM_PROPRE)]],
+    nom: ['', [Validators.required, Validators.maxLength(80), Validators.pattern(REGLE_NOM_PROPRE)]],
     bio: ['', Validators.maxLength(500)],
   });
   private readonly bio = toSignal(this.form.controls.bio.valueChanges, { initialValue: '' });
   protected readonly longueurBio = () => this.bio().length;
+
+  /** Prénom et nom : retire à la frappe (et au collage) ce qui n'est pas une lettre. */
+  protected filtrerNom(champ: 'prenom' | 'nom', evenement: Event): void {
+    const saisie = evenement.target as HTMLInputElement;
+    const propre = lettresSeulement(saisie.value);
+    if (propre === saisie.value) return;
+    saisie.value = propre;
+    this.form.controls[champ].setValue(propre);
+  }
+
+  /** Message sous les champs si le prénom ou le nom (modifié ou repris d'avant) n'est pas fait de lettres. */
+  protected nomRefuse(): string | null {
+    const { prenom, nom } = this.form.controls;
+    const refus = (prenom.hasError('pattern') && prenom.touched) || (nom.hasError('pattern') && nom.touched);
+    return refus ? 'Lettres uniquement (les espaces, tirets et apostrophes sont admis)' : null;
+  }
 
   protected ouvrir(): void {
     const p = this.profil();

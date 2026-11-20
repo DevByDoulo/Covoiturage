@@ -93,12 +93,12 @@ export class SessionService {
    * Connexion ou inscription par téléphone : envoie le code par SMS au numéro (+221…). Après le code, un numéro
    * déjà connu est connecté ; un numéro inconnu répond PROFIL_REQUIS (voir {@link terminerInscriptionTelephone}).
    */
-  codeTelephone(telephone: string, resterConnecte = false): Observable<AuthReponse> {
+  codeTelephone(telephone: string, resterConnecte = false, inscription = false): Observable<AuthReponse> {
     this.persistant = resterConnecte;
     this.definirJetonInscription(null);
     return this.http
       .post<AuthReponse>(`${this.api}/telephone/code`, { telephone })
-      .pipe(tap((r) => this.traiter(r, telephone, 'telephone')));
+      .pipe(tap((r) => this.traiter(r, telephone, 'telephone', inscription)));
   }
 
   verifierOtp(code: string): Observable<AuthReponse> {
@@ -108,7 +108,7 @@ export class SessionService {
       v?.mode === 'telephone'
         ? this.http.post<AuthReponse>(`${this.api}/telephone/verifier`, { telephone: identifiant, code })
         : this.http.post<AuthReponse>(`${this.api}/otp/verifier`, { identifiant, code });
-    return appel.pipe(tap((r) => this.traiter(r, identifiant, v?.mode)));
+    return appel.pipe(tap((r) => this.traiter(r, identifiant, v?.mode, v?.inscription)));
   }
 
   renvoyerOtp(): Observable<AuthReponse> {
@@ -118,7 +118,7 @@ export class SessionService {
       v?.mode === 'telephone'
         ? this.http.post<AuthReponse>(`${this.api}/telephone/code`, { telephone: identifiant })
         : this.http.post<AuthReponse>(`${this.api}/otp/renvoyer`, { identifiant });
-    return appel.pipe(tap((r) => this.traiter(r, identifiant, v?.mode)));
+    return appel.pipe(tap((r) => this.traiter(r, identifiant, v?.mode, v?.inscription)));
   }
 
   /**
@@ -288,7 +288,7 @@ export class SessionService {
 
   // ------------------------------------------------------------------ Interne
 
-  private traiter(r: AuthReponse, identifiant: string, mode?: 'telephone'): void {
+  private traiter(r: AuthReponse, identifiant: string, mode?: 'telephone', inscription?: boolean): void {
     if (r.etape === 'CONNECTE') {
       this.ouvrirSession(r);
       if (r.suppressionAnnulee) this.suppressionAnnulee.set(true);
@@ -304,6 +304,7 @@ export class SessionService {
       this.definirVerification({
         identifiant,
         ...(mode ? { mode } : {}),
+        ...(inscription ? { inscription } : {}),
         canal: r.canal ?? 'SMS',
         telephoneMasque: r.telephoneMasque ?? null,
         emailMasque: r.emailMasque ?? null,

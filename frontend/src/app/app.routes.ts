@@ -32,8 +32,16 @@ export const routes: Routes = [
         loadComponent: () => import('./features/auth/entree/entree').then((m) => m.Entree),
       },
       {
-        // Inscription : le numéro d'abord, puis Google, puis « Autres options » (e-mail et mot de passe).
+        // Inscription : e-mail et mot de passe d'abord, puis Google, puis « Autres options » (numéro + code SMS).
         path: 'inscription',
+        title: 'Créer un compte · YOBALEMAsn',
+        data: { parcours: 'email', carte: true },
+        canActivate: [invitesGuard],
+        loadComponent: () => import('./features/auth/inscription/inscription').then((m) => m.Inscription),
+      },
+      {
+        // « Autres options » de l'inscription : numéro + code SMS (même écran que la connexion par téléphone).
+        path: 'inscription-telephone',
         title: 'Créer un compte · YOBALEMAsn',
         data: { inscription: true, carte: true },
         canActivate: [invitesGuard],
@@ -54,13 +62,7 @@ export const routes: Routes = [
         canActivate: [invitesGuard],
         loadComponent: () => import('./features/auth/inscription/inscription').then((m) => m.Inscription),
       },
-      {
-        path: 'inscription-email',
-        title: 'Créer un compte · YOBALEMAsn',
-        data: { parcours: 'email', carte: true },
-        canActivate: [invitesGuard],
-        loadComponent: () => import('./features/auth/inscription/inscription').then((m) => m.Inscription),
-      },
+      { path: 'inscription-email', redirectTo: 'inscription' },
       {
         path: 'verification',
         title: 'Vérification · YOBALEMAsn',

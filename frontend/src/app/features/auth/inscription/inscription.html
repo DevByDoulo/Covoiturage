@@ -29,6 +29,14 @@
           8 caractères minimum, dont une lettre et un chiffre
         </p>
       </div>
+      <div class="champ" [class.champ--erreur]="enErreur('confirmation')">
+        <label class="libelle" for="confirmation">Confirmez le mot de passe</label>
+        <app-champ-mot-de-passe idChamp="confirmation" formControlName="confirmation" autocomplete="new-password"
+                                placeholder="Confirmez le mot de passe" [decritPar]="enErreur('confirmation') ? 'erreur-confirmation' : ''" />
+        @if (enErreur('confirmation')) {
+          <p class="message-erreur" id="erreur-confirmation"><app-icone nom="alerte" [taille]="14" /> Les deux mots de passe ne correspondent pas</p>
+        }
+      </div>
     }
     @case ('nom') {
       <h1 #titre tabindex="-1" id="titre-etape">Comment vous appelez-vous ?</h1>
@@ -37,18 +45,20 @@
         <label class="libelle" for="prenom">Prénom</label>
         <div class="saisie">
           <app-icone nom="utilisateur" />
-          <input id="prenom" formControlName="prenom" autocomplete="given-name" placeholder="Prénom" />
+          <input id="prenom" formControlName="prenom" autocomplete="given-name" placeholder="Prénom"
+                 (input)="filtrerNom('prenom', $event)" />
         </div>
       </div>
       <div class="champ" [class.champ--erreur]="enErreur('nom')">
         <label class="libelle" for="nom">Nom</label>
         <div class="saisie">
           <app-icone nom="utilisateur" />
-          <input id="nom" formControlName="nom" autocomplete="family-name" placeholder="Nom" />
+          <input id="nom" formControlName="nom" autocomplete="family-name" placeholder="Nom"
+                 (input)="filtrerNom('nom', $event)" />
         </div>
       </div>
       @if (enErreur('prenom') || enErreur('nom')) {
-        <p class="message-erreur"><app-icone nom="alerte" [taille]="14" /> Indiquez votre prénom et votre nom</p>
+        <p class="message-erreur"><app-icone nom="alerte" [taille]="14" /> {{ messageNom() }}</p>
       }
     }
     @case ('telephone') {
@@ -95,6 +105,14 @@
           8 caractères minimum, dont une lettre et un chiffre
         </p>
       </div>
+      <div class="champ" [class.champ--erreur]="enErreur('confirmation')">
+        <label class="libelle" for="confirmation">Confirmez le mot de passe</label>
+        <app-champ-mot-de-passe idChamp="confirmation" formControlName="confirmation" autocomplete="new-password"
+                                placeholder="Confirmez le mot de passe" [decritPar]="enErreur('confirmation') ? 'erreur-confirmation' : ''" />
+        @if (enErreur('confirmation')) {
+          <p class="message-erreur" id="erreur-confirmation"><app-icone nom="alerte" [taille]="14" /> Les deux mots de passe ne correspondent pas</p>
+        }
+      </div>
     }
     @case ('cgu') {
       <h1 #titre tabindex="-1" id="titre-etape">Acceptez les conditions de YOBALEMAsn</h1>
@@ -118,7 +136,7 @@
     <app-alerte type="erreur">
       {{ e.message }}
       @if (parcours() === 'telephone' && e.status === 400) {
-        <a routerLink="/auth/inscription">Recommencer avec mon numéro</a>
+        <a routerLink="/auth/inscription-telephone">Recommencer avec mon numéro</a>
       }
     </app-alerte>
   }
@@ -134,5 +152,15 @@
   </button>
   @if (etape() === 'motDePasse') {
     <button class="bouton bouton--secondaire" type="button" (click)="passer()">Passer</button>
+  }
+
+  @if (parcours() === 'email' && etape() === 'identifiants') {
+    <app-connexion-sociale />
+
+    <a class="autres-options" routerLink="/auth/inscription-telephone"
+       [queryParams]="retourValide() ? { retour: retourValide() } : null">
+      <app-icone nom="telephone" [taille]="18" /> Autres options <span class="detail">numéro + code SMS</span>
+      <app-icone nom="chevron-droite" [taille]="18" />
+    </a>
   }
 </form>

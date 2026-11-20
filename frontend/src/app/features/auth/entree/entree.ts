@@ -20,9 +20,9 @@ export function appleConfigure(): boolean {
 }
 
 /**
- * Écran de départ, pour se connecter comme pour créer un compte (/auth/connexion et /auth/inscription), inspiré
- * d'Uber : numéro de téléphone (+221) et « Continuer », puis « ou », Google (et Apple s'il est configuré), puis
- * « Autres options » (e-mail et mot de passe). Aucune méthode n'est imposée.
+ * Écran du numéro, « Autres options » de la connexion (/auth/connexion-telephone) comme de l'inscription
+ * (/auth/inscription-telephone) : numéro de téléphone (+221) et « Continuer », puis « ou », Google (et Apple s'il est
+ * configuré), puis retour à l'e-mail et au mot de passe (/auth/connexion ou /auth/inscription). Aucune méthode n'est imposée.
  * Numéro : code par SMS, puis connexion du compte existant ou, pour un nouveau numéro, quelques informations.
  */
 @Component({
@@ -86,7 +86,7 @@ export class Entree implements OnInit {
     this.envoi.set(true);
     this.erreur.set(null);
     const telephone = '+221' + chiffresTelephone(champ.value);
-    this.session.codeTelephone(telephone, this.form.controls.resterConnecte.value).subscribe({
+    this.session.codeTelephone(telephone, this.form.controls.resterConnecte.value, !!this.inscription()).subscribe({
       next: () => this.router.navigateByUrl('/auth/verification'),
       error: (e) => {
         const err = lireErreur(e);

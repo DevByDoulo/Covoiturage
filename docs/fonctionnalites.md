@@ -141,12 +141,46 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
     secondaires transparents à bord blanc, **bouton principal orange de la charte avec texte sombre** (8:1 ; blanc sur
     orange échoue AA) et flèche (remplace le rouge de la maquette ; variable `--principal` dans `auth-photo.scss` pour
     changer de couleur en une ligne). Mot de passe oublié : « Retour » + titre comme les autres écrans, étapes à plat.
-  - **Ordre des écrans de connexion** (changement de la même branche, en plus du design) : `/auth/connexion` affiche
-    d'abord **e-mail (ou numéro) + mot de passe**, puis « ou continuer avec » Google (et Apple s'il est configuré), puis
-    « Autres options » = numéro + code SMS (`/auth/connexion-telephone`, même écran `Entree`) et le lien vers
-    l'inscription ; `/auth/inscription` commence au contraire par le numéro, avec « Autres options » = e-mail et mot de
-    passe (`/auth/autres-options`). `Connexion` reçoit la donnée de route `principal` ; « Retour » de la vérification
-    ramène à `/auth/connexion-telephone` pour un code par SMS. Tests : `connexion.spec.ts`, `entree.spec.ts`.
+  - **Ordre des écrans de connexion et d'inscription** (changement de la même branche, en plus du design ; 20/11/2026) :
+    même logique des deux côtés, **e-mail d'abord, numéro dans « Autres options »**.
+    - Connexion : `/auth/connexion` = e-mail (ou numéro) + mot de passe, puis « ou continuer avec » Google (Apple s'il est
+      configuré), puis « Autres options » = numéro + code SMS (`/auth/connexion-telephone`, écran `Entree`) et le lien vers
+      l'inscription. `Connexion` reçoit la donnée de route `principal`.
+    - **Inscription (inversée)** : `/auth/inscription` = parcours e-mail (`Inscription`, `parcours: 'email'` : e-mail et
+      mot de passe, prénom et nom, numéro, sexe, conditions, puis code) avec, **sous la 1re étape seulement**, Google /
+      Apple (nouveau composant partagé `features/auth/connexion-sociale.ts` : séparateur, pastilles, suite du parcours
+      TELEPHONE_REQUIS / OTP_ENVOYE / connexion) et « Autres options » = numéro + code SMS
+      (`/auth/inscription-telephone`, `Entree` avec `inscription`, qui propose en retour « Autres options — e-mail et mot de
+      passe » vers `/auth/inscription`). Le numéro vérifié mène toujours à `/auth/profil`. `/auth/inscription-email`
+      redirige vers `/auth/inscription` ; `/auth/autres-options` n'est plus lié. `retour` est mémorisé par l'inscription
+      par e-mail comme par l'écran du numéro. « Retour » de la 1re étape ramène à `/auth/connexion` ; jeton perdu ou
+      erreur 400 du profil → `/auth/inscription-telephone`.
+    - Tests : `connexion.spec.ts`, `entree.spec.ts`, `inscription.spec.ts` (1re étape e-mail : Google puis « Autres
+      options » ; absents aux étapes suivantes et pour le parcours téléphone).
+    - **« Retour » du code de vérification** : `VerificationEnCours.inscription` (posé par `codeTelephone(numero, rester,
+      inscription)`, conservé au renvoi du code) → `Verification.retourVers` : `/auth/inscription-telephone` pour une
+      inscription par numéro, `/auth/connexion-telephone` pour une connexion par numéro, `/auth/inscription` avec le
+      paramètre `inscription` (e-mail ou Google), `/auth/connexion` sinon. `AuthLayout` met aussi dans la carte le code d'une
+      inscription par numéro (`session.verification().inscription`). Test : `verification.spec.ts`.
+    - **Prénom et nom : lettres seulement, partout** (site, API, appli mobile ; 20/11/2026) : lettres de l'alphabet (accents
+      compris), avec espaces, tirets et apostrophes pour les noms composés (« Marie-Claire », « N'Diaye », « Ba Fall »),
+      commençant par une lettre ; pas de chiffres ni de symboles.
+      - **Site** : `REGLE_NOM_PROPRE` et `lettresSeulement` (`features/auth/formulaire.ts`) ; inscription (`filtrerNom`,
+        message « Lettres uniquement… ») et modification du profil (`APropos`) : les caractères refusés sont **retirés à la
+        frappe et au collage**, le validateur refuse le reste (un ancien nom contenant un chiffre doit être corrigé pour
+        enregistrer le profil). Tests : `formulaire.spec.ts`, `inscription.spec.ts`, `a-propos.spec.ts`.
+      - **API** : `common/Noms` (`REGLE`, `MESSAGE`) en `@Pattern` sur `prenom` et `nom` de `InscriptionRequete`,
+        `FinInscriptionTelephoneRequete` (inscription par numéro) et `ModificationProfilRequete` → 400 avec `erreurs.prenom` /
+        `erreurs.nom`. **Non filtrés** : les noms repris de Google / Apple (`AppleRequete`, jeton Google), pour ne pas bloquer
+        une connexion, et les comptes existants. Test : `common/NomsTest` (validation des trois requêtes).
+      - **Mobile** : `erreurNom` / `lettresSeulement` (`core/formats.dart`), `formatNom` (`shared/widgets.dart`) sur
+        l'inscription, le profil après le numéro (`profil_telephone.dart`) et « Modifier mon profil ». Tests : `core_test.dart`,
+        `inscription_telephone_test.dart`.
+    - **Confirmation du mot de passe à l'inscription** : champ « Confirmez le mot de passe » sous le mot de passe, à la
+      1re étape du parcours e-mail (obligatoire) et à l'étape facultative du parcours téléphone (obligatoire seulement si un
+      mot de passe est saisi ; « Passer » l'efface). Contrôle `confirmation` (validateur `memeMotDePasse`, revérifié quand le
+      mot de passe change), message « Les deux mots de passe ne correspondent pas » ; non envoyé au backend. Le
+      changement de mot de passe du profil et le mot de passe oublié avaient déjà une confirmation.
   - **Carte d'inscription** (maquette « Create new account » de Doulo, 20/11/2026 ; `auth-carte.scss`, 2e feuille de
     `AuthLayout` pour rester sous le budget de style) : sur les écrans d'inscription (donnée de route `carte` sur
     `/auth/inscription`, `/auth/inscription-email`, `/auth/profil`, `/auth/telephone`, et `/auth/verification?inscription=N`
@@ -457,7 +491,7 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   Reste : push.
 - Tests : `./mvnw test` → 68 tests (dont `InscriptionTelephoneParcoursTest`, `ConnexionExterneParcoursTest`, `AppleTokenVerifierTest`, `MessagesVocauxParcoursTest`, `AnalyseAudioTest`, `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 125 tests (dont guards, retour après connexion,
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 140 tests (dont guards, retour après connexion,
   intercepteur visiteur, `BarreRecherche`, paramètres de recherche, inscription Google en étapes, écran de départ par
   numéro et bouton Apple masqué, étapes du profil) ; `flutter test` dans `mobile` → 84 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de

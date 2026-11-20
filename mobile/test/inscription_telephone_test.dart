@@ -157,6 +157,11 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
+      // Chiffres et symboles ne peuvent pas être tapés.
+      await tester.enterText(find.byKey(const Key('prenom')), 'Awa123');
+      await tester.enterText(find.byKey(const Key('nom')), '@Diop!');
+      expect(tester.widget<TextFormField>(find.byKey(const Key('prenom'))).controller!.text, 'Awa');
+      expect(tester.widget<TextFormField>(find.byKey(const Key('nom'))).controller!.text, 'Diop');
       await tester.enterText(find.byKey(const Key('prenom')), 'Awa');
       await tester.enterText(find.byKey(const Key('nom')), 'Diop');
       await tester.ensureVisible(find.text('Créer mon compte'));
