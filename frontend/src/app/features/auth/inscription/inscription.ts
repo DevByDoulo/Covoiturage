@@ -21,7 +21,8 @@ import { Alerte } from '../../../shared/ui/alerte';
 import { ChampMotDePasse } from '../../../shared/ui/champ-mot-de-passe';
 import { DrapeauSenegal } from '../../../shared/ui/drapeau-senegal';
 import { Icone } from '../../../shared/ui/icone';
-import { REGLE_MOT_DE_PASSE, chiffresTelephone, enErreur, telephoneSenegalValidator } from '../formulaire';
+import { ConnexionSociale } from '../connexion-sociale';
+import { REGLE_MOT_DE_PASSE, chiffresTelephone, enErreur, retourSur, telephoneSenegalValidator } from '../formulaire';
 
 export type Parcours = 'telephone' | 'email';
 export type EtapeInscription = 'identifiants' | 'nom' | 'telephone' | 'sexe' | 'motDePasse' | 'cgu';
@@ -59,12 +60,13 @@ const ETAPE_DU_CHAMP: Record<string, EtapeInscription> = {
  * Création du compte en plusieurs étapes, donnée de route `parcours` :
  * - `telephone` (/auth/profil) : numéro déjà vérifié par code ; prénom et nom, sexe, mot de passe facultatif, conditions ;
  *   le compte est créé et connecté.
- * - `email` (« Autres options », /auth/inscription-email) : e-mail et mot de passe, prénom et nom, numéro, sexe,
- *   conditions, puis code de vérification.
+ * - `email` (/auth/inscription, l'écran d'inscription principal) : e-mail et mot de passe, puis Google / Apple et
+ *   « Autres options » (numéro + code SMS, /auth/inscription-telephone) sous la première étape ; prénom et nom, numéro,
+ *   sexe, conditions, puis code de vérification.
  */
 @Component({
   selector: 'app-inscription',
-  imports: [ReactiveFormsModule, RouterLink, Icone, Alerte, DrapeauSenegal, ChampMotDePasse],
+  imports: [ReactiveFormsModule, RouterLink, Icone, Alerte, DrapeauSenegal, ChampMotDePasse, ConnexionSociale],
   templateUrl: './inscription.html',
   styleUrl: './inscription.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -77,6 +79,9 @@ export class Inscription implements OnInit {
 
   /** Donnée de route. */
   readonly parcours = input<Parcours>('telephone');
+  /** Paramètre d'URL (lié par le routeur) : page où revenir après la connexion. */
+  readonly retour = input<string>();
+  protected readonly retourValide = computed(() => retourSur(this.retour()));
 
   protected readonly form = inject(FormBuilder).nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -109,11 +114,13 @@ export class Inscription implements OnInit {
 
   ngOnInit(): void {
     if (this.parcours() === 'email') {
+      // Mémorisé pour traverser le code de vérification ; une visite sans retour efface l'ancien.
+      this.session.memoriserRetour(this.retour());
       this.form.controls.motDePasse.addValidators(Validators.required);
       this.form.controls.motDePasse.updateValueAndValidity();
     } else if (!this.session.jetonInscription) {
       // Jeton perdu (autre onglet, rechargement après 15 minutes…) : il faut recommencer avec le numéro.
-      this.router.navigateByUrl('/auth/inscription');
+      this.router.navigateByUrl('/auth/inscription-telephone');
     }
   }
 
@@ -140,7 +147,7 @@ export class Inscription implements OnInit {
 
   protected precedent(): void {
     if (this.index() > 0) this.allerA(this.index() - 1);
-    else this.router.navigateByUrl(this.parcours() === 'email' ? '/auth/autres-options' : '/auth/inscription');
+    else this.router.navigateByUrl(this.parcours() === 'email' ? '/auth/connexion' : '/auth/inscription-telephone');
   }
 
   protected choisirSexe(s: Sexe): void {

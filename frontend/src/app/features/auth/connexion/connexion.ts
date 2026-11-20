@@ -18,7 +18,7 @@ import { enErreur, retourSur } from '../formulaire';
  * - /auth/connexion (donnée de route `principal`) : écran de connexion. Le formulaire vient en premier, puis
  *   « ou continuer avec » Google (et Apple s'il est configuré), puis « Autres options » : numéro + code SMS
  *   (/auth/connexion-telephone), et le lien vers l'inscription.
- * - /auth/autres-options (depuis l'inscription, qui commence par le numéro) : même formulaire avec « Retour » et la
+ * - /auth/autres-options (ancienne adresse, plus liée depuis l'inscription) : même formulaire avec « Retour » et la
  *   création d'un compte avec une adresse e-mail.
  */
 @Component({

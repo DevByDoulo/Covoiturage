@@ -53,8 +53,8 @@ describe('Connexion (/auth/connexion) : e-mail et mot de passe d\'abord, numéro
 });
 
 describe('Écran du numéro : « Autres options » selon le parcours', () => {
-  it("à l'inscription, mène aux autres options (e-mail et mot de passe)", () => {
+  it("à l'inscription, ramène à l'inscription par e-mail (l'écran principal)", () => {
     const { el } = creer(Entree, { inscription: true });
-    expect(el.querySelector('.autres-options')?.getAttribute('href')).toBe('/auth/autres-options');
+    expect(el.querySelector('.autres-options')?.getAttribute('href')).toBe('/auth/inscription');
   });
 });

@@ -48,7 +48,34 @@ describe('Création du compte en étapes (Inscription)', () => {
 
   it('parcours téléphone sans jeton : retour au numéro', () => {
     const { navigation } = creer('telephone', null);
-    expect(navigation).toHaveBeenCalledWith('/auth/inscription');
+    expect(navigation).toHaveBeenCalledWith('/auth/inscription-telephone');
+  });
+
+  it('parcours e-mail : la 1re étape propose Google puis « Autres options » vers le numéro', () => {
+    const { el, titre, etape } = creer('email');
+    expect(etape()).toBe('Étape 1 sur 6');
+    expect(titre()).toContain('adresse e-mail');
+    const ordre = [...el.querySelectorAll('#email, #motDePasse, .separateur, app-bouton-google, .autres-options')].map(
+      (n) => n.id || n.className || n.tagName.toLowerCase(),
+    );
+    expect(ordre).toEqual(['email', 'motDePasse', 'separateur', 'app-bouton-google', 'autres-options']);
+    expect(el.querySelector('.autres-options')?.getAttribute('href')).toBe('/auth/inscription-telephone');
+    expect(el.querySelector('.autres-options')?.textContent).toContain('numéro + code SMS');
+  });
+
+  it("parcours e-mail : Google et « Autres options » disparaissent après la 1re étape", () => {
+    const { el, saisir, continuer } = creer('email');
+    saisir('email', 'awa@exemple.sn');
+    saisir('motDePasse', 'Motdepasse1');
+    continuer();
+    expect(el.querySelector('app-connexion-sociale')).toBeNull();
+    expect(el.querySelector('.autres-options')).toBeNull();
+  });
+
+  it("parcours téléphone : pas de Google ni d'« Autres options » (le numéro est déjà vérifié)", () => {
+    const { el } = creer('telephone');
+    expect(el.querySelector('app-connexion-sociale')).toBeNull();
+    expect(el.querySelector('.autres-options')).toBeNull();
   });
 
   it('parcours téléphone : nom, sexe, mot de passe passé, conditions, puis compte créé et connecté', () => {

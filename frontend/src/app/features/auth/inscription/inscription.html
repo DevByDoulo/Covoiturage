@@ -118,7 +118,7 @@
     <app-alerte type="erreur">
       {{ e.message }}
       @if (parcours() === 'telephone' && e.status === 400) {
-        <a routerLink="/auth/inscription">Recommencer avec mon numéro</a>
+        <a routerLink="/auth/inscription-telephone">Recommencer avec mon numéro</a>
       }
     </app-alerte>
   }
@@ -134,5 +134,15 @@
   </button>
   @if (etape() === 'motDePasse') {
     <button class="bouton bouton--secondaire" type="button" (click)="passer()">Passer</button>
+  }
+
+  @if (parcours() === 'email' && etape() === 'identifiants') {
+    <app-connexion-sociale />
+
+    <a class="autres-options" routerLink="/auth/inscription-telephone"
+       [queryParams]="retourValide() ? { retour: retourValide() } : null">
+      <app-icone nom="telephone" [taille]="18" /> Autres options <span class="detail">numéro + code SMS</span>
+      <app-icone nom="chevron-droite" [taille]="18" />
+    </a>
   }
 </form>

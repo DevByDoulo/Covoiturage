@@ -141,12 +141,22 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
     secondaires transparents à bord blanc, **bouton principal orange de la charte avec texte sombre** (8:1 ; blanc sur
     orange échoue AA) et flèche (remplace le rouge de la maquette ; variable `--principal` dans `auth-photo.scss` pour
     changer de couleur en une ligne). Mot de passe oublié : « Retour » + titre comme les autres écrans, étapes à plat.
-  - **Ordre des écrans de connexion** (changement de la même branche, en plus du design) : `/auth/connexion` affiche
-    d'abord **e-mail (ou numéro) + mot de passe**, puis « ou continuer avec » Google (et Apple s'il est configuré), puis
-    « Autres options » = numéro + code SMS (`/auth/connexion-telephone`, même écran `Entree`) et le lien vers
-    l'inscription ; `/auth/inscription` commence au contraire par le numéro, avec « Autres options » = e-mail et mot de
-    passe (`/auth/autres-options`). `Connexion` reçoit la donnée de route `principal` ; « Retour » de la vérification
-    ramène à `/auth/connexion-telephone` pour un code par SMS. Tests : `connexion.spec.ts`, `entree.spec.ts`.
+  - **Ordre des écrans de connexion et d'inscription** (changement de la même branche, en plus du design ; 20/11/2026) :
+    même logique des deux côtés, **e-mail d'abord, numéro dans « Autres options »**.
+    - Connexion : `/auth/connexion` = e-mail (ou numéro) + mot de passe, puis « ou continuer avec » Google (Apple s'il est
+      configuré), puis « Autres options » = numéro + code SMS (`/auth/connexion-telephone`, écran `Entree`) et le lien vers
+      l'inscription. `Connexion` reçoit la donnée de route `principal`.
+    - **Inscription (inversée)** : `/auth/inscription` = parcours e-mail (`Inscription`, `parcours: 'email'` : e-mail et
+      mot de passe, prénom et nom, numéro, sexe, conditions, puis code) avec, **sous la 1re étape seulement**, Google /
+      Apple (nouveau composant partagé `features/auth/connexion-sociale.ts` : séparateur, pastilles, suite du parcours
+      TELEPHONE_REQUIS / OTP_ENVOYE / connexion) et « Autres options » = numéro + code SMS
+      (`/auth/inscription-telephone`, `Entree` avec `inscription`, qui propose en retour « Autres options — e-mail et mot de
+      passe » vers `/auth/inscription`). Le numéro vérifié mène toujours à `/auth/profil`. `/auth/inscription-email`
+      redirige vers `/auth/inscription` ; `/auth/autres-options` n'est plus lié. `retour` est mémorisé par l'inscription
+      par e-mail comme par l'écran du numéro. « Retour » de la 1re étape ramène à `/auth/connexion` ; jeton perdu ou
+      erreur 400 du profil → `/auth/inscription-telephone`.
+    - Tests : `connexion.spec.ts`, `entree.spec.ts`, `inscription.spec.ts` (1re étape e-mail : Google puis « Autres
+      options » ; absents aux étapes suivantes et pour le parcours téléphone).
   - **Carte d'inscription** (maquette « Create new account » de Doulo, 20/11/2026 ; `auth-carte.scss`, 2e feuille de
     `AuthLayout` pour rester sous le budget de style) : sur les écrans d'inscription (donnée de route `carte` sur
     `/auth/inscription`, `/auth/inscription-email`, `/auth/profil`, `/auth/telephone`, et `/auth/verification?inscription=N`
@@ -457,7 +467,7 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   Reste : push.
 - Tests : `./mvnw test` → 68 tests (dont `InscriptionTelephoneParcoursTest`, `ConnexionExterneParcoursTest`, `AppleTokenVerifierTest`, `MessagesVocauxParcoursTest`, `AnalyseAudioTest`, `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 125 tests (dont guards, retour après connexion,
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 128 tests (dont guards, retour après connexion,
   intercepteur visiteur, `BarreRecherche`, paramètres de recherche, inscription Google en étapes, écran de départ par
   numéro et bouton Apple masqué, étapes du profil) ; `flutter test` dans `mobile` → 84 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
