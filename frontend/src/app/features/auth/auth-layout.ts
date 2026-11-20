@@ -25,8 +25,8 @@ import { Logo } from '../../shared/ui/logo';
           <img
             src="fond-connexion.webp"
             alt=""
-            width="1920"
-            height="1080"
+            width="1376"
+            height="768"
             fetchpriority="high"
             decoding="async"
             (error)="fondAbsent.set(true)"

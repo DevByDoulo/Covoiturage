@@ -16,8 +16,8 @@ describe("Cadre photo des écrans d'authentification (AuthLayout)", () => {
     expect(img.getAttribute('src')).toBe('fond-connexion.webp');
     expect(img.getAttribute('fetchpriority')).toBe('high');
     expect(img.getAttribute('alt')).toBe('');
-    expect(img.getAttribute('width')).toBe('1920');
-    expect(img.getAttribute('height')).toBe('1080');
+    expect(img.getAttribute('width')).toBe('1376');
+    expect(img.getAttribute('height')).toBe('768');
     const mobile = el.querySelector('picture source')!;
     expect(mobile.getAttribute('srcset')).toBe('fond-connexion-mobile.webp');
     expect(mobile.getAttribute('type')).toBe('image/webp');
