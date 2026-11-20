@@ -35,7 +35,7 @@ export const routes: Routes = [
         // Inscription : le numéro d'abord, puis Google, puis « Autres options » (e-mail et mot de passe).
         path: 'inscription',
         title: 'Créer un compte · YOBALEMAsn',
-        data: { inscription: true },
+        data: { inscription: true, carte: true },
         canActivate: [invitesGuard],
         loadComponent: () => import('./features/auth/entree/entree').then((m) => m.Entree),
       },
@@ -50,14 +50,14 @@ export const routes: Routes = [
         // Nouveau numéro vérifié par code : prénom, nom, sexe, mot de passe facultatif, conditions.
         path: 'profil',
         title: 'Créer un compte · YOBALEMAsn',
-        data: { parcours: 'telephone' },
+        data: { parcours: 'telephone', carte: true },
         canActivate: [invitesGuard],
         loadComponent: () => import('./features/auth/inscription/inscription').then((m) => m.Inscription),
       },
       {
         path: 'inscription-email',
         title: 'Créer un compte · YOBALEMAsn',
-        data: { parcours: 'email' },
+        data: { parcours: 'email', carte: true },
         canActivate: [invitesGuard],
         loadComponent: () => import('./features/auth/inscription/inscription').then((m) => m.Inscription),
       },
@@ -77,7 +77,7 @@ export const routes: Routes = [
       {
         path: 'telephone',
         title: 'Inscription · YOBALEMAsn',
-        data: {},
+        data: { carte: true },
         loadComponent: () =>
           import('./features/auth/google-telephone/google-telephone').then((m) => m.GoogleTelephone),
       },

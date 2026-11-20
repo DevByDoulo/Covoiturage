@@ -147,6 +147,17 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
     l'inscription ; `/auth/inscription` commence au contraire par le numéro, avec « Autres options » = e-mail et mot de
     passe (`/auth/autres-options`). `Connexion` reçoit la donnée de route `principal` ; « Retour » de la vérification
     ramène à `/auth/connexion-telephone` pour un code par SMS. Tests : `connexion.spec.ts`, `entree.spec.ts`.
+  - **Carte d'inscription** (maquette « Create new account » de Doulo, 20/11/2026 ; `auth-carte.scss`, 2e feuille de
+    `AuthLayout` pour rester sous le budget de style) : sur les écrans d'inscription (donnée de route `carte` sur
+    `/auth/inscription`, `/auth/inscription-email`, `/auth/profil`, `/auth/telephone`, et `/auth/verification?inscription=N`
+    seulement quand c'est le code d'une inscription — `AuthLayout.activer()`), le formulaire est dans une **carte vert
+    foncé translucide** (80 %, flou 18 px, bord blanc à 16 %, coins de 24 px ; fond opaque si `prefers-reduced-transparency`
+    ou sans `backdrop-filter`), champs sombres avec **pictogramme à droite** (`order` CSS) et bord orange au focus,
+    titres alignés à gauche, « Déjà membre ? Se connecter » à droite. À gauche (≥ 960 px) : « REJOIGNEZ GRATUITEMENT »,
+    « Voyagez ensemble, <orange>au juste prix</orange>. » et un court texte, à la place de l'accroche. **Accent : orange de
+    la charte** (la maquette est bleue) ; texte orange éclairci `#ffb84d` sur la photo (≥ 3,8:1, grand texte). Différence
+    avec la maquette : libellés au-dessus des champs, pas flottants dans le champ ; parcours par étapes conservé (un seul
+    formulaire demanderait de changer le backend). La connexion garde le formulaire posé sur la photo.
   - **Images à fournir** : `frontend/public/fond-connexion.webp` et `fond-connexion-mobile.webp` (conseillé : 828×1600,
     ≤ 120 Ko pour le mobile), servies à la racine du site (`public/` : pas de `src/assets` dans ce projet) ; redémarrer
     `ng serve` après un ajout. **Tant qu'elles manquent** : l'événement `error` retire la `<picture>` et le dégradé vert
@@ -445,7 +456,7 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   Reste : push.
 - Tests : `./mvnw test` → 68 tests (dont `InscriptionTelephoneParcoursTest`, `ConnexionExterneParcoursTest`, `AppleTokenVerifierTest`, `MessagesVocauxParcoursTest`, `AnalyseAudioTest`, `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 122 tests (dont guards, retour après connexion,
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 125 tests (dont guards, retour après connexion,
   intercepteur visiteur, `BarreRecherche`, paramètres de recherche, inscription Google en étapes, écran de départ par
   numéro et bouton Apple masqué, étapes du profil) ; `flutter test` dans `mobile` → 84 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
