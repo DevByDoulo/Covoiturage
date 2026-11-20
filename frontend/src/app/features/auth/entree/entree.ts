@@ -86,7 +86,7 @@ export class Entree implements OnInit {
     this.envoi.set(true);
     this.erreur.set(null);
     const telephone = '+221' + chiffresTelephone(champ.value);
-    this.session.codeTelephone(telephone, this.form.controls.resterConnecte.value).subscribe({
+    this.session.codeTelephone(telephone, this.form.controls.resterConnecte.value, !!this.inscription()).subscribe({
       next: () => this.router.navigateByUrl('/auth/verification'),
       error: (e) => {
         const err = lireErreur(e);

@@ -63,10 +63,47 @@ describe('Création du compte en étapes (Inscription)', () => {
     expect(el.querySelector('.autres-options')?.textContent).toContain('numéro + code SMS');
   });
 
+  it('parcours e-mail : la confirmation doit être identique au mot de passe', () => {
+    const { el, saisir, continuer, etape } = creer('email');
+    saisir('email', 'awa@test.sn');
+    saisir('motDePasse', 'Teranga2026');
+    continuer();
+    // Confirmation vide : on reste sur l'étape, avec le message.
+    expect(etape()).toBe('Étape 1 sur 6');
+    expect(el.querySelector('#erreur-confirmation')?.textContent).toContain('ne correspondent pas');
+    saisir('confirmation', 'Teranga2027');
+    continuer();
+    expect(etape()).toBe('Étape 1 sur 6');
+    expect(el.querySelector('#erreur-confirmation')).not.toBeNull();
+    saisir('confirmation', 'Teranga2026');
+    expect(el.querySelector('#erreur-confirmation')).toBeNull();
+    continuer();
+    expect(etape()).toBe('Étape 2 sur 6');
+  });
+
+  it('parcours téléphone : un mot de passe saisi doit être confirmé ; « Passer » reste possible', () => {
+    const { el, saisir, continuer, cliquer, etape, titre } = creer('telephone');
+    saisir('prenom', 'Awa');
+    saisir('nom', 'Diop');
+    continuer();
+    cliquer('Une femme');
+    continuer();
+    expect(titre()).toContain('mot de passe');
+    // Champs vides : le mot de passe est facultatif, on peut continuer sans confirmation.
+    saisir('motDePasse', 'Teranga2026');
+    continuer();
+    expect(titre()).toContain('mot de passe');
+    expect(el.querySelector('#erreur-confirmation')).not.toBeNull();
+    saisir('confirmation', 'Teranga2026');
+    continuer();
+    expect(etape()).toBe('Étape 6 sur 6');
+  });
+
   it("parcours e-mail : Google et « Autres options » disparaissent après la 1re étape", () => {
     const { el, saisir, continuer } = creer('email');
     saisir('email', 'awa@exemple.sn');
     saisir('motDePasse', 'Motdepasse1');
+    saisir('confirmation', 'Motdepasse1');
     continuer();
     expect(el.querySelector('app-connexion-sociale')).toBeNull();
     expect(el.querySelector('.autres-options')).toBeNull();
@@ -125,6 +162,7 @@ describe('Création du compte en étapes (Inscription)', () => {
     continuer();
     expect(etape()).toBe('Étape 1 sur 6');
     saisir('motDePasse', 'Teranga2026');
+    saisir('confirmation', 'Teranga2026');
     continuer();
     saisir('prenom', 'Awa');
     saisir('nom', 'Diop');

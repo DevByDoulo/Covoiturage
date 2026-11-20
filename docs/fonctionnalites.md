@@ -157,6 +157,16 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
       erreur 400 du profil → `/auth/inscription-telephone`.
     - Tests : `connexion.spec.ts`, `entree.spec.ts`, `inscription.spec.ts` (1re étape e-mail : Google puis « Autres
       options » ; absents aux étapes suivantes et pour le parcours téléphone).
+    - **« Retour » du code de vérification** : `VerificationEnCours.inscription` (posé par `codeTelephone(numero, rester,
+      inscription)`, conservé au renvoi du code) → `Verification.retourVers` : `/auth/inscription-telephone` pour une
+      inscription par numéro, `/auth/connexion-telephone` pour une connexion par numéro, `/auth/inscription` avec le
+      paramètre `inscription` (e-mail ou Google), `/auth/connexion` sinon. `AuthLayout` met aussi dans la carte le code d'une
+      inscription par numéro (`session.verification().inscription`). Test : `verification.spec.ts`.
+    - **Confirmation du mot de passe à l'inscription** : champ « Confirmez le mot de passe » sous le mot de passe, à la
+      1re étape du parcours e-mail (obligatoire) et à l'étape facultative du parcours téléphone (obligatoire seulement si un
+      mot de passe est saisi ; « Passer » l'efface). Contrôle `confirmation` (validateur `memeMotDePasse`, revérifié quand le
+      mot de passe change), message « Les deux mots de passe ne correspondent pas » ; non envoyé au backend. Le
+      changement de mot de passe du profil et le mot de passe oublié avaient déjà une confirmation.
   - **Carte d'inscription** (maquette « Create new account » de Doulo, 20/11/2026 ; `auth-carte.scss`, 2e feuille de
     `AuthLayout` pour rester sous le budget de style) : sur les écrans d'inscription (donnée de route `carte` sur
     `/auth/inscription`, `/auth/inscription-email`, `/auth/profil`, `/auth/telephone`, et `/auth/verification?inscription=N`
@@ -467,7 +477,7 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   Reste : push.
 - Tests : `./mvnw test` → 68 tests (dont `InscriptionTelephoneParcoursTest`, `ConnexionExterneParcoursTest`, `AppleTokenVerifierTest`, `MessagesVocauxParcoursTest`, `AnalyseAudioTest`, `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 128 tests (dont guards, retour après connexion,
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 134 tests (dont guards, retour après connexion,
   intercepteur visiteur, `BarreRecherche`, paramètres de recherche, inscription Google en étapes, écran de départ par
   numéro et bouton Apple masqué, étapes du profil) ; `flutter test` dans `mobile` → 84 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de

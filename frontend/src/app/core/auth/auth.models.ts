@@ -82,6 +82,8 @@ export interface VerificationEnCours {
   identifiant: string;
   /** 'telephone' : connexion ou inscription par numéro (/api/auth/telephone/...). */
   mode?: 'telephone';
+  /** Code demandé depuis l'inscription par numéro (« Retour » et habillage de l'écran du code). */
+  inscription?: boolean;
   canal: CanalOtp;
   telephoneMasque: string | null;
   emailMasque: string | null;

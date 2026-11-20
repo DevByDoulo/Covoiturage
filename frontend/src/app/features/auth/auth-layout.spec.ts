@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -6,7 +8,7 @@ import { AuthLayout } from './auth-layout';
 
 describe("Cadre photo des écrans d'authentification (AuthLayout)", () => {
   function creer() {
-    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
     const fixture = TestBed.createComponent(AuthLayout);
     fixture.detectChanges();
     return fixture;
@@ -52,6 +54,8 @@ describe("Cadre photo des écrans d'authentification (AuthLayout)", () => {
     async function ouvrir(url: string) {
       TestBed.configureTestingModule({
         providers: [
+          provideHttpClient(),
+          provideHttpClientTesting(),
           provideRouter([
             {
               path: '',

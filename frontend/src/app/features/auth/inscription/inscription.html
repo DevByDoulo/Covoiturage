@@ -29,6 +29,14 @@
           8 caractères minimum, dont une lettre et un chiffre
         </p>
       </div>
+      <div class="champ" [class.champ--erreur]="enErreur('confirmation')">
+        <label class="libelle" for="confirmation">Confirmez le mot de passe</label>
+        <app-champ-mot-de-passe idChamp="confirmation" formControlName="confirmation" autocomplete="new-password"
+                                placeholder="Confirmez le mot de passe" [decritPar]="enErreur('confirmation') ? 'erreur-confirmation' : ''" />
+        @if (enErreur('confirmation')) {
+          <p class="message-erreur" id="erreur-confirmation"><app-icone nom="alerte" [taille]="14" /> Les deux mots de passe ne correspondent pas</p>
+        }
+      </div>
     }
     @case ('nom') {
       <h1 #titre tabindex="-1" id="titre-etape">Comment vous appelez-vous ?</h1>
@@ -94,6 +102,14 @@
         <p [class]="enErreur('motDePasse') ? 'message-erreur' : 'aide'">
           8 caractères minimum, dont une lettre et un chiffre
         </p>
+      </div>
+      <div class="champ" [class.champ--erreur]="enErreur('confirmation')">
+        <label class="libelle" for="confirmation">Confirmez le mot de passe</label>
+        <app-champ-mot-de-passe idChamp="confirmation" formControlName="confirmation" autocomplete="new-password"
+                                placeholder="Confirmez le mot de passe" [decritPar]="enErreur('confirmation') ? 'erreur-confirmation' : ''" />
+        @if (enErreur('confirmation')) {
+          <p class="message-erreur" id="erreur-confirmation"><app-icone nom="alerte" [taille]="14" /> Les deux mots de passe ne correspondent pas</p>
+        }
       </div>
     }
     @case ('cgu') {

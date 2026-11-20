@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, signal, ViewEncapsulation, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, ViewEncapsulation, viewChild } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
+import { SessionService } from '../../core/auth/session.service';
 import { Logo } from '../../shared/ui/logo';
 
 /**
@@ -74,10 +75,13 @@ export class AuthLayout {
   protected readonly carte = signal(false);
 
   private readonly outlet = viewChild.required(RouterOutlet);
+  private readonly session = inject(SessionService);
 
   protected activer(): void {
     const route = this.outlet().activatedRoute;
-    const codeDInscription = route.snapshot.routeConfig?.path === 'verification' && route.snapshot.queryParamMap.has('inscription');
+    const codeDInscription =
+      route.snapshot.routeConfig?.path === 'verification' &&
+      (route.snapshot.queryParamMap.has('inscription') || !!this.session.verification()?.inscription);
     this.carte.set(!!this.outlet().activatedRouteData['carte'] || codeDInscription);
   }
 }
