@@ -59,3 +59,20 @@ String numeroSenegal(String saisie) =>
 
 /// Numéro mobile sénégalais : 9 chiffres commençant par 7.
 bool numeroSenegalValide(String saisie) => RegExp(r'^7\d{8}$').hasMatch(numeroSenegal(saisie));
+
+/// Prénom et nom : des lettres (accents compris), avec espaces, tirets et apostrophes pour les noms composés
+/// (« Marie-Claire », « N'Diaye », « Ba Fall »), en commençant par une lettre. Même règle que le site et l'API.
+final _regleNom = RegExp(r"^\s*\p{L}[\p{L}\s'’-]*$", unicode: true);
+
+/// Message d'erreur d'un prénom ou d'un nom, ou null s'il est valable (80 caractères au plus).
+String? erreurNom(String? saisie) {
+  final t = saisie?.trim() ?? '';
+  if (t.isEmpty) return 'Obligatoire';
+  if (t.length > 80) return '80 caractères au plus.';
+  if (!_regleNom.hasMatch(t)) return 'Lettres uniquement (espaces, tirets et apostrophes admis).';
+  return null;
+}
+
+/// Retire d'une saisie tout ce qui n'est pas une lettre, un espace, un tiret ou une apostrophe.
+String lettresSeulement(String saisie) => saisie.replaceAll(RegExp(r"[^\p{L}\s'’-]", unicode: true), '');
+

@@ -1,5 +1,6 @@
 package sn.isep.Convoiturage.auth;
 
+import sn.isep.Convoiturage.common.Noms;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -17,8 +18,8 @@ public final class AuthDtos {
     static final String MESSAGE_MDP = "Le mot de passe doit contenir au moins 8 caractères, dont une lettre et un chiffre";
 
     public record InscriptionRequete(
-            @NotBlank @Size(max = 80) String prenom,
-            @NotBlank @Size(max = 80) String nom,
+            @NotBlank @Size(max = 80) @Pattern(regexp = Noms.REGLE, message = Noms.MESSAGE) String prenom,
+            @NotBlank @Size(max = 80) @Pattern(regexp = Noms.REGLE, message = Noms.MESSAGE) String nom,
             @NotBlank @Email @Size(max = 160) String email,
             @NotBlank String telephone,
             @NotBlank @Pattern(regexp = REGLE_MDP, message = MESSAGE_MDP) String motDePasse,
@@ -51,8 +52,8 @@ public final class AuthDtos {
     /** Fin de l'inscription par téléphone : jeton remis après le code, informations manquantes, mot de passe facultatif. */
     public record FinInscriptionTelephoneRequete(
             @NotBlank String jeton,
-            @NotBlank @Size(max = 80) String prenom,
-            @NotBlank @Size(max = 80) String nom,
+            @NotBlank @Size(max = 80) @Pattern(regexp = Noms.REGLE, message = Noms.MESSAGE) String prenom,
+            @NotBlank @Size(max = 80) @Pattern(regexp = Noms.REGLE, message = Noms.MESSAGE) String nom,
             Sexe sexe,
             @Pattern(regexp = REGLE_MDP, message = MESSAGE_MDP) String motDePasse) {}
 

@@ -97,8 +97,9 @@ class _InscriptionPageState extends State<InscriptionPage> {
                     child: TextFormField(
                       controller: _prenom,
                       textCapitalization: TextCapitalization.words,
+                      inputFormatters: [formatNom],
                       decoration: _deco('Prénom', 'prenom', Icons.badge_outlined),
-                      validator: (v) => (v ?? '').trim().isEmpty ? 'Obligatoire' : null,
+                      validator: erreurNom,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -106,8 +107,9 @@ class _InscriptionPageState extends State<InscriptionPage> {
                     child: TextFormField(
                       controller: _nom,
                       textCapitalization: TextCapitalization.words,
+                      inputFormatters: [formatNom],
                       decoration: _deco('Nom', 'nom', Icons.badge_outlined),
-                      validator: (v) => (v ?? '').trim().isEmpty ? 'Obligatoire' : null,
+                      validator: erreurNom,
                     ),
                   ),
                 ]),

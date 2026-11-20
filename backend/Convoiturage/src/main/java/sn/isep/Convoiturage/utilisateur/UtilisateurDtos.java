@@ -1,6 +1,8 @@
 package sn.isep.Convoiturage.utilisateur;
 
+import sn.isep.Convoiturage.common.Noms;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
@@ -59,8 +61,8 @@ public final class UtilisateurDtos {
     }
 
     public record ModificationProfilRequete(
-            @NotBlank @Size(max = 80) String prenom,
-            @NotBlank @Size(max = 80) String nom,
+            @NotBlank @Size(max = 80) @Pattern(regexp = Noms.REGLE, message = Noms.MESSAGE) String prenom,
+            @NotBlank @Size(max = 80) @Pattern(regexp = Noms.REGLE, message = Noms.MESSAGE) String nom,
             @Size(max = 500) String bio,
             Sexe sexe) {}
 

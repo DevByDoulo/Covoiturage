@@ -162,12 +162,20 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
       inscription par numéro, `/auth/connexion-telephone` pour une connexion par numéro, `/auth/inscription` avec le
       paramètre `inscription` (e-mail ou Google), `/auth/connexion` sinon. `AuthLayout` met aussi dans la carte le code d'une
       inscription par numéro (`session.verification().inscription`). Test : `verification.spec.ts`.
-    - **Prénom et nom : lettres seulement** (inscription du site, `inscription.ts`) : `REGLE_NOM_PROPRE` dans `formulaire.ts`
-      = lettres de l'alphabet (accents compris, `\p{L}`), avec espaces, tirets et apostrophes pour les noms composés
-      (« Marie-Claire », « N'Diaye », « Ba Fall »), commençant par une lettre. Les chiffres et symboles sont **retirés à la
-      frappe et au collage** (`lettresSeulement`, `filtrerNom`) et le validateur refuse le reste (« Lettres uniquement… »).
-      Frontend seulement : le backend (`@NotBlank @Size(max = 80)`), la modification du profil, l'appli mobile et les noms
-      repris de Google / Apple ne sont pas filtrés. Tests : `formulaire.spec.ts`, `inscription.spec.ts`.
+    - **Prénom et nom : lettres seulement, partout** (site, API, appli mobile ; 20/11/2026) : lettres de l'alphabet (accents
+      compris), avec espaces, tirets et apostrophes pour les noms composés (« Marie-Claire », « N'Diaye », « Ba Fall »),
+      commençant par une lettre ; pas de chiffres ni de symboles.
+      - **Site** : `REGLE_NOM_PROPRE` et `lettresSeulement` (`features/auth/formulaire.ts`) ; inscription (`filtrerNom`,
+        message « Lettres uniquement… ») et modification du profil (`APropos`) : les caractères refusés sont **retirés à la
+        frappe et au collage**, le validateur refuse le reste (un ancien nom contenant un chiffre doit être corrigé pour
+        enregistrer le profil). Tests : `formulaire.spec.ts`, `inscription.spec.ts`, `a-propos.spec.ts`.
+      - **API** : `common/Noms` (`REGLE`, `MESSAGE`) en `@Pattern` sur `prenom` et `nom` de `InscriptionRequete`,
+        `FinInscriptionTelephoneRequete` (inscription par numéro) et `ModificationProfilRequete` → 400 avec `erreurs.prenom` /
+        `erreurs.nom`. **Non filtrés** : les noms repris de Google / Apple (`AppleRequete`, jeton Google), pour ne pas bloquer
+        une connexion, et les comptes existants. Test : `common/NomsTest` (validation des trois requêtes).
+      - **Mobile** : `erreurNom` / `lettresSeulement` (`core/formats.dart`), `formatNom` (`shared/widgets.dart`) sur
+        l'inscription, le profil après le numéro (`profil_telephone.dart`) et « Modifier mon profil ». Tests : `core_test.dart`,
+        `inscription_telephone_test.dart`.
     - **Confirmation du mot de passe à l'inscription** : champ « Confirmez le mot de passe » sous le mot de passe, à la
       1re étape du parcours e-mail (obligatoire) et à l'étape facultative du parcours téléphone (obligatoire seulement si un
       mot de passe est saisi ; « Passer » l'efface). Contrôle `confirmation` (validateur `memeMotDePasse`, revérifié quand le
@@ -483,7 +491,7 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   Reste : push.
 - Tests : `./mvnw test` → 68 tests (dont `InscriptionTelephoneParcoursTest`, `ConnexionExterneParcoursTest`, `AppleTokenVerifierTest`, `MessagesVocauxParcoursTest`, `AnalyseAudioTest`, `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 138 tests (dont guards, retour après connexion,
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 140 tests (dont guards, retour après connexion,
   intercepteur visiteur, `BarreRecherche`, paramètres de recherche, inscription Google en étapes, écran de départ par
   numéro et bouton Apple masqué, étapes du profil) ; `flutter test` dans `mobile` → 84 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de

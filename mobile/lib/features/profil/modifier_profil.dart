@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api.dart';
+import '../../core/formats.dart';
 import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../shared/widgets.dart';
@@ -135,7 +136,7 @@ class _ModifierProfilPageState extends State<ModifierProfilPage> {
     final t = v?.trim() ?? '';
     if (t.isEmpty) return '$libelle obligatoire.';
     if (t.length > 80) return '80 caractères au plus.';
-    return null;
+    return erreurNom(t);
   }
 
   @override
@@ -179,6 +180,7 @@ class _ModifierProfilPageState extends State<ModifierProfilPage> {
             controller: _prenom,
             textCapitalization: TextCapitalization.words,
             autofillHints: const [AutofillHints.givenName],
+            inputFormatters: [formatNom],
             decoration: InputDecoration(
                 labelText: 'Prénom', prefixIcon: const Icon(Icons.person_outline), errorText: _erreursChamps['prenom']),
             validator: (v) => _requis(v, 'Prénom'),
@@ -189,6 +191,7 @@ class _ModifierProfilPageState extends State<ModifierProfilPage> {
             controller: _nom,
             textCapitalization: TextCapitalization.words,
             autofillHints: const [AutofillHints.familyName],
+            inputFormatters: [formatNom],
             decoration: InputDecoration(
                 labelText: 'Nom', prefixIcon: const Icon(Icons.badge_outlined), errorText: _erreursChamps['nom']),
             validator: (v) => _requis(v, 'Nom'),

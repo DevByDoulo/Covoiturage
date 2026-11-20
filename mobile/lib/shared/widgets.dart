@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/config.dart';
 import '../core/theme.dart';
+
+/// Champ prénom ou nom : ne laisse taper que des lettres, espaces, tirets et apostrophes (voir `erreurNom`).
+final TextInputFormatter formatNom = FilteringTextInputFormatter.allow(RegExp(r"[\p{L}\s'’-]", unicode: true));
 
 /// Encadré d'erreur (rouge) ou d'information (vert).
 class Bandeau extends StatelessWidget {
