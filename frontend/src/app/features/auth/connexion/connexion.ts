@@ -17,7 +17,7 @@ import { enErreur, retourSur } from '../formulaire';
   selector: 'app-connexion',
   imports: [ReactiveFormsModule, RouterLink, Icone, Alerte, ChampMotDePasse],
   templateUrl: './connexion.html',
-  styleUrls: ['../auth-epure.scss', './connexion.scss'],
+  styleUrl: './connexion.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Connexion implements OnInit {

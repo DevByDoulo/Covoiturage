@@ -49,11 +49,11 @@ chaque fonctionnalité ; ici, ne garder qu'une ligne par module.
   Google, pas de session sans numéro de téléphone ; à activer avec un compte Apple Developer), inscription et connexion
   **par téléphone** au même niveau que Google et e-mail (branche `inscription-telephone` : écran de départ numéro +221
   → code SMS → profil pour un nouveau numéro, `POST /api/auth/telephone/code|verifier|terminer`, étape `PROFIL_REQUIS`,
-  « Autres options » = e-mail et mot de passe, bouton Apple masqué sans `environment.apple` ; site et mobile).
+  « Autres options » = e-mail et mot de passe, bouton Apple masqué sans `environment.apple` ; site et mobile). Habillage **photo plein écran + panneau en verre dépoli** pour tous les écrans d'authentification (branche `connexion-photo` : `AuthLayout` + `auth-photo.scss` partagé, images `public/fond-connexion(-mobile).webp` à fournir, dégradé vert en repli ; design seulement).
 - **Appli mobile Flutter** (`mobile/`, voir `mobile/README.md`) : parcours passager et conducteur, messagerie, avis,
   guidage vocal et suivi en direct, notifications push (`google-services.json` non commité). Mot de passe oublié fait (branche `mobile-mot-de-passe-oublie`), historique des paiements et reçus (branche `mobile-paiements`), modification du profil — photo, prénom, nom, présentation (branche `mobile-profil`), icône + test sur téléphone Android (branche `mobile-test-telephone`, `docs/test-telephone-android.md`), connexion Google (branche `mobile-google`, ID client Web en `--dart-define=GOOGLE_SERVER_CLIENT_ID`, même endpoint `/api/auth/google`), escales à la publication (branche `mobile-escales` : ajout, ordre, suppression, jusqu'à 5 ; pas de prix par tronçon ni de réservation de segment, absents du site et de l'API). Reste : iOS (push APNs).
 - Version complète d'avant le 27/10/2026 : étiquette Git `archive/lot1-complet`.
-- **Tests** : `./mvnw test` (68), `npm test` (114) + `npx ng build`, `flutter test` dans `mobile` (84),
+- **Tests** : `./mvnw test` (68), `npm test` (117) + `npx ng build`, `flutter test` dans `mobile` (84),
   `python -m pytest` dans `ia-tarification` (20). Tests d'intégration : numéros de téléphone uniques (base partagée).
 - **Textes légaux** (`frontend/src/app/features/legal`) : à mettre à jour (texte + `VERSION_LEGALE`) à chaque
   fonctionnalité qui touche aux données ou aux règles. Version du 13/11/2026 : notifications push (jetons d'appareil,

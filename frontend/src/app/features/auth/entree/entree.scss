@@ -1,24 +1,30 @@
-/* Propre à l'écran de départ (le reste : ../auth-epure.scss et ../google-telephone/google-telephone.scss). */
-
-.aide {
-  margin: 6px 2px 0;
-  font-size: 13px;
-  color: var(--texte-2);
-}
+/* Propre à l'écran de départ (le reste : ../auth-photo.scss). */
 
 .autres-options {
   display: flex;
   align-items: center;
   gap: 10px;
   min-height: 52px;
-  padding: 0 4px;
+  padding: 0 8px;
+  border-radius: 10px;
   color: var(--texte);
   font-weight: 600;
-  &:hover { text-decoration: none; background: #f6f6f6; }
+  &:hover {
+    text-decoration: none;
+    background: rgba(17, 24, 39, 0.06);
+  }
   .detail {
     font-weight: 400;
     font-size: 14px;
     color: var(--texte-2);
   }
-  app-icone:last-child { margin-left: auto; }
+  app-icone:last-child {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 400px) {
+  .autres-options .detail {
+    display: none;
+  }
 }

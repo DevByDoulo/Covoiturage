@@ -13,7 +13,7 @@ import { SaisieCode } from '../../../shared/ui/saisie-code';
   selector: 'app-verification',
   imports: [ReactiveFormsModule, RouterLink, Icone, Alerte, SaisieCode, PaveNumerique],
   templateUrl: './verification.html',
-  styleUrls: ['../auth-commun.scss', '../auth-epure.scss', './verification.scss'],
+  styleUrl: './verification.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Verification {

@@ -18,7 +18,7 @@ export const routes: Routes = [
       {
         path: 'connexion',
         title: 'Connexion · YOBALEMAsn',
-        data: { epure: true },
+        data: {},
         canActivate: [invitesGuard],
         loadComponent: () => import('./features/auth/entree/entree').then((m) => m.Entree),
       },
@@ -26,14 +26,14 @@ export const routes: Routes = [
         // Même écran de départ (numéro, Google, autres options), titre adapté.
         path: 'inscription',
         title: 'Créer un compte · YOBALEMAsn',
-        data: { epure: true, inscription: true },
+        data: { inscription: true },
         canActivate: [invitesGuard],
         loadComponent: () => import('./features/auth/entree/entree').then((m) => m.Entree),
       },
       {
         path: 'autres-options',
         title: 'Connexion par e-mail · YOBALEMAsn',
-        data: { epure: true },
+        data: {},
         canActivate: [invitesGuard],
         loadComponent: () => import('./features/auth/connexion/connexion').then((m) => m.Connexion),
       },
@@ -41,21 +41,21 @@ export const routes: Routes = [
         // Nouveau numéro vérifié par code : prénom, nom, sexe, mot de passe facultatif, conditions.
         path: 'profil',
         title: 'Créer un compte · YOBALEMAsn',
-        data: { epure: true, parcours: 'telephone' },
+        data: { parcours: 'telephone' },
         canActivate: [invitesGuard],
         loadComponent: () => import('./features/auth/inscription/inscription').then((m) => m.Inscription),
       },
       {
         path: 'inscription-email',
         title: 'Créer un compte · YOBALEMAsn',
-        data: { epure: true, parcours: 'email' },
+        data: { parcours: 'email' },
         canActivate: [invitesGuard],
         loadComponent: () => import('./features/auth/inscription/inscription').then((m) => m.Inscription),
       },
       {
         path: 'verification',
         title: 'Vérification · YOBALEMAsn',
-        data: { epure: true },
+        data: {},
         canActivate: [verificationGuard],
         loadComponent: () => import('./features/auth/verification/verification').then((m) => m.Verification),
       },
@@ -68,7 +68,7 @@ export const routes: Routes = [
       {
         path: 'telephone',
         title: 'Inscription · YOBALEMAsn',
-        data: { epure: true },
+        data: {},
         loadComponent: () =>
           import('./features/auth/google-telephone/google-telephone').then((m) => m.GoogleTelephone),
       },

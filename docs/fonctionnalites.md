@@ -122,6 +122,35 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
     Pas de bouton Apple dans l'appli, rien à masquer.
   - Textes légaux (version du **20/11/2026**) : numéro de téléphone comme identifiant de connexion, code par SMS
     (empreinte seule conservée, limites), email et mot de passe facultatifs pour un compte créé par numéro.
+- **Habillage photo + verre dépoli des écrans d'authentification** (branche `connexion-photo`, site seulement,
+  **design seulement** : parcours, méthodes et textes inchangés ; remplace le bandeau vert et la colonne blanche de
+  `connexion-design`) :
+  - **Cadre** (`auth-layout.ts`, tous les écrans sous `/auth` : départ, autres options, inscription, profil,
+    vérification, téléphone après Google/Apple, mot de passe oublié ; la donnée de route `epure` n'existe plus) : photo
+    plein écran dans une `<picture>` (`fond-connexion.webp`, et `fond-connexion-mobile.webp` en portrait de moins de
+    768 px ; `fetchpriority="high"`, `width`/`height` fixes, `alt` vide, pas de bibliothèque), voile sombre dégradé,
+    panneau **blanc à 90 %, flou 18 px** (`backdrop-filter`), coins de 24 px, bordure blanche de 1 px, ombre douce.
+    ≥ 960 px : logo (pastille blanche, lisible sur toute photo) et accroche à gauche, **fine ligne blanche verticale**
+    puis panneau à droite ; téléphone : logo en haut, panneau pleine largeur avec marges de 16 px, en bas.
+  - **Images à fournir** : `frontend/public/fond-connexion.webp` (conseillé 1920×1080, ≤ 200 Ko) et
+    `fond-connexion-mobile.webp` (828×1600, ≤ 120 Ko), servies à la racine du site (`public/` : il n'y a pas de
+    `src/assets` dans ce projet). **Tant qu'elles manquent** : l'événement `error` retire la `<picture>` et le
+    dégradé vert de la charte (`#0c6b3f` → `#084a2b`) reste en fond (test dans `auth-layout.spec.ts`).
+  - **Style partagé** : `features/auth/auth-photo.scss`, appliqué **une seule fois** par `AuthLayout`
+    (`ViewEncapsulation.None`, tout sous `.auth-photo` / `.auth-panneau`) pour toutes les pages ; il remplace
+    `auth-epure.scss`, `auth-commun.scss` et `google-telephone.scss`. Les écrans ne gardent que leurs particularités
+    (`entree.scss`, `connexion.scss`, `inscription.scss`, `verification.scss`, `mot-de-passe-oublie.scss`). Le
+    budget `anyComponentStyle` passe de 4 à **6 ko** en avertissement (la feuille unique fait ~6 ko).
+  - **Champs et boutons** : champs blancs de 54 px, bord `#7b8596` (3,8:1, WCAG 1.4.11), pictogrammes (e-mail,
+    cadenas, prénom/nom) ; bouton principal **vert de la charte** (blanc dessus : 6,6:1 ; l'orange ne passe pas AA) ;
+    boutons secondaires, Google et Apple blancs à bord fin. Mot de passe oublié : « Retour » + titre comme les autres
+    écrans (plus d'en-tête de page), étapes à plat dans le panneau.
+  - **Accessibilité** : libellés conservés (visibles ou `sr-only`), contour de focus vert de 3 px, halo sur les
+    champs, `prefers-reduced-motion` (pas d'animation d'apparition), **fond opaque** si `prefers-reduced-transparency`
+    ou sans `backdrop-filter` (`@supports not`), `forced-colors`. Contrastes calculés dans le pire cas (photo
+    blanche ou noire sous le voile, panneau à 90 %) : texte 12,5:1, texte secondaire 6,1:1, liens verts 5,3:1,
+    erreurs 4,8:1 ; texte blanc de l'accroche sur le voile ≥ 6:1.
+  - Vérifié dans le navigateur intégré (1280 px et 375 px, avec une photo de test très claire non commitée).
 - **Textes légaux** (branche `pages-legales`) : pages publiques `/conditions` et `/confidentialite`
   (`features/legal`, cadre commun `page-legale.ts` : contact `CONTACT_LEGAL`, date `VERSION_LEGALE`), liens depuis
   l'inscription, le pied des écrans de connexion, le profil, et dans l'appli mobile (`LiensLegaux`, qui ouvre le
@@ -407,7 +436,7 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   Reste : push.
 - Tests : `./mvnw test` → 68 tests (dont `InscriptionTelephoneParcoursTest`, `ConnexionExterneParcoursTest`, `AppleTokenVerifierTest`, `MessagesVocauxParcoursTest`, `AnalyseAudioTest`, `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 114 tests (dont guards, retour après connexion,
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 117 tests (dont guards, retour après connexion,
   intercepteur visiteur, `BarreRecherche`, paramètres de recherche, inscription Google en étapes, écran de départ par
   numéro et bouton Apple masqué, étapes du profil) ; `flutter test` dans `mobile` → 84 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de

@@ -33,7 +33,6 @@ export type EtapeGoogle = 2 | 3 | 4;
   selector: 'app-google-telephone',
   imports: [ReactiveFormsModule, RouterLink, Icone, Alerte, DrapeauSenegal],
   templateUrl: './google-telephone.html',
-  styleUrls: ['../auth-epure.scss', './google-telephone.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GoogleTelephone implements OnInit {

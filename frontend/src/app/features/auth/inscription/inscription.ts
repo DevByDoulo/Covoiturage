@@ -66,7 +66,7 @@ const ETAPE_DU_CHAMP: Record<string, EtapeInscription> = {
   selector: 'app-inscription',
   imports: [ReactiveFormsModule, RouterLink, Icone, Alerte, DrapeauSenegal, ChampMotDePasse],
   templateUrl: './inscription.html',
-  styleUrls: ['../auth-epure.scss', '../google-telephone/google-telephone.scss', './inscription.scss'],
+  styleUrl: './inscription.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Inscription implements OnInit {

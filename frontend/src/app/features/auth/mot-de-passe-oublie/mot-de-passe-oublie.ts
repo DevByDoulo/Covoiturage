@@ -1,14 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ErreurApi, lireErreur } from '../../../core/api/erreur-api';
 import { CanalOtp } from '../../../core/auth/auth.models';
 import { SessionService } from '../../../core/auth/session.service';
 import { Alerte } from '../../../shared/ui/alerte';
 import { ChampMotDePasse } from '../../../shared/ui/champ-mot-de-passe';
 import { compteARebours } from '../../../shared/ui/compte-a-rebours';
-import { EntetePage } from '../../../shared/ui/entete-page';
 import { ForceMotDePasse } from '../../../shared/ui/force-mot-de-passe';
 import { Icone } from '../../../shared/ui/icone';
 import { SaisieCode } from '../../../shared/ui/saisie-code';
@@ -22,9 +21,9 @@ type Etape = 1 | 2 | 3;
  */
 @Component({
   selector: 'app-mot-de-passe-oublie',
-  imports: [ReactiveFormsModule, EntetePage, Icone, Alerte, ChampMotDePasse, SaisieCode, ForceMotDePasse],
+  imports: [ReactiveFormsModule, RouterLink, Icone, Alerte, ChampMotDePasse, SaisieCode, ForceMotDePasse],
   templateUrl: './mot-de-passe-oublie.html',
-  styleUrls: ['../auth-commun.scss', './mot-de-passe-oublie.scss'],
+  styleUrl: './mot-de-passe-oublie.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MotDePasseOublie {

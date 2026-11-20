@@ -11,6 +11,7 @@
       <div class="champ" [class.champ--erreur]="enErreur('email') || erreurServeur('email')">
         <label class="sr-only" for="email">Adresse e-mail</label>
         <div class="saisie">
+          <app-icone nom="mail" />
           <input id="email" type="email" formControlName="email" autocomplete="email" inputmode="email"
                  placeholder="Adresse e-mail" [attr.aria-invalid]="enErreur('email') || !!erreurServeur('email')" />
         </div>
@@ -34,11 +35,17 @@
       <p class="sous-titre">Votre prénom est montré aux conducteurs et aux passagers de vos trajets.</p>
       <div class="champ" [class.champ--erreur]="enErreur('prenom')">
         <label class="sr-only" for="prenom">Prénom</label>
-        <div class="saisie"><input id="prenom" formControlName="prenom" autocomplete="given-name" placeholder="Prénom" /></div>
+        <div class="saisie">
+          <app-icone nom="utilisateur" />
+          <input id="prenom" formControlName="prenom" autocomplete="given-name" placeholder="Prénom" />
+        </div>
       </div>
       <div class="champ" [class.champ--erreur]="enErreur('nom')">
         <label class="sr-only" for="nom">Nom</label>
-        <div class="saisie"><input id="nom" formControlName="nom" autocomplete="family-name" placeholder="Nom" /></div>
+        <div class="saisie">
+          <app-icone nom="utilisateur" />
+          <input id="nom" formControlName="nom" autocomplete="family-name" placeholder="Nom" />
+        </div>
       </div>
       @if (enErreur('prenom') || enErreur('nom')) {
         <p class="message-erreur"><app-icone nom="alerte" [taille]="14" /> Indiquez votre prénom et votre nom</p>

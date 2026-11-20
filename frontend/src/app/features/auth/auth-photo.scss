@@ -1,0 +1,381 @@
+/* Habillage unique des écrans d'authentification : photo plein écran + panneau en verre dépoli.
+   Appliqué une seule fois par AuthLayout (ViewEncapsulation.None) ; tout est sous .auth-photo pour ne pas
+   déborder sur le reste du site. Les écrans (connexion, entrée, inscription, vérification, mot de passe oublié)
+   n'ajoutent que leurs particularités. */
+
+.auth-photo {
+  --verre: rgba(255, 255, 255, 0.9);
+  --bord-champ: #7b8596; /* 3,8:1 sur blanc (WCAG 1.4.11) */
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  /* Repli quand la photo est absente ou n'a pas encore chargé : dégradé vert de la charte. */
+  background: linear-gradient(160deg, #0c6b3f 0%, #084a2b 100%);
+  color: var(--texte);
+}
+
+/* ---------------------------------------------------------------- Fond */
+
+.auth-photo__fond,
+.auth-photo__voile {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
+.auth-photo__fond img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Voile sombre : assure le contraste du texte blanc à gauche et du panneau, quelle que soit la photo. */
+.auth-photo__voile {
+  background: linear-gradient(180deg, rgba(4, 28, 18, 0.5) 0%, rgba(4, 28, 18, 0.7) 100%);
+}
+
+/* ---------------------------------------------------------------- Cadre */
+
+.auth-photo__cadre {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  padding: 16px;
+}
+
+.auth-photo__logo {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(4, 28, 18, 0.25);
+  &:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 3px;
+  }
+}
+
+.auth-photo__accroche {
+  display: none;
+  margin: 0;
+  max-width: 14em;
+  font-size: clamp(32px, 3.4vw, 46px);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: #fff;
+  text-shadow: 0 2px 18px rgba(4, 28, 18, 0.5);
+}
+
+/* ---------------------------------------------------------------- Panneau */
+
+.auth-panneau {
+  width: 100%;
+  max-width: 480px;
+  margin: auto auto 0;
+  padding: 22px 18px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 24px;
+  background: var(--verre);
+  box-shadow: 0 24px 60px rgba(4, 28, 18, 0.35);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  animation: auth-apparition 0.35s ease-out;
+}
+
+@keyframes auth-apparition {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Pas de flou possible (navigateur ancien) ou transparence réduite : panneau opaque. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .auth-panneau {
+    background: #fff;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .auth-panneau {
+    background: #fff;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-panneau {
+    animation: none;
+  }
+}
+@media (forced-colors: active) {
+  .auth-panneau {
+    border-color: CanvasText;
+    background: Canvas;
+  }
+}
+
+@media (min-width: 960px) {
+  .auth-photo__voile {
+    background: linear-gradient(90deg, rgba(4, 28, 18, 0.74) 0%, rgba(4, 28, 18, 0.6) 100%);
+  }
+  .auth-photo__cadre {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(420px, 480px);
+    padding: 0 clamp(24px, 5vw, 72px);
+  }
+  /* Colonne de la marque, séparée du panneau par une fine ligne blanche. */
+  .auth-photo__marque {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 32px 56px 32px 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.7);
+  }
+  .auth-photo__accroche {
+    display: block;
+    margin-bottom: 18vh;
+  }
+  .auth-panneau {
+    align-self: center;
+    margin: 32px 0 32px 56px;
+    padding: 32px 28px 20px;
+  }
+}
+
+/* ---------------------------------------------------------------- Contenu des écrans */
+
+.auth-panneau {
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  .case:focus-within {
+    outline: 3px solid var(--vert);
+    outline-offset: 2px;
+  }
+  /* Le conteneur .saisie montre déjà le focus : pas de double contour sur l'input. */
+  .saisie input:focus-visible {
+    outline: 0;
+  }
+
+  .ecran {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  h1 {
+    margin-bottom: 6px;
+    font-size: clamp(22px, 5.5vw, 28px);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    &:focus {
+      outline: 0;
+    }
+  }
+
+  .formulaire {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .sous-titre {
+    margin: -6px 0 4px;
+    color: var(--texte-2);
+  }
+
+  .mention {
+    margin: 14px 0 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--texte-2);
+  }
+
+  .liens-legaux {
+    margin: 18px 0 0;
+    font-size: 13px;
+    text-align: center;
+    color: var(--texte-2);
+  }
+
+  .centre {
+    margin: -6px 0 0;
+    text-align: center;
+  }
+
+  .titres {
+    text-align: center;
+    p {
+      margin: 6px 0 0;
+      color: var(--texte-2);
+    }
+  }
+
+  /* Champs : fond blanc, bord net, pictogramme ; bord vert et halo au focus. */
+  .saisie {
+    min-height: 54px;
+    padding: 0 14px;
+    border: 1.5px solid var(--bord-champ);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: none;
+    &:focus-within {
+      border-color: var(--vert);
+      box-shadow: 0 0 0 3px rgba(12, 107, 63, 0.25);
+    }
+    input::placeholder {
+      color: var(--texte-3);
+    }
+    .indicatif {
+      background: #f1f3f7;
+    }
+  }
+  .champ--erreur .saisie {
+    border-color: var(--erreur);
+    background: var(--erreur-fond);
+  }
+
+  /* Boutons : le principal est vert (charte) ; les autres, blancs à bord fin. */
+  .bouton {
+    min-height: 54px;
+    border-radius: 12px;
+    font-weight: 700;
+  }
+  .bouton--primaire {
+    box-shadow: 0 6px 16px rgba(12, 107, 63, 0.3);
+  }
+  .bouton--secondaire,
+  app-bouton-google .bouton,
+  app-bouton-apple .bouton {
+    border: 1.5px solid #c3cad6;
+    background: #fff;
+    box-shadow: none;
+    color: var(--texte);
+    &:hover:not(:disabled) {
+      background: #f4f6fa;
+      text-decoration: none;
+    }
+  }
+
+  .separateur {
+    margin: 4px 0;
+    text-transform: none;
+    font-size: 14px;
+    color: var(--texte-2);
+    &::before,
+    &::after {
+      background: rgba(17, 24, 39, 0.3);
+    }
+  }
+
+  /* Retour, numéro d'étape. */
+  .haut {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 36px;
+    font-size: 13.5px;
+    color: var(--texte-2);
+    .etape {
+      margin-left: auto;
+      font-weight: 600;
+    }
+  }
+  .retour {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: -6px;
+    padding: 6px;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--texte);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    &:hover {
+      background: rgba(17, 24, 39, 0.07);
+      text-decoration: none;
+    }
+  }
+
+  .aide {
+    margin: 6px 2px 0;
+    font-size: 13px;
+    color: var(--texte-2);
+  }
+
+  /* Choix à gros boutons (sexe) et liste des textes à lire. */
+  .choix {
+    display: grid;
+    gap: 10px;
+    button {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 60px;
+      padding: 0 18px;
+      border: 1.5px solid var(--bord-champ);
+      border-radius: 12px;
+      background: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: left;
+      color: var(--texte);
+      cursor: pointer;
+      &:hover {
+        background: #f4f6fa;
+      }
+      &[aria-checked='true'] {
+        border-color: var(--vert);
+        box-shadow: 0 0 0 2px var(--vert);
+        background: var(--vert-clair);
+        color: var(--vert-fonce);
+      }
+    }
+  }
+
+  .liens-conditions {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid rgba(17, 24, 39, 0.15);
+    li {
+      border-bottom: 1px solid rgba(17, 24, 39, 0.15);
+    }
+    a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 2px;
+      color: var(--texte);
+    }
+  }
+
+  .case {
+    font-size: 14.5px;
+    color: var(--texte);
+  }
+  .case--erreur input {
+    outline: 2px solid var(--erreur);
+  }
+
+  /* Textes secondaires posés directement sur le verre : un ton plus foncé pour rester lisibles (AA). */
+  .pied-securite,
+  .validite {
+    color: var(--texte-2);
+  }
+
+  /* Mot de passe oublié : les étapes ne sont plus des cartes dans le panneau. */
+  .carte {
+    padding: 0;
+    background: none;
+    box-shadow: none;
+  }
+}

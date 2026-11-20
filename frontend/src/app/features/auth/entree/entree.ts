@@ -29,7 +29,7 @@ export function appleConfigure(): boolean {
   selector: 'app-entree',
   imports: [ReactiveFormsModule, RouterLink, Icone, Alerte, BoutonGoogle, BoutonApple, DrapeauSenegal],
   templateUrl: './entree.html',
-  styleUrls: ['../auth-epure.scss', '../google-telephone/google-telephone.scss', './entree.scss'],
+  styleUrl: './entree.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Entree implements OnInit {
