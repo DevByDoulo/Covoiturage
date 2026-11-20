@@ -4,6 +4,18 @@ import { ErreurApi } from '../../core/api/erreur-api';
 /** Même règle que le backend : 8 caractères minimum, au moins une lettre et un chiffre. */
 export const REGLE_MOT_DE_PASSE = /^(?=.*[A-Za-z])(?=.*\d).{8,72}$/;
 
+/**
+ * Prénom et nom : des lettres de l'alphabet (accents compris), avec espaces, tirets et apostrophes pour les noms composés
+ * (« Marie-Claire », « N'Diaye », « Ba Fall ») ; pas de chiffres ni de symboles. Commence par une lettre (les espaces
+ * autour sont retirés à l'envoi).
+ */
+export const REGLE_NOM_PROPRE = /^\s*\p{L}[\p{L}\s'’-]*$/u;
+
+/** Retire d'une saisie tout ce qui n'est pas une lettre, un espace, un tiret ou une apostrophe. */
+export function lettresSeulement(brut: string): string {
+  return brut.replace(/[^\p{L}\s'’-]/gu, '');
+}
+
 /** Numéro sénégalais saisi sans indicatif (« 77 123 45 67 »), ou avec +221 / 00221. */
 export function chiffresTelephone(brut: string): string {
   let c = brut.replace(/\D/g, '');

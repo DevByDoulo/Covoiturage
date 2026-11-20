@@ -22,7 +22,15 @@ import { ChampMotDePasse } from '../../../shared/ui/champ-mot-de-passe';
 import { DrapeauSenegal } from '../../../shared/ui/drapeau-senegal';
 import { Icone } from '../../../shared/ui/icone';
 import { ConnexionSociale } from '../connexion-sociale';
-import { REGLE_MOT_DE_PASSE, chiffresTelephone, enErreur, retourSur, telephoneSenegalValidator } from '../formulaire';
+import {
+  REGLE_MOT_DE_PASSE,
+  REGLE_NOM_PROPRE,
+  chiffresTelephone,
+  enErreur,
+  lettresSeulement,
+  retourSur,
+  telephoneSenegalValidator,
+} from '../formulaire';
 
 export type Parcours = 'telephone' | 'email';
 export type EtapeInscription = 'identifiants' | 'nom' | 'telephone' | 'sexe' | 'motDePasse' | 'cgu';
@@ -92,8 +100,8 @@ export class Inscription implements OnInit {
     email: ['', [Validators.required, Validators.email]],
     motDePasse: ['', Validators.pattern(REGLE_MOT_DE_PASSE)],
     confirmation: ['', memeMotDePasse],
-    prenom: ['', [Validators.required, Validators.maxLength(80)]],
-    nom: ['', [Validators.required, Validators.maxLength(80)]],
+    prenom: ['', [Validators.required, Validators.maxLength(80), Validators.pattern(REGLE_NOM_PROPRE)]],
+    nom: ['', [Validators.required, Validators.maxLength(80), Validators.pattern(REGLE_NOM_PROPRE)]],
     telephone: ['', [Validators.required, telephoneSenegalValidator]],
     sexe: inject(FormBuilder).control<Sexe | null>(null, Validators.required),
     cgu: [false, Validators.requiredTrue],
@@ -109,6 +117,22 @@ export class Inscription implements OnInit {
   /** Refus du serveur par champ, gardés à part (le champ est recréé quand on change d'étape) ; effacés à la saisie. */
   protected readonly erreursServeur = signal<Record<string, string>>({});
   protected readonly enErreur = (nom: string) => enErreur(this.form, nom);
+
+  /** Prénom et nom : retire à la frappe (et au collage) ce qui n'est pas une lettre. */
+  protected filtrerNom(champ: 'prenom' | 'nom', evenement: Event): void {
+    const saisie = evenement.target as HTMLInputElement;
+    const propre = lettresSeulement(saisie.value);
+    if (propre === saisie.value) return;
+    saisie.value = propre;
+    this.form.controls[champ].setValue(propre);
+  }
+
+  protected messageNom(): string {
+    const lettres = this.form.controls.prenom.hasError('pattern') || this.form.controls.nom.hasError('pattern');
+    return lettres
+      ? "Lettres uniquement (les espaces, tirets et apostrophes sont admis)"
+      : 'Indiquez votre prénom et votre nom';
+  }
 
   constructor() {
     // La confirmation est revérifiée quand le mot de passe change.

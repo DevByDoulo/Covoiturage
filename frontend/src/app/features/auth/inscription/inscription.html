@@ -45,18 +45,20 @@
         <label class="libelle" for="prenom">Prénom</label>
         <div class="saisie">
           <app-icone nom="utilisateur" />
-          <input id="prenom" formControlName="prenom" autocomplete="given-name" placeholder="Prénom" />
+          <input id="prenom" formControlName="prenom" autocomplete="given-name" placeholder="Prénom"
+                 (input)="filtrerNom('prenom', $event)" />
         </div>
       </div>
       <div class="champ" [class.champ--erreur]="enErreur('nom')">
         <label class="libelle" for="nom">Nom</label>
         <div class="saisie">
           <app-icone nom="utilisateur" />
-          <input id="nom" formControlName="nom" autocomplete="family-name" placeholder="Nom" />
+          <input id="nom" formControlName="nom" autocomplete="family-name" placeholder="Nom"
+                 (input)="filtrerNom('nom', $event)" />
         </div>
       </div>
       @if (enErreur('prenom') || enErreur('nom')) {
-        <p class="message-erreur"><app-icone nom="alerte" [taille]="14" /> Indiquez votre prénom et votre nom</p>
+        <p class="message-erreur"><app-icone nom="alerte" [taille]="14" /> {{ messageNom() }}</p>
       }
     }
     @case ('telephone') {

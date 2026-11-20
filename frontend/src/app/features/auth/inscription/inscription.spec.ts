@@ -81,6 +81,29 @@ describe('Création du compte en étapes (Inscription)', () => {
     expect(etape()).toBe('Étape 2 sur 6');
   });
 
+  it('prénom et nom : les caractères qui ne sont pas des lettres sont retirés à la saisie', () => {
+    const { el, saisir, continuer, etape } = creer('telephone');
+    saisir('prenom', 'Awa123');
+    saisir('nom', '@Diop!');
+    expect(el.querySelector<HTMLInputElement>('#prenom')!.value).toBe('Awa');
+    expect(el.querySelector<HTMLInputElement>('#nom')!.value).toBe('Diop');
+    saisir('prenom', "Marie-Claire");
+    saisir('nom', "N'Diaye");
+    expect(el.querySelector<HTMLInputElement>('#prenom')!.value).toBe('Marie-Claire');
+    expect(el.querySelector<HTMLInputElement>('#nom')!.value).toBe("N'Diaye");
+    continuer();
+    expect(etape()).toBe('Étape 4 sur 6');
+  });
+
+  it('prénom : une valeur sans lettre (espaces, tirets) est refusée avec un message', () => {
+    const { el, saisir, continuer, etape } = creer('telephone');
+    saisir('prenom', '---');
+    saisir('nom', 'Diop');
+    continuer();
+    expect(etape()).toBe('Étape 3 sur 6');
+    expect(el.querySelector('.message-erreur')?.textContent).toContain('Lettres uniquement');
+  });
+
   it('parcours téléphone : un mot de passe saisi doit être confirmé ; « Passer » reste possible', () => {
     const { el, saisir, continuer, cliquer, etape, titre } = creer('telephone');
     saisir('prenom', 'Awa');
