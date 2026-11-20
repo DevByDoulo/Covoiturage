@@ -84,6 +84,24 @@ class Session extends ChangeNotifier {
         'sexe': ?sexe,
       });
 
+  /// Connexion ou inscription par téléphone : code envoyé par SMS au numéro (+221…).
+  Future<AuthReponse> codeTelephone(String telephone) => _authentifier('/auth/telephone/code', {'telephone': telephone});
+
+  /// Numéro déjà connu : connecte le compte. Numéro inconnu : PROFIL_REQUIS avec le jeton d'inscription.
+  Future<AuthReponse> verifierCodeTelephone(String telephone, String code) =>
+      _authentifier('/auth/telephone/verifier', {'telephone': telephone, 'code': code});
+
+  /// Crée le compte du numéro vérifié (mot de passe facultatif) et ouvre la session.
+  Future<AuthReponse> terminerInscriptionTelephone(String jeton,
+          {required String prenom, required String nom, String? sexe, String? motDePasse}) =>
+      _authentifier('/auth/telephone/terminer', {
+        'jeton': jeton,
+        'prenom': prenom.trim(),
+        'nom': nom.trim(),
+        'sexe': ?sexe,
+        'motDePasse': ?motDePasse,
+      });
+
   Future<AuthReponse> verifierCode(String identifiant, String code) =>
       _authentifier('/auth/otp/verifier', {'identifiant': identifiant, 'code': code});
 

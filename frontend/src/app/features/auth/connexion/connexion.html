@@ -1,5 +1,14 @@
 <div class="ecran">
-  <h1 id="titre-connexion">Indiquez votre numéro de téléphone ou votre adresse e-mail</h1>
+  @if (principal()) {
+    <h1 id="titre-connexion">Connectez-vous</h1>
+  } @else {
+    <div class="haut">
+      <a class="retour" routerLink="/auth/inscription" [queryParams]="retourValide() ? { retour: retourValide() } : null">
+        <app-icone nom="fleche-gauche" [taille]="20" /> Retour
+      </a>
+    </div>
+    <h1 id="titre-connexion">Connectez-vous avec votre e-mail et votre mot de passe</h1>
+  }
 
   @if (reinitialise()) {
     <app-alerte type="succes" titre="Mot de passe modifié">Connectez-vous avec votre nouveau mot de passe.</app-alerte>
@@ -15,14 +24,15 @@
 
   <form class="formulaire" [formGroup]="form" (ngSubmit)="soumettre()" novalidate>
     <div class="champ" [class.champ--erreur]="enErreur('identifiant')">
-      <label class="sr-only" for="identifiant">Téléphone (+221) ou e-mail</label>
+      <label class="libelle" for="identifiant">E-mail ou téléphone (+221)</label>
       <div class="saisie">
+        <app-icone nom="mail" />
         <input
           id="identifiant"
           formControlName="identifiant"
           autocomplete="username"
           inputmode="email"
-          placeholder="Saisir n° de tél. ou e-mail"
+          placeholder="Adresse e-mail (ou n° de tél.)"
           [attr.aria-invalid]="enErreur('identifiant')"
           [attr.aria-describedby]="enErreur('identifiant') ? 'erreur-identifiant' : null"
         />
@@ -33,7 +43,7 @@
     </div>
 
     <div class="champ" [class.champ--erreur]="enErreur('motDePasse')">
-      <label class="sr-only" for="motDePasse">Mot de passe</label>
+      <label class="libelle" for="motDePasse">Mot de passe</label>
       <app-champ-mot-de-passe idChamp="motDePasse" formControlName="motDePasse" autocomplete="current-password"
                               placeholder="Mot de passe" [decritPar]="enErreur('motDePasse') ? 'erreur-mot-de-passe' : ''" />
       @if (enErreur('motDePasse')) {
@@ -61,27 +71,46 @@
       @if (envoi()) {
         <span class="chargement" aria-hidden="true"></span> Connexion…
       } @else {
-        Continuer
+        Se connecter <app-icone nom="fleche-droite" [taille]="18" />
       }
     </button>
   </form>
 
-  <div class="separateur">ou</div>
+  @if (principal()) {
+    <div class="separateur">ou continuer avec</div>
 
-  <app-bouton-google forme="rectangular" (jeton)="google($event)" (indisponible)="googleIndisponible.set(true)" />
-  @if (googleIndisponible()) {
-    <app-alerte type="info">La connexion Google n'est pas encore activée. Utilisez votre e-mail ou votre téléphone.</app-alerte>
-  }
-  <app-bouton-apple (reponse)="apple($event)"
-                    (indisponible)="messageApple.set(messagesApple.indisponible)" (echec)="messageApple.set(messagesApple.echec)" />
-  @if (messageApple(); as m) {
-    <app-alerte type="info">{{ m }}</app-alerte>
-  }
-  <a class="bouton bouton--secondaire" routerLink="/auth/inscription"
-     [queryParams]="retourValide() ? { retour: retourValide() } : null">Créer un compte</a>
+    <div class="reseaux">
+      <app-bouton-google variante="icone" (jeton)="google($event)" (indisponible)="googleIndisponible.set(true)" />
+      @if (apple) {
+        <app-bouton-apple variante="icone" (reponse)="connexionApple($event)"
+                          (indisponible)="messageApple.set(messagesApple.indisponible)" (echec)="messageApple.set(messagesApple.echec)" />
+      }
+    </div>
+    @if (googleIndisponible()) {
+      <app-alerte type="info">La connexion Google n'est pas disponible pour le moment. Utilisez votre e-mail ou votre numéro.</app-alerte>
+    }
+    @if (apple && messageApple(); as m) {
+      <app-alerte type="info">{{ m }}</app-alerte>
+    }
 
-  <p class="mention">
-    « Rester connecté » garde la session 30 jours : à ne pas cocher sur un appareil partagé. Si votre compte n'est pas
-    encore vérifié, un code vous sera envoyé par SMS ou par e-mail.
-  </p>
+    <a class="autres-options" routerLink="/auth/connexion-telephone"
+       [queryParams]="retourValide() ? { retour: retourValide() } : null">
+      <app-icone nom="telephone" [taille]="18" /> Autres options <span class="detail">numéro + code SMS</span>
+      <app-icone nom="chevron-droite" [taille]="18" />
+    </a>
+
+    <p class="mention">
+      Pas encore de compte ?
+      <a routerLink="/auth/inscription" [queryParams]="retourValide() ? { retour: retourValide() } : null">Créer un compte</a>
+    </p>
+  } @else {
+    <div class="separateur">ou</div>
+
+    <a class="bouton bouton--secondaire" routerLink="/auth/inscription-email"
+       [queryParams]="retourValide() ? { retour: retourValide() } : null">Créer un compte avec une adresse e-mail</a>
+
+    <p class="mention">
+      Pas de mot de passe ? Revenez en arrière et continuez avec votre numéro : un code vous sera envoyé par SMS.
+    </p>
+  }
 </div>

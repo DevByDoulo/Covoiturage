@@ -33,7 +33,6 @@ export type EtapeGoogle = 2 | 3 | 4;
   selector: 'app-google-telephone',
   imports: [ReactiveFormsModule, RouterLink, Icone, Alerte, DrapeauSenegal],
   templateUrl: './google-telephone.html',
-  styleUrls: ['../auth-epure.scss', './google-telephone.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GoogleTelephone implements OnInit {
@@ -110,7 +109,7 @@ export class GoogleTelephone implements OnInit {
       next: (r) =>
         r.etape === 'CONNECTE'
           ? this.router.navigateByUrl(this.session.pageApresConnexion())
-          : this.router.navigate(['/auth/verification'], { queryParams: { inscription: 1 } }),
+          : this.router.navigate(['/auth/verification'], { queryParams: { inscription: 5 } }),
       error: (e) => {
         const err = lireErreur(e);
         this.envoi.set(false);

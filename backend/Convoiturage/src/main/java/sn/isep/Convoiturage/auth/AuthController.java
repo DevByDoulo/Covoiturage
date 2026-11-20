@@ -37,6 +37,27 @@ public class AuthController {
         return auth.connecter(req);
     }
 
+    /** Connexion ou inscription par téléphone, étape 1 : code envoyé par SMS. */
+    @PostMapping("/telephone/code")
+    public AuthReponse codeTelephone(@Valid @RequestBody TelephoneRequete req, HttpServletRequest http) {
+        limiteurIp.consommer(LimiteurParIp.Action.DEMANDE_CODE, http.getRemoteAddr());
+        return auth.envoyerCodeTelephone(req);
+    }
+
+    /** Étape 2 : CONNECTE (numéro déjà connu) ou PROFIL_REQUIS avec le jeton d'inscription. */
+    @PostMapping("/telephone/verifier")
+    public AuthReponse verifierTelephone(@Valid @RequestBody VerificationTelephoneRequete req, HttpServletRequest http) {
+        limiteurIp.consommer(LimiteurParIp.Action.VERIFICATION_CODE, http.getRemoteAddr());
+        return auth.verifierCodeTelephone(req);
+    }
+
+    /** Étape 3 (numéro inconnu) : création du compte, puis connexion. */
+    @PostMapping("/telephone/terminer")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AuthReponse terminerTelephone(@Valid @RequestBody FinInscriptionTelephoneRequete req) {
+        return auth.terminerInscriptionTelephone(req);
+    }
+
     @PostMapping("/google")
     public AuthReponse google(@Valid @RequestBody GoogleRequete req) {
         return auth.connecterAvecGoogle(req);

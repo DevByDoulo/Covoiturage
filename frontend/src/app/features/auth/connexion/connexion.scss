@@ -1,4 +1,4 @@
-/* Propre à la connexion (le reste : ../auth-epure.scss). */
+/* Propre à la connexion par e-mail (le reste : ../auth-photo.scss). */
 
 .options {
   display: flex;
@@ -13,3 +13,33 @@
   }
 }
 
+/* « Autres options » : numéro + code SMS (même style que sur l'écran du numéro). */
+.autres-options {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 8px;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  &:hover {
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.16);
+  }
+  .detail {
+    font-weight: 400;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.92);
+  }
+  app-icone:last-child {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 400px) {
+  .autres-options .detail {
+    display: none;
+  }
+}

@@ -192,7 +192,7 @@ void main() {
       await tester.tap(find.text('Continuer avec Google'));
       await tester.pumpAndSettle();
       expect(google.appels, 1);
-      expect(find.text('Connexion'), findsOneWidget);
+      expect(find.text('Quel est votre numéro de téléphone ?'), findsOneWidget);
       expect(find.byType(Bandeau), findsNothing);
     });
 

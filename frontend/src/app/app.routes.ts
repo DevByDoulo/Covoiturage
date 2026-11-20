@@ -16,23 +16,55 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'connexion' },
       {
+        // Connexion : e-mail + mot de passe d'abord, puis Google, puis « Autres options » (numéro + code SMS).
         path: 'connexion',
         title: 'Connexion · YOBALEMAsn',
-        data: { epure: true },
+        data: { principal: true },
         canActivate: [invitesGuard],
         loadComponent: () => import('./features/auth/connexion/connexion').then((m) => m.Connexion),
       },
       {
+        // « Autres options » de la connexion : numéro + code SMS (même écran que le début de l'inscription).
+        path: 'connexion-telephone',
+        title: 'Connexion par téléphone · YOBALEMAsn',
+        data: {},
+        canActivate: [invitesGuard],
+        loadComponent: () => import('./features/auth/entree/entree').then((m) => m.Entree),
+      },
+      {
+        // Inscription : le numéro d'abord, puis Google, puis « Autres options » (e-mail et mot de passe).
         path: 'inscription',
         title: 'Créer un compte · YOBALEMAsn',
-        data: { epure: true },
+        data: { inscription: true, carte: true },
+        canActivate: [invitesGuard],
+        loadComponent: () => import('./features/auth/entree/entree').then((m) => m.Entree),
+      },
+      {
+        path: 'autres-options',
+        title: 'Connexion par e-mail · YOBALEMAsn',
+        data: {},
+        canActivate: [invitesGuard],
+        loadComponent: () => import('./features/auth/connexion/connexion').then((m) => m.Connexion),
+      },
+      {
+        // Nouveau numéro vérifié par code : prénom, nom, sexe, mot de passe facultatif, conditions.
+        path: 'profil',
+        title: 'Créer un compte · YOBALEMAsn',
+        data: { parcours: 'telephone', carte: true },
+        canActivate: [invitesGuard],
+        loadComponent: () => import('./features/auth/inscription/inscription').then((m) => m.Inscription),
+      },
+      {
+        path: 'inscription-email',
+        title: 'Créer un compte · YOBALEMAsn',
+        data: { parcours: 'email', carte: true },
         canActivate: [invitesGuard],
         loadComponent: () => import('./features/auth/inscription/inscription').then((m) => m.Inscription),
       },
       {
         path: 'verification',
         title: 'Vérification · YOBALEMAsn',
-        data: { epure: true },
+        data: {},
         canActivate: [verificationGuard],
         loadComponent: () => import('./features/auth/verification/verification').then((m) => m.Verification),
       },
@@ -45,7 +77,7 @@ export const routes: Routes = [
       {
         path: 'telephone',
         title: 'Inscription · YOBALEMAsn',
-        data: { epure: true },
+        data: { carte: true },
         loadComponent: () =>
           import('./features/auth/google-telephone/google-telephone').then((m) => m.GoogleTelephone),
       },

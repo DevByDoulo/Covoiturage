@@ -68,6 +68,7 @@ class AuthReponse {
     this.utilisateur,
     this.renvoiDans,
     this.suppressionAnnulee = false,
+    this.jetonInscription,
   });
 
   final String etape;
@@ -85,6 +86,9 @@ class AuthReponse {
   /// Vrai si cette connexion a annulé une suppression de compte en cours (délai de grâce de 30 jours).
   final bool suppressionAnnulee;
 
+  /// PROFIL_REQUIS (numéro inconnu dont le code est bon) : autorise 15 minutes la création du compte.
+  final String? jetonInscription;
+
   bool get connecte => etape == 'CONNECTE';
 
   factory AuthReponse.depuisJson(Map<String, dynamic> j) => AuthReponse(
@@ -96,6 +100,7 @@ class AuthReponse {
         utilisateur: j['utilisateur'] == null ? null : Profil.depuisJson(j['utilisateur'] as Map<String, dynamic>),
         renvoiDans: (j['renvoiPossibleDansSecondes'] as num?)?.toInt(),
         suppressionAnnulee: j['suppressionAnnulee'] == true,
+        jetonInscription: j['jetonInscription'] as String?,
       );
 }
 

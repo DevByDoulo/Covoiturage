@@ -87,6 +87,91 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
     du compte : le numéro est obligatoire mais pas vérifié par SMS tant que le fournisseur SMS n'est pas choisi.
   - Textes légaux (version du **19/11/2026**) : inscription avec Google ou Apple, données transmises par Apple
     (identifiant, email réel ou relais, prénom et nom au premier accès).
+- **Inscription et connexion par téléphone, au même niveau que Google et e-mail** (branche `inscription-telephone`,
+  site + API + mobile). Aucune méthode n'est imposée ; le numéro reste obligatoire pour les comptes Google, Apple et
+  e-mail (décision du 19/11/2026 : codes OTP rattachés au numéro, contact entre membres, SMS).
+  - **Backend** (aucune migration) : `POST /api/auth/telephone/code` (`{telephone}`, numéros +221 seulement, code
+    **toujours par SMS** même si le compte a un email, réponse identique que le numéro ait un compte ou non),
+    `POST /api/auth/telephone/verifier` (`{telephone, code}` → `CONNECTE` pour un numéro déjà connu, sans doublon,
+    numéro marqué vérifié, suppression en cours annulée ; sinon nouvelle étape **`PROFIL_REQUIS`** avec
+    `jetonInscription`), `POST /api/auth/telephone/terminer` (`{jeton, prenom, nom, sexe, motDePasse?}` → compte
+    `ACTIF`, `telephone_verifie`, mot de passe facultatif, 201 + `CONNECTE`). `JetonInscription` : jeton opaque signé
+    HMAC (clé des JWT) contenant le numéro, 15 minutes, rien en base ; rejoué → 409 (le compte existe déjà).
+    Réutilise `OtpService` (table `otp_code`, objet `VERIFICATION_TELEPHONE`, 6 chiffres, 5 min, 5 essais, renvoi
+    après 60 s, 5 codes/heure et 10/jour par numéro) et `LimiteurParIp` (20 demandes et 30 vérifications par heure
+    et par IP). Une **inscription abandonnée** avec ce numéro (compte `EN_ATTENTE_OTP` jamais vérifié) est reprise par
+    celui qui prouve posséder le numéro, sans rien garder (email, mot de passe, Google/Apple effacés) : empêche de
+    réserver le numéro de quelqu'un d'autre. `SmsSender` : le code n'est écrit dans les journaux (`[SMS simulé]`)
+    qu'en profils `dev` et `test` ; ailleurs, tant qu'aucun fournisseur n'est branché, `SmsNonConfigure` journalise
+    l'envoi sans le contenu.
+  - **Site** : `/auth/connexion` et `/auth/inscription` affichent le même **écran de départ** (`features/auth/entree`) :
+    champ +221 et « Continuer », « Rester connecté », « ou », Google, **Apple seulement si `environment.apple` est
+    renseigné** (`appleConfigure()`, sinon le bouton est masqué ; code Apple conservé), lien « Autres options (e-mail
+    et mot de passe) ». Puis `/auth/verification` (mode `telephone` dans `VerificationEnCours`, renvoi par
+    `/telephone/code`) ; numéro inconnu → **`/auth/profil`** (`Inscription`, parcours `telephone`, « Étape 3 à 6
+    sur 6 » : prénom et nom, sexe, mot de passe facultatif avec « Passer », conditions → compte créé et connecté ;
+    jeton en sessionStorage `covoitia.inscription`). **« Autres options »** = `/auth/autres-options` (ancien
+    formulaire de connexion identifiant + mot de passe, retour de « mot de passe oublié ») et
+    **`/auth/inscription-email`** (parcours `email` : e-mail et mot de passe, prénom et nom, numéro, sexe, conditions,
+    puis code « Étape 6 sur 6 » via `POST /api/auth/inscription` inchangé ; champ refusé → retour à son étape).
+    `?inscription=` de `/auth/verification` porte désormais le nombre d'étapes (5 Google, 6 e-mail).
+  - **Mobile** : `ConnexionPage` devient l'écran de départ (numéro + « Continuer », « ou », Google, « Autres options »),
+    `AutresOptionsPage` (`/autres-options` : e-mail + mot de passe, mot de passe oublié, « Créer un compte avec une
+    adresse e-mail » → ancienne `InscriptionPage`, sans bouton Google), `ProfilTelephonePage` (`/inscription/profil`,
+    jeton en mémoire : prénom, nom, sexe, mot de passe facultatif, conditions), `DemandeVerification.parTelephone`.
+    Pas de bouton Apple dans l'appli, rien à masquer.
+  - Textes légaux (version du **20/11/2026**) : numéro de téléphone comme identifiant de connexion, code par SMS
+    (empreinte seule conservée, limites), email et mot de passe facultatifs pour un compte créé par numéro.
+- **Habillage « photo plein écran » des écrans d'authentification** (branche `connexion-photo`, site seulement,
+  **design seulement** : parcours, méthodes et textes inchangés ; remplace le bandeau vert et la colonne blanche de
+  `connexion-design`). Modèle : capture de référence de Doulo (20/11/2026) — formulaire **posé directement sur la
+  photo, sans cadre**, texte blanc, champs blancs arrondis, gros bouton plein largeur avec flèche.
+  - **Cadre** (`auth-layout.ts`, tous les écrans sous `/auth` : départ, autres options, inscription, profil,
+    vérification, téléphone après Google/Apple, mot de passe oublié ; la donnée de route `epure` n'existe plus) : photo
+    plein écran dans une `<picture>` (`fond-connexion.webp`, et `fond-connexion-mobile.webp` en portrait de moins de
+    768 px ; `fetchpriority="high"`, `width`/`height` fixes — 1376×768 pour la photo actuelle —, `alt` vide, pas de
+    bibliothèque) et **voile sombre dégradé** (≈ 64 % → 76 % en vertical sur téléphone ; ≈ 72 % → 66 % de gauche à droite
+    sur grand écran). ≥ 960 px : logo (pastille blanche, lisible sur toute photo) et accroche à gauche, **fine ligne
+    blanche verticale**, formulaire à droite ; téléphone : logo en haut, formulaire centré, pleine largeur.
+  - **Écrans** : titre blanc centré, **libellés blancs visibles** au-dessus des champs (plus de `sr-only`), champs
+    blancs de 54 px à coins de 14 px avec pictogramme (e-mail, cadenas, prénom/nom, drapeau +221), « Rester connecté » et
+    mentions en blanc, liens blancs soulignés, séparateur « ou continuer avec » en traits blancs, **Google et Apple en
+    pastilles rondes** (nouvelle entrée `variante="icone"` de `BoutonGoogle` — bouton officiel `type: 'icon'`,
+    `shape: 'circle'` — et de `BoutonApple`, libellé gardé en `aria-label`), erreurs de champ en pastille claire, boutons
+    secondaires transparents à bord blanc, **bouton principal orange de la charte avec texte sombre** (8:1 ; blanc sur
+    orange échoue AA) et flèche (remplace le rouge de la maquette ; variable `--principal` dans `auth-photo.scss` pour
+    changer de couleur en une ligne). Mot de passe oublié : « Retour » + titre comme les autres écrans, étapes à plat.
+  - **Ordre des écrans de connexion** (changement de la même branche, en plus du design) : `/auth/connexion` affiche
+    d'abord **e-mail (ou numéro) + mot de passe**, puis « ou continuer avec » Google (et Apple s'il est configuré), puis
+    « Autres options » = numéro + code SMS (`/auth/connexion-telephone`, même écran `Entree`) et le lien vers
+    l'inscription ; `/auth/inscription` commence au contraire par le numéro, avec « Autres options » = e-mail et mot de
+    passe (`/auth/autres-options`). `Connexion` reçoit la donnée de route `principal` ; « Retour » de la vérification
+    ramène à `/auth/connexion-telephone` pour un code par SMS. Tests : `connexion.spec.ts`, `entree.spec.ts`.
+  - **Carte d'inscription** (maquette « Create new account » de Doulo, 20/11/2026 ; `auth-carte.scss`, 2e feuille de
+    `AuthLayout` pour rester sous le budget de style) : sur les écrans d'inscription (donnée de route `carte` sur
+    `/auth/inscription`, `/auth/inscription-email`, `/auth/profil`, `/auth/telephone`, et `/auth/verification?inscription=N`
+    seulement quand c'est le code d'une inscription — `AuthLayout.activer()`), le formulaire est dans une **carte vert
+    foncé translucide** (80 %, flou 18 px, bord blanc à 16 %, coins de 24 px ; fond opaque si `prefers-reduced-transparency`
+    ou sans `backdrop-filter`), champs sombres avec **pictogramme à droite** (`order` CSS) et bord orange au focus,
+    titres alignés à gauche, « Déjà membre ? Se connecter » à droite. À gauche (≥ 960 px) : « REJOIGNEZ GRATUITEMENT »,
+    « Voyagez ensemble, <orange>au juste prix</orange>. » et un court texte, à la place de l'accroche. **Accent : orange de
+    la charte** (la maquette est bleue) ; texte orange éclairci `#ffb84d` sur la photo (≥ 3,8:1, grand texte). Différence
+    avec la maquette : libellés au-dessus des champs, pas flottants dans le champ ; parcours par étapes conservé (un seul
+    formulaire demanderait de changer le backend). La connexion garde le formulaire posé sur la photo.
+  - **Images** : `frontend/public/fond-connexion.webp` est fournie (fresque, 1376×768, recompressée de 750 à 60 Ko, WebP
+    qualité 72) ; `fond-connexion-mobile.webp` reste à fournir (conseillé : 828×1600,
+    ≤ 120 Ko pour le mobile), servies à la racine du site (`public/` : pas de `src/assets` dans ce projet) ; redémarrer
+    `ng serve` après un ajout. **Tant qu'elles manquent** : l'événement `error` retire la `<picture>` et le dégradé vert
+    de la charte (`#0c6b3f` → `#084a2b`) reste en fond (test dans `auth-layout.spec.ts`).
+  - **Style partagé** : `features/auth/auth-photo.scss`, appliqué **une seule fois** par `AuthLayout`
+    (`ViewEncapsulation.None`, tout sous `.auth-photo` / `.auth-panneau`) pour toutes les pages ; il remplace
+    `auth-epure.scss`, `auth-commun.scss` et `google-telephone.scss`. Les écrans ne gardent que leurs particularités.
+    Budget `anyComponentStyle` : avertissement relevé de 4 à **7,5 ko** (la feuille unique fait ~7,2 ko ; erreur à 8 ko).
+  - **Accessibilité** : libellés visibles, contour de focus blanc de 3 px, halo blanc sur les champs, `prefers-reduced-motion`
+    (pas d'animation d'apparition). Contraste du texte blanc sur la vraie photo sous le voile : ≥ 5,8:1 (calculé sur
+    les pixels de la photo, zone du formulaire) ; bouton orange / texte sombre 8:1 ; erreurs de champ en pastille claire
+    (rouge sur blanc 5,2:1).
+  - Vérifié dans le navigateur intégré (1280 px et 375 px, avec la vraie photo ; l'image mobile de test n'est pas commitée).
 - **Textes légaux** (branche `pages-legales`) : pages publiques `/conditions` et `/confidentialite`
   (`features/legal`, cadre commun `page-legale.ts` : contact `CONTACT_LEGAL`, date `VERSION_LEGALE`), liens depuis
   l'inscription, le pied des écrans de connexion, le profil, et dans l'appli mobile (`LiensLegaux`, qui ouvre le
@@ -370,10 +455,11 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   **Connexion avec Google** (branche `mobile-google`, `lib/core/google.dart` + `lib/features/auth/google.dart`) : bouton « Continuer avec Google » (séparateur « ou ») sur la connexion et l'inscription. Le package `google_sign_in` (7.x, `authenticate()`, puis déconnexion de Google pour pouvoir choisir un autre compte la fois suivante) fournit l'idToken, envoyé à `POST /api/auth/google` (`Session.connexionGoogle`, **même endpoint que le site, backend inchangé**) qui renvoie la session habituelle. `serverClientId` = ID client **Web** (celui du site), donc l'audience de l'idToken est bien le `GOOGLE_CLIENT_ID` vérifié par `GoogleTokenVerifier` (tokeninfo) ; le client Android n'est reconnu que par le paquet `sn.isep.yobalema` + SHA-1. Les ID clients passent par `--dart-define=GOOGLE_SERVER_CLIENT_ID=…` (et `GOOGLE_IOS_CLIENT_ID` plus tard), jamais dans le dépôt ; `tool/lancer-telephone.ps1` reprend la variable d'environnement du même nom. Cas gérés par `continuerAvecGoogle` (testé sans le plugin via l'interface `ServiceGoogle`) : annulation (rien d'affiché), compte connu → connecté, compte inconnu → `TELEPHONE_REQUIS` → écran `/google/telephone` (numéro + sexe, idToken gardé en mémoire seulement, numéro déjà pris affiché sous le champ) → code de vérification comme à l'inscription, erreur réseau / jeton refusé / plugin mal configuré → message dans le bandeau. Non disponible dans la version navigateur ; iOS à configurer (client iOS + schéma d'URL). Étapes Google Cloud et `gradlew signingReport` : `mobile/README.md`.
   **Escales à la publication** (branche `mobile-escales`, `lib/core/escales.dart` + `lib/features/conducteur/publier.dart`) : « Ajouter une escale » (5 au maximum, comme `@Size(max = 5)` de l'API), chaque escale avec recherche de lieu, « Ma position » ou toucher de la carte (puces « La carte place : Départ / Escale n / Arrivée »), monter / descendre / supprimer ; les escales partent dans `escales` de `/trajets/estimation` et `/trajets` (mêmes endpoints que le site) et comptent dans l'estimation. Le détail d'un trajet et « Mon trajet » les affichaient déjà (carte + liste). **Non existant côté site et API, donc non fait** : prix par tronçon, recherche et réservation d'un segment (le site ne propose pas non plus de choisir l'escale de prise en charge, bien que `idEscaleRamassage` existe dans l'API de réservation).
   Reste : push.
-- Tests : `./mvnw test` → 62 tests (dont `ConnexionExterneParcoursTest`, `AppleTokenVerifierTest`, `MessagesVocauxParcoursTest`, `AnalyseAudioTest`, `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
+- Tests : `./mvnw test` → 68 tests (dont `InscriptionTelephoneParcoursTest`, `ConnexionExterneParcoursTest`, `AppleTokenVerifierTest`, `MessagesVocauxParcoursTest`, `AnalyseAudioTest`, `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 104 tests (dont guards, retour après connexion,
-  intercepteur visiteur, `BarreRecherche`, paramètres de recherche, inscription Google en étapes) ; `flutter test` dans `mobile` → 79 tests ;
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 125 tests (dont guards, retour après connexion,
+  intercepteur visiteur, `BarreRecherche`, paramètres de recherche, inscription Google en étapes, écran de départ par
+  numéro et bouton Apple masqué, étapes du profil) ; `flutter test` dans `mobile` → 84 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
   téléphone uniques : ils partagent la base, et l'immatriculation de test reprend les 4 derniers chiffres.
 

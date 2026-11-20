@@ -32,7 +32,8 @@ export interface Profil {
   dateCreation: string;
 }
 
-export type EtapeAuth = 'CONNECTE' | 'OTP_ENVOYE' | 'TELEPHONE_REQUIS';
+/** PROFIL_REQUIS : numéro inconnu dont le code est bon ; le compte est créé avec le jeton d'inscription. */
+export type EtapeAuth = 'CONNECTE' | 'OTP_ENVOYE' | 'TELEPHONE_REQUIS' | 'PROFIL_REQUIS';
 export type CanalOtp = 'EMAIL' | 'SMS';
 
 export interface AuthReponse {
@@ -48,6 +49,16 @@ export interface AuthReponse {
   utilisateur?: Profil;
   /** Vrai quand cette connexion a annulé une suppression de compte en cours (délai de grâce de 30 jours). */
   suppressionAnnulee?: boolean;
+  /** PROFIL_REQUIS : autorise pendant 15 minutes la création du compte avec le numéro vérifié. */
+  jetonInscription?: string;
+}
+
+/** Fin de l'inscription par téléphone : informations manquantes ; mot de passe facultatif. */
+export interface FinInscriptionTelephone {
+  prenom: string;
+  nom: string;
+  sexe: Sexe | null;
+  motDePasse?: string;
 }
 
 /** Code de « mot de passe oublié » accepté : le jeton autorise le nouveau mot de passe pendant validiteSecondes. */
@@ -69,6 +80,8 @@ export interface InscriptionRequete {
 export interface VerificationEnCours {
   /** Téléphone ou email permettant au backend de retrouver le compte. */
   identifiant: string;
+  /** 'telephone' : connexion ou inscription par numéro (/api/auth/telephone/...). */
+  mode?: 'telephone';
   canal: CanalOtp;
   telephoneMasque: string | null;
   emailMasque: string | null;

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api.dart';
@@ -11,7 +12,7 @@ import '../../shared/widgets.dart';
 
 /// Où le code a été envoyé, pour l'écran de vérification.
 class DemandeVerification {
-  DemandeVerification(this.identifiant, this.canal, this.destination, this.renvoiDans);
+  DemandeVerification(this.identifiant, this.canal, this.destination, this.renvoiDans, {this.parTelephone = false});
 
   /// Numéro de téléphone (ou email) du compte à vérifier.
   final String identifiant;
@@ -20,6 +21,9 @@ class DemandeVerification {
   final String canal;
   final String? destination;
   final int? renvoiDans;
+
+  /// Connexion ou inscription par numéro (/auth/telephone/...) : un nouveau numéro mène ensuite au profil.
+  final bool parTelephone;
 }
 
 /// Saisie du code à 6 chiffres reçu par email ou SMS. Une fois vérifié, l'utilisateur est connecté.
@@ -74,7 +78,15 @@ class _VerificationPageState extends State<VerificationPage> {
     });
     try {
       // Connecté : le routeur ouvre l'application.
-      await context.read<Session>().verifierCode(widget.demande.identifiant, code);
+      final session = context.read<Session>();
+      final d = widget.demande;
+      if (!d.parTelephone) {
+        await session.verifierCode(d.identifiant, code);
+        return;
+      }
+      final r = await session.verifierCodeTelephone(d.identifiant, code);
+      // Nouveau numéro : il reste à créer le compte.
+      if (mounted && r.etape == 'PROFIL_REQUIS') context.pushReplacement('/inscription/profil', extra: r.jetonInscription);
     } on ErreurApi catch (e) {
       final reste = e.tentativesRestantes;
       setState(() => _erreur = reste == null ? e.message : '${e.message} — il vous reste $reste tentative(s).');
@@ -91,7 +103,9 @@ class _VerificationPageState extends State<VerificationPage> {
       _info = null;
     });
     try {
-      final r = await context.read<Session>().renvoyerCode(widget.demande.identifiant);
+      final session = context.read<Session>();
+      final d = widget.demande;
+      final r = d.parTelephone ? await session.codeTelephone(d.identifiant) : await session.renvoyerCode(d.identifiant);
       setState(() => _info = 'Un nouveau code a été envoyé.');
       _demarrerAttente(r.renvoiDans ?? 60);
     } catch (e) {
