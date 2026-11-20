@@ -9,7 +9,7 @@
       <h1 #titre tabindex="-1" id="titre-etape">Votre adresse e-mail et un mot de passe</h1>
       <p class="sous-titre">Vous pourrez vous connecter avec cette adresse ou avec votre numéro.</p>
       <div class="champ" [class.champ--erreur]="enErreur('email') || erreurServeur('email')">
-        <label class="sr-only" for="email">Adresse e-mail</label>
+        <label class="libelle" for="email">Adresse e-mail</label>
         <div class="saisie">
           <app-icone nom="mail" />
           <input id="email" type="email" formControlName="email" autocomplete="email" inputmode="email"
@@ -22,7 +22,7 @@
         }
       </div>
       <div class="champ" [class.champ--erreur]="enErreur('motDePasse')">
-        <label class="sr-only" for="motDePasse">Mot de passe</label>
+        <label class="libelle" for="motDePasse">Mot de passe</label>
         <app-champ-mot-de-passe idChamp="motDePasse" formControlName="motDePasse" autocomplete="new-password"
                                 placeholder="Mot de passe" />
         <p [class]="enErreur('motDePasse') ? 'message-erreur' : 'aide'">
@@ -34,14 +34,14 @@
       <h1 #titre tabindex="-1" id="titre-etape">Comment vous appelez-vous ?</h1>
       <p class="sous-titre">Votre prénom est montré aux conducteurs et aux passagers de vos trajets.</p>
       <div class="champ" [class.champ--erreur]="enErreur('prenom')">
-        <label class="sr-only" for="prenom">Prénom</label>
+        <label class="libelle" for="prenom">Prénom</label>
         <div class="saisie">
           <app-icone nom="utilisateur" />
           <input id="prenom" formControlName="prenom" autocomplete="given-name" placeholder="Prénom" />
         </div>
       </div>
       <div class="champ" [class.champ--erreur]="enErreur('nom')">
-        <label class="sr-only" for="nom">Nom</label>
+        <label class="libelle" for="nom">Nom</label>
         <div class="saisie">
           <app-icone nom="utilisateur" />
           <input id="nom" formControlName="nom" autocomplete="family-name" placeholder="Nom" />
@@ -55,7 +55,7 @@
       <h1 #titre tabindex="-1" id="titre-etape">Quel est votre numéro de téléphone ?</h1>
       <p class="sous-titre">Il sert à la sécurité des trajets et n'est jamais montré aux autres membres.</p>
       <div class="champ" [class.champ--erreur]="enErreur('telephone') || erreurServeur('telephone')">
-        <label class="sr-only" for="telephone">Numéro de téléphone (+221)</label>
+        <label class="libelle" for="telephone">Numéro de téléphone (+221)</label>
         <div class="saisie">
           <span class="indicatif"><app-drapeau-senegal /> +221</span>
           <input id="telephone" type="tel" formControlName="telephone" autocomplete="tel-national" inputmode="tel"
@@ -88,7 +88,7 @@
       <p class="sous-titre">Facultatif : sans mot de passe, vous vous connectez avec un code reçu par SMS. Vous pourrez
         en ajouter un plus tard depuis votre profil.</p>
       <div class="champ" [class.champ--erreur]="enErreur('motDePasse')">
-        <label class="sr-only" for="motDePasse">Mot de passe (facultatif)</label>
+        <label class="libelle" for="motDePasse">Mot de passe (facultatif)</label>
         <app-champ-mot-de-passe idChamp="motDePasse" formControlName="motDePasse" autocomplete="new-password"
                                 placeholder="Mot de passe (facultatif)" />
         <p [class]="enErreur('motDePasse') ? 'message-erreur' : 'aide'">
@@ -129,7 +129,7 @@
     } @else if (derniere()) {
       {{ parcours() === 'email' ? 'Recevoir le code' : 'Créer mon compte' }}
     } @else {
-      Continuer
+      Continuer <app-icone nom="fleche-droite" [taille]="18" />
     }
   </button>
   @if (etape() === 'motDePasse') {

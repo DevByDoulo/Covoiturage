@@ -159,7 +159,7 @@ export class MotDePasseOublie {
     this.envoiReinit.set(true);
     this.erreurReinit.set(null);
     this.session.reinitialiserMotDePasse(jeton, this.form.controls.motDePasse.value).subscribe({
-      next: () => this.router.navigate(['/auth/autres-options'], { queryParams: { reinitialise: 1 } }),
+      next: () => this.router.navigate(['/auth/connexion'], { queryParams: { reinitialise: 1 } }),
       error: (e) => {
         this.erreurReinit.set(lireErreur(e));
         this.envoiReinit.set(false);

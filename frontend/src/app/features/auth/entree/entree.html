@@ -15,7 +15,7 @@
 
   <form class="formulaire" [formGroup]="form" (ngSubmit)="continuer()" novalidate>
     <div class="champ" [class.champ--erreur]="messageTelephone()">
-      <label class="sr-only" for="telephone">Numéro de téléphone (+221)</label>
+      <label class="libelle" for="telephone">Numéro de téléphone (+221)</label>
       <div class="saisie">
         <span class="indicatif"><app-drapeau-senegal /> +221</span>
         <input id="telephone" type="tel" formControlName="telephone" autocomplete="tel-national" inputmode="tel"
@@ -42,26 +42,28 @@
       @if (envoi()) {
         <span class="chargement" aria-hidden="true"></span> Un instant…
       } @else {
-        Continuer
+        Continuer <app-icone nom="fleche-droite" [taille]="18" />
       }
     </button>
   </form>
 
-  <div class="separateur">ou</div>
+  <div class="separateur">ou continuer avec</div>
 
-  <app-bouton-google forme="rectangular" (jeton)="google($event)" (indisponible)="googleIndisponible.set(true)" />
+  <div class="reseaux">
+    <app-bouton-google variante="icone" (jeton)="google($event)" (indisponible)="googleIndisponible.set(true)" />
+    @if (apple) {
+      <app-bouton-apple variante="icone" (reponse)="connexionApple($event)"
+                        (indisponible)="messageApple.set(messagesApple.indisponible)" (echec)="messageApple.set(messagesApple.echec)" />
+    }
+  </div>
   @if (googleIndisponible()) {
     <app-alerte type="info">La connexion Google n'est pas disponible pour le moment. Utilisez votre numéro.</app-alerte>
   }
-  @if (apple) {
-    <app-bouton-apple (reponse)="connexionApple($event)"
-                      (indisponible)="messageApple.set(messagesApple.indisponible)" (echec)="messageApple.set(messagesApple.echec)" />
-    @if (messageApple(); as m) {
-      <app-alerte type="info">{{ m }}</app-alerte>
-    }
+  @if (apple && messageApple(); as m) {
+    <app-alerte type="info">{{ m }}</app-alerte>
   }
 
-  <a class="autres-options" routerLink="/auth/autres-options"
+  <a class="autres-options" [routerLink]="inscription() ? '/auth/autres-options' : '/auth/connexion'"
      [queryParams]="retourValide() ? { retour: retourValide() } : null">
     <app-icone nom="mail" [taille]="18" /> Autres options <span class="detail">e-mail et mot de passe</span>
     <app-icone nom="chevron-droite" [taille]="18" />

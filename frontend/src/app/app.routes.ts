@@ -16,14 +16,23 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'connexion' },
       {
+        // Connexion : e-mail + mot de passe d'abord, puis Google, puis « Autres options » (numéro + code SMS).
         path: 'connexion',
         title: 'Connexion · YOBALEMAsn',
+        data: { principal: true },
+        canActivate: [invitesGuard],
+        loadComponent: () => import('./features/auth/connexion/connexion').then((m) => m.Connexion),
+      },
+      {
+        // « Autres options » de la connexion : numéro + code SMS (même écran que le début de l'inscription).
+        path: 'connexion-telephone',
+        title: 'Connexion par téléphone · YOBALEMAsn',
         data: {},
         canActivate: [invitesGuard],
         loadComponent: () => import('./features/auth/entree/entree').then((m) => m.Entree),
       },
       {
-        // Même écran de départ (numéro, Google, autres options), titre adapté.
+        // Inscription : le numéro d'abord, puis Google, puis « Autres options » (e-mail et mot de passe).
         path: 'inscription',
         title: 'Créer un compte · YOBALEMAsn',
         data: { inscription: true },

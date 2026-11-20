@@ -1,17 +1,20 @@
-/* Habillage unique des écrans d'authentification : photo plein écran + panneau en verre dépoli.
+/* Habillage unique des écrans d'authentification : photo plein écran, formulaire posé directement dessus
+   (texte blanc, champs blancs arrondis), comme la maquette de référence.
    Appliqué une seule fois par AuthLayout (ViewEncapsulation.None) ; tout est sous .auth-photo pour ne pas
-   déborder sur le reste du site. Les écrans (connexion, entrée, inscription, vérification, mot de passe oublié)
-   n'ajoutent que leurs particularités. */
+   déborder sur le reste du site. Les écrans n'ajoutent que leurs particularités. */
 
 .auth-photo {
-  --verre: rgba(255, 255, 255, 0.9);
-  --bord-champ: #7b8596; /* 3,8:1 sur blanc (WCAG 1.4.11) */
+  /* Bouton principal : l'orange de la charte, texte sombre (9:1) — il ressort sur la photo comme le rouge de la maquette. */
+  --principal: var(--orange);
+  --principal-survol: #e08a0f;
+  --principal-texte: #111827;
+  --erreur-sur-photo: #ffd9db;
   position: relative;
   isolation: isolate;
   min-height: 100dvh;
   /* Repli quand la photo est absente ou n'a pas encore chargé : dégradé vert de la charte. */
   background: linear-gradient(160deg, #0c6b3f 0%, #084a2b 100%);
-  color: var(--texte);
+  color: #fff;
 }
 
 /* ---------------------------------------------------------------- Fond */
@@ -30,9 +33,9 @@
   object-fit: cover;
 }
 
-/* Voile sombre : assure le contraste du texte blanc à gauche et du panneau, quelle que soit la photo. */
+/* Voile sombre dégradé : garantit le contraste (AA) du texte blanc, quelle que soit la photo. */
 .auth-photo__voile {
-  background: linear-gradient(180deg, rgba(4, 28, 18, 0.5) 0%, rgba(4, 28, 18, 0.7) 100%);
+  background: linear-gradient(180deg, rgba(4, 28, 18, 0.64) 0%, rgba(4, 28, 18, 0.7) 50%, rgba(4, 28, 18, 0.76) 100%);
 }
 
 /* ---------------------------------------------------------------- Cadre */
@@ -69,19 +72,13 @@
   text-shadow: 0 2px 18px rgba(4, 28, 18, 0.5);
 }
 
-/* ---------------------------------------------------------------- Panneau */
-
+/* Le formulaire n'a pas de cadre : il est posé sur la photo. */
 .auth-panneau {
   width: 100%;
-  max-width: 480px;
-  margin: auto auto 0;
-  padding: 22px 18px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  border-radius: 24px;
-  background: var(--verre);
-  box-shadow: 0 24px 60px rgba(4, 28, 18, 0.35);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  backdrop-filter: blur(18px) saturate(140%);
+  max-width: 440px;
+  margin: auto;
+  padding: 8px 4px 16px;
+  color: #fff;
   animation: auth-apparition 0.35s ease-out;
 }
 
@@ -91,43 +88,22 @@
     transform: translateY(12px);
   }
 }
-
-/* Pas de flou possible (navigateur ancien) ou transparence réduite : panneau opaque. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .auth-panneau {
-    background: #fff;
-  }
-}
-@media (prefers-reduced-transparency: reduce) {
-  .auth-panneau {
-    background: #fff;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .auth-panneau {
     animation: none;
   }
 }
-@media (forced-colors: active) {
-  .auth-panneau {
-    border-color: CanvasText;
-    background: Canvas;
-  }
-}
 
 @media (min-width: 960px) {
   .auth-photo__voile {
-    background:
-      linear-gradient(90deg, rgba(4, 28, 18, 0.7) 0%, rgba(4, 28, 18, 0.5) 55%, rgba(4, 28, 18, 0.3) 100%);
+    background: linear-gradient(90deg, rgba(4, 28, 18, 0.72) 0%, rgba(4, 28, 18, 0.66) 55%, rgba(4, 28, 18, 0.66) 100%);
   }
   .auth-photo__cadre {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(420px, 480px);
     padding: 0 clamp(24px, 5vw, 72px);
   }
-  /* Colonne de la marque, séparée du panneau par une fine ligne blanche. */
+  /* Colonne de la marque, séparée du formulaire par une fine ligne blanche. */
   .auth-photo__marque {
     display: flex;
     flex-direction: column;
@@ -142,23 +118,43 @@
   .auth-panneau {
     align-self: center;
     margin: 32px 0 32px 56px;
-    padding: 32px 28px 20px;
+    padding: 0;
   }
 }
 
 /* ---------------------------------------------------------------- Contenu des écrans */
 
 .auth-panneau {
+  a {
+    color: #fff;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
   a:focus-visible,
   button:focus-visible,
   input:focus-visible,
   .case:focus-within {
-    outline: 3px solid var(--vert);
-    outline-offset: 2px;
+    outline: 3px solid #fff;
+    outline-offset: 3px;
   }
   /* Le conteneur .saisie montre déjà le focus : pas de double contour sur l'input. */
   .saisie input:focus-visible {
     outline: 0;
+  }
+
+  /* Léger ombrage des textes posés directement sur la photo. */
+  h1,
+  .libelle,
+  .sous-titre,
+  .aide,
+  .mention,
+  .liens-legaux,
+  .case,
+  .separateur,
+  .haut,
+  .titres p,
+  .pied-securite {
+    text-shadow: 0 1px 8px rgba(4, 28, 18, 0.4);
   }
 
   .ecran {
@@ -168,11 +164,13 @@
   }
 
   h1 {
-    margin-bottom: 6px;
-    font-size: clamp(22px, 5.5vw, 28px);
+    margin-bottom: 8px;
+    font-size: clamp(28px, 7vw, 34px);
     font-weight: 700;
-    line-height: 1.25;
+    line-height: 1.2;
     letter-spacing: -0.01em;
+    text-align: center;
+    color: #fff;
     &:focus {
       outline: 0;
     }
@@ -181,52 +179,69 @@
   .formulaire {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
   }
 
+  .sous-titre,
+  .aide,
+  .mention,
+  .liens-legaux,
+  .pied-securite,
+  .titres p {
+    color: rgba(255, 255, 255, 0.92);
+  }
   .sous-titre {
-    margin: -6px 0 4px;
-    color: var(--texte-2);
+    margin: -4px 0 4px;
+    text-align: center;
   }
-
   .mention {
-    margin: 14px 0 0;
+    margin: 12px 0 0;
     font-size: 13px;
     line-height: 1.55;
-    color: var(--texte-2);
+    text-align: center;
   }
-
   .liens-legaux {
     margin: 18px 0 0;
     font-size: 13px;
     text-align: center;
-    color: var(--texte-2);
   }
-
+  .aide {
+    margin: 2px 2px 0;
+    font-size: 13px;
+  }
   .centre {
     margin: -6px 0 0;
     text-align: center;
   }
-
   .titres {
     text-align: center;
     p {
       margin: 6px 0 0;
-      color: var(--texte-2);
     }
   }
 
-  /* Champs : fond blanc, bord net, pictogramme ; bord vert et halo au focus. */
+  /* Libellés blancs au-dessus des champs. */
+  .libelle {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .champ--erreur .libelle {
+    color: var(--erreur-sur-photo);
+  }
+
+  /* Champs : blancs, arrondis, pictogramme à gauche, sans bord ; halo blanc au focus. */
   .saisie {
     min-height: 54px;
-    padding: 0 14px;
-    border: 1.5px solid var(--bord-champ);
-    border-radius: 12px;
+    padding: 0 16px;
+    border: 2px solid transparent;
+    border-radius: 14px;
     background: #fff;
     box-shadow: none;
+    text-shadow: none;
     &:focus-within {
       border-color: var(--vert);
-      box-shadow: 0 0 0 3px rgba(12, 107, 63, 0.25);
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.55);
     }
     input::placeholder {
       color: var(--texte-3);
@@ -240,36 +255,81 @@
     background: var(--erreur-fond);
   }
 
-  /* Boutons : le principal est vert (charte) ; les autres, blancs à bord fin. */
+  /* Erreur de champ : pastille claire (le rouge seul ne passe pas sur la photo). */
+  .message-erreur {
+    align-self: flex-start;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.94);
+    text-shadow: none;
+  }
+
+  /* Boutons : le principal en orange pleine largeur avec flèche ; les autres, transparents à bord blanc. */
   .bouton {
     min-height: 54px;
     border-radius: 12px;
     font-weight: 700;
+    text-shadow: none;
+    text-decoration: none;
   }
   .bouton--primaire {
-    box-shadow: 0 6px 16px rgba(12, 107, 63, 0.3);
-  }
-  .bouton--secondaire,
-  app-bouton-google .bouton,
-  app-bouton-apple .bouton {
-    border: 1.5px solid #c3cad6;
-    background: #fff;
-    box-shadow: none;
-    color: var(--texte);
+    background: var(--principal);
+    color: var(--principal-texte);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
     &:hover:not(:disabled) {
-      background: #f4f6fa;
-      text-decoration: none;
+      background: var(--principal-survol);
+    }
+    .chargement {
+      border-color: rgba(17, 24, 39, 0.3);
+      border-top-color: var(--principal-texte);
+    }
+  }
+  .bouton--secondaire {
+    border: 1.5px solid rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.14);
+    box-shadow: none;
+    color: #fff;
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.26);
+    }
+  }
+  /* Google et Apple : pastilles rondes blanches (le G et la pomme seuls). */
+  .reseaux {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    app-bouton-apple {
+      width: auto;
+    }
+    .rond {
+      border: 0;
+      background: #fff;
+      color: #111827;
+      &:hover:not(:disabled) {
+        background: #eef0f4;
+      }
+    }
+  }
+  .bouton-lien {
+    color: #fff;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    &:disabled {
+      color: rgba(255, 255, 255, 0.75);
     }
   }
 
   .separateur {
-    margin: 4px 0;
+    margin: 6px 0;
     text-transform: none;
     font-size: 14px;
-    color: var(--texte-2);
+    font-weight: 500;
+    letter-spacing: 0;
+    color: #fff;
     &::before,
     &::after {
-      background: rgba(17, 24, 39, 0.3);
+      background: rgba(255, 255, 255, 0.85);
     }
   }
 
@@ -280,7 +340,7 @@
     justify-content: space-between;
     min-height: 36px;
     font-size: 13.5px;
-    color: var(--texte-2);
+    color: #fff;
     .etape {
       margin-left: auto;
       font-weight: 600;
@@ -295,20 +355,14 @@
     border: 0;
     border-radius: 8px;
     background: none;
-    color: var(--texte);
+    color: #fff;
     font-weight: 600;
     cursor: pointer;
     text-decoration: none;
     &:hover {
-      background: rgba(17, 24, 39, 0.07);
+      background: rgba(255, 255, 255, 0.16);
       text-decoration: none;
     }
-  }
-
-  .aide {
-    margin: 6px 2px 0;
-    font-size: 13px;
-    color: var(--texte-2);
   }
 
   /* Choix à gros boutons (sexe) et liste des textes à lire. */
@@ -321,20 +375,21 @@
       gap: 12px;
       min-height: 60px;
       padding: 0 18px;
-      border: 1.5px solid var(--bord-champ);
-      border-radius: 12px;
+      border: 2px solid transparent;
+      border-radius: 14px;
       background: #fff;
       font-size: 16px;
       font-weight: 600;
       text-align: left;
+      text-shadow: none;
       color: var(--texte);
       cursor: pointer;
       &:hover {
-        background: #f4f6fa;
+        background: #eef0f4;
       }
       &[aria-checked='true'] {
         border-color: var(--vert);
-        box-shadow: 0 0 0 2px var(--vert);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.6);
         background: var(--vert-clair);
         color: var(--vert-fonce);
       }
@@ -346,34 +401,28 @@
     margin: 0;
     padding: 0;
     list-style: none;
-    border-top: 1px solid rgba(17, 24, 39, 0.15);
+    border-top: 1px solid rgba(255, 255, 255, 0.4);
     li {
-      border-bottom: 1px solid rgba(17, 24, 39, 0.15);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.4);
     }
     a {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 14px 2px;
-      color: var(--texte);
+      text-decoration: none;
     }
   }
 
   .case {
     font-size: 14.5px;
-    color: var(--texte);
+    color: #fff;
   }
   .case--erreur input {
-    outline: 2px solid var(--erreur);
+    outline: 2px solid var(--erreur-sur-photo);
   }
 
-  /* Textes secondaires posés directement sur le verre : un ton plus foncé pour rester lisibles (AA). */
-  .pied-securite,
-  .validite {
-    color: var(--texte-2);
-  }
-
-  /* Mot de passe oublié : les étapes ne sont plus des cartes dans le panneau. */
+  /* Mot de passe oublié : les étapes ne sont plus des cartes. */
   .carte {
     padding: 0;
     background: none;

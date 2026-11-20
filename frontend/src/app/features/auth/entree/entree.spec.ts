@@ -44,7 +44,8 @@ describe('Écran de départ (numéro, Google, autres options)', () => {
     expect(ordre).toEqual(['telephone', 'separateur', 'app-bouton-google', 'autres-options']);
     expect(el.querySelector('.indicatif')?.textContent).toContain('+221');
     expect(el.querySelector('button[type=submit]')?.textContent).toContain('Continuer');
-    expect(el.querySelector('.autres-options')?.getAttribute('href')).toBe('/auth/autres-options');
+    // Venu de la connexion, « Autres options » ramène au formulaire e-mail + mot de passe.
+    expect(el.querySelector('.autres-options')?.getAttribute('href')).toBe('/auth/connexion');
   });
 
   it("masque le bouton Apple tant que la configuration Apple est vide", () => {

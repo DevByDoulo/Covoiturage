@@ -1,4 +1,4 @@
-/* Propre à l'écran de départ (le reste : ../auth-photo.scss). */
+/* Propre à l'écran du numéro (le reste : ../auth-photo.scss). */
 
 .autres-options {
   display: flex;
@@ -7,16 +7,17 @@
   min-height: 52px;
   padding: 0 8px;
   border-radius: 10px;
-  color: var(--texte);
+  color: #fff;
   font-weight: 600;
+  text-decoration: none;
   &:hover {
     text-decoration: none;
-    background: rgba(17, 24, 39, 0.06);
+    background: rgba(255, 255, 255, 0.16);
   }
   .detail {
     font-weight: 400;
     font-size: 14px;
-    color: var(--texte-2);
+    color: rgba(255, 255, 255, 0.92);
   }
   app-icone:last-child {
     margin-left: auto;

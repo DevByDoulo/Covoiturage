@@ -4,9 +4,9 @@ import { Logo } from '../../shared/ui/logo';
 
 /**
  * Cadre de tous les écrans d'authentification : photo plein écran (WebP, repli en dégradé vert si elle manque),
- * voile sombre, et formulaire dans un panneau en verre dépoli. Sur grand écran, logo et accroche à gauche,
- * séparés du panneau par une fine ligne blanche ; sur téléphone, panneau en bas, pleine largeur.
- * Le style (partagé par tous les écrans) est dans `auth-photo.scss`, appliqué sous `.auth-photo`.
+ * voile sombre dégradé, et formulaire posé directement sur la photo (texte blanc, champs blancs arrondis).
+ * Sur grand écran, logo et accroche à gauche, séparés du formulaire par une fine ligne blanche ; sur téléphone,
+ * formulaire centré, pleine largeur. Le style (partagé par tous les écrans) est dans `auth-photo.scss`.
  */
 @Component({
   selector: 'app-auth-layout',

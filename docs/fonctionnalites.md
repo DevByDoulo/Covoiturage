@@ -122,35 +122,44 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
     Pas de bouton Apple dans l'appli, rien à masquer.
   - Textes légaux (version du **20/11/2026**) : numéro de téléphone comme identifiant de connexion, code par SMS
     (empreinte seule conservée, limites), email et mot de passe facultatifs pour un compte créé par numéro.
-- **Habillage photo + verre dépoli des écrans d'authentification** (branche `connexion-photo`, site seulement,
+- **Habillage « photo plein écran » des écrans d'authentification** (branche `connexion-photo`, site seulement,
   **design seulement** : parcours, méthodes et textes inchangés ; remplace le bandeau vert et la colonne blanche de
-  `connexion-design`) :
+  `connexion-design`). Modèle : capture de référence de Doulo (20/11/2026) — formulaire **posé directement sur la
+  photo, sans cadre**, texte blanc, champs blancs arrondis, gros bouton plein largeur avec flèche.
   - **Cadre** (`auth-layout.ts`, tous les écrans sous `/auth` : départ, autres options, inscription, profil,
     vérification, téléphone après Google/Apple, mot de passe oublié ; la donnée de route `epure` n'existe plus) : photo
     plein écran dans une `<picture>` (`fond-connexion.webp`, et `fond-connexion-mobile.webp` en portrait de moins de
-    768 px ; `fetchpriority="high"`, `width`/`height` fixes, `alt` vide, pas de bibliothèque), voile sombre dégradé,
-    panneau **blanc à 90 %, flou 18 px** (`backdrop-filter`), coins de 24 px, bordure blanche de 1 px, ombre douce.
-    ≥ 960 px : logo (pastille blanche, lisible sur toute photo) et accroche à gauche, **fine ligne blanche verticale**
-    puis panneau à droite ; téléphone : logo en haut, panneau pleine largeur avec marges de 16 px, en bas.
-  - **Images à fournir** : `frontend/public/fond-connexion.webp` (conseillé 1920×1080, ≤ 200 Ko) et
-    `fond-connexion-mobile.webp` (828×1600, ≤ 120 Ko), servies à la racine du site (`public/` : il n'y a pas de
-    `src/assets` dans ce projet). **Tant qu'elles manquent** : l'événement `error` retire la `<picture>` et le
-    dégradé vert de la charte (`#0c6b3f` → `#084a2b`) reste en fond (test dans `auth-layout.spec.ts`).
+    768 px ; `fetchpriority="high"`, `width`/`height` fixes — 1376×768 pour la photo actuelle —, `alt` vide, pas de
+    bibliothèque) et **voile sombre dégradé** (≈ 64 % → 76 % en vertical sur téléphone ; ≈ 72 % → 66 % de gauche à droite
+    sur grand écran). ≥ 960 px : logo (pastille blanche, lisible sur toute photo) et accroche à gauche, **fine ligne
+    blanche verticale**, formulaire à droite ; téléphone : logo en haut, formulaire centré, pleine largeur.
+  - **Écrans** : titre blanc centré, **libellés blancs visibles** au-dessus des champs (plus de `sr-only`), champs
+    blancs de 54 px à coins de 14 px avec pictogramme (e-mail, cadenas, prénom/nom, drapeau +221), « Rester connecté » et
+    mentions en blanc, liens blancs soulignés, séparateur « ou continuer avec » en traits blancs, **Google et Apple en
+    pastilles rondes** (nouvelle entrée `variante="icone"` de `BoutonGoogle` — bouton officiel `type: 'icon'`,
+    `shape: 'circle'` — et de `BoutonApple`, libellé gardé en `aria-label`), erreurs de champ en pastille claire, boutons
+    secondaires transparents à bord blanc, **bouton principal orange de la charte avec texte sombre** (8:1 ; blanc sur
+    orange échoue AA) et flèche (remplace le rouge de la maquette ; variable `--principal` dans `auth-photo.scss` pour
+    changer de couleur en une ligne). Mot de passe oublié : « Retour » + titre comme les autres écrans, étapes à plat.
+  - **Ordre des écrans de connexion** (changement de la même branche, en plus du design) : `/auth/connexion` affiche
+    d'abord **e-mail (ou numéro) + mot de passe**, puis « ou continuer avec » Google (et Apple s'il est configuré), puis
+    « Autres options » = numéro + code SMS (`/auth/connexion-telephone`, même écran `Entree`) et le lien vers
+    l'inscription ; `/auth/inscription` commence au contraire par le numéro, avec « Autres options » = e-mail et mot de
+    passe (`/auth/autres-options`). `Connexion` reçoit la donnée de route `principal` ; « Retour » de la vérification
+    ramène à `/auth/connexion-telephone` pour un code par SMS. Tests : `connexion.spec.ts`, `entree.spec.ts`.
+  - **Images à fournir** : `frontend/public/fond-connexion.webp` et `fond-connexion-mobile.webp` (conseillé : 828×1600,
+    ≤ 120 Ko pour le mobile), servies à la racine du site (`public/` : pas de `src/assets` dans ce projet) ; redémarrer
+    `ng serve` après un ajout. **Tant qu'elles manquent** : l'événement `error` retire la `<picture>` et le dégradé vert
+    de la charte (`#0c6b3f` → `#084a2b`) reste en fond (test dans `auth-layout.spec.ts`).
   - **Style partagé** : `features/auth/auth-photo.scss`, appliqué **une seule fois** par `AuthLayout`
     (`ViewEncapsulation.None`, tout sous `.auth-photo` / `.auth-panneau`) pour toutes les pages ; il remplace
-    `auth-epure.scss`, `auth-commun.scss` et `google-telephone.scss`. Les écrans ne gardent que leurs particularités
-    (`entree.scss`, `connexion.scss`, `inscription.scss`, `verification.scss`, `mot-de-passe-oublie.scss`). Le
-    budget `anyComponentStyle` passe de 4 à **6 ko** en avertissement (la feuille unique fait ~6 ko).
-  - **Champs et boutons** : champs blancs de 54 px, bord `#7b8596` (3,8:1, WCAG 1.4.11), pictogrammes (e-mail,
-    cadenas, prénom/nom) ; bouton principal **vert de la charte** (blanc dessus : 6,6:1 ; l'orange ne passe pas AA) ;
-    boutons secondaires, Google et Apple blancs à bord fin. Mot de passe oublié : « Retour » + titre comme les autres
-    écrans (plus d'en-tête de page), étapes à plat dans le panneau.
-  - **Accessibilité** : libellés conservés (visibles ou `sr-only`), contour de focus vert de 3 px, halo sur les
-    champs, `prefers-reduced-motion` (pas d'animation d'apparition), **fond opaque** si `prefers-reduced-transparency`
-    ou sans `backdrop-filter` (`@supports not`), `forced-colors`. Contrastes calculés dans le pire cas (photo
-    blanche ou noire sous le voile, panneau à 90 %) : texte 12,5:1, texte secondaire 6,1:1, liens verts 5,3:1,
-    erreurs 4,8:1 ; texte blanc de l'accroche sur le voile ≥ 6:1.
-  - Vérifié dans le navigateur intégré (1280 px et 375 px, avec une photo de test très claire non commitée).
+    `auth-epure.scss`, `auth-commun.scss` et `google-telephone.scss`. Les écrans ne gardent que leurs particularités.
+    Budget `anyComponentStyle` : avertissement relevé de 4 à **7,5 ko** (la feuille unique fait ~7,2 ko ; erreur à 8 ko).
+  - **Accessibilité** : libellés visibles, contour de focus blanc de 3 px, halo blanc sur les champs, `prefers-reduced-motion`
+    (pas d'animation d'apparition). Contraste du texte blanc sur la vraie photo sous le voile : ≥ 5,8:1 (calculé sur
+    les pixels de la photo, zone du formulaire) ; bouton orange / texte sombre 8:1 ; erreurs de champ en pastille claire
+    (rouge sur blanc 5,2:1).
+  - Vérifié dans le navigateur intégré (1280 px et 375 px, avec la vraie photo ; l'image mobile de test n'est pas commitée).
 - **Textes légaux** (branche `pages-legales`) : pages publiques `/conditions` et `/confidentialite`
   (`features/legal`, cadre commun `page-legale.ts` : contact `CONTACT_LEGAL`, date `VERSION_LEGALE`), liens depuis
   l'inscription, le pied des écrans de connexion, le profil, et dans l'appli mobile (`LiensLegaux`, qui ouvre le
@@ -436,7 +445,7 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
   Reste : push.
 - Tests : `./mvnw test` → 68 tests (dont `InscriptionTelephoneParcoursTest`, `ConnexionExterneParcoursTest`, `AppleTokenVerifierTest`, `MessagesVocauxParcoursTest`, `AnalyseAudioTest`, `SuppressionCompteParcoursTest`, `SignalementsParcoursTest`, `ParcoursCompletTest`, `SuiviPositionParcoursTest`, `TrajetsParcoursTest`, `AlertesRechercheParcoursTest`,
   `ReservationsPaiementsParcoursTest`, `AvisParcoursTest`, `MessagerieParcoursTest`, `PayDunyaParcoursTest`,
-  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 117 tests (dont guards, retour après connexion,
+  `WaveFournisseurTest`, `PayDunyaFournisseurTest`) ; `npm test` → 122 tests (dont guards, retour après connexion,
   intercepteur visiteur, `BarreRecherche`, paramètres de recherche, inscription Google en étapes, écran de départ par
   numéro et bouton Apple masqué, étapes du profil) ; `flutter test` dans `mobile` → 84 tests ;
   `python -m pytest` dans `ia-tarification` → 20 tests. Dans les tests d'intégration, utiliser des numéros de
