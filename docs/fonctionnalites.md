@@ -158,7 +158,8 @@ récupérable sous l'**étiquette Git `archive/lot1-complet`** (`git show archiv
     la charte** (la maquette est bleue) ; texte orange éclairci `#ffb84d` sur la photo (≥ 3,8:1, grand texte). Différence
     avec la maquette : libellés au-dessus des champs, pas flottants dans le champ ; parcours par étapes conservé (un seul
     formulaire demanderait de changer le backend). La connexion garde le formulaire posé sur la photo.
-  - **Images à fournir** : `frontend/public/fond-connexion.webp` et `fond-connexion-mobile.webp` (conseillé : 828×1600,
+  - **Images** : `frontend/public/fond-connexion.webp` est fournie (fresque, 1376×768, recompressée de 750 à 60 Ko, WebP
+    qualité 72) ; `fond-connexion-mobile.webp` reste à fournir (conseillé : 828×1600,
     ≤ 120 Ko pour le mobile), servies à la racine du site (`public/` : pas de `src/assets` dans ce projet) ; redémarrer
     `ng serve` après un ajout. **Tant qu'elles manquent** : l'événement `error` retire la `<picture>` et le dégradé vert
     de la charte (`#0c6b3f` → `#084a2b`) reste en fond (test dans `auth-layout.spec.ts`).
